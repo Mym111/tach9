@@ -41,7 +41,7 @@ body{height:100%;margin:0;background:var(--space);color:var(--ink);font-family:v
 #space{position:fixed;inset:0;width:100%;height:100%;z-index:0}
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
 #app{position:relative;z-index:1;height:100%;max-width:520px;margin:0 auto}
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;transition:opacity .45s ease,transform .55s cubic-bezier(.2,.7,.2,1),visibility 0s}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-top:max(12px,env(safe-area-inset-top,0px));padding-bottom:max(12px,env(safe-area-inset-bottom,0px));transition:opacity .45s ease,transform .55s cubic-bezier(.2,.7,.2,1),visibility 0s}
 .screen.off{opacity:0;pointer-events:none;transform:scale(.97);visibility:hidden;transition:opacity .45s ease,transform .55s cubic-bezier(.2,.7,.2,1),visibility 0s linear .55s}
 /* iOS WebKit: a faded-out overlay that keeps its backdrop blur can stop the page under it from painting (only canvases survive) */
 .overlay.off{backdrop-filter:none;-webkit-backdrop-filter:none}
@@ -60,7 +60,7 @@ button:disabled{cursor:default}
 .btn.ghost:active{transform:translateY(1px)}
 .btn.danger{color:var(--alert);box-shadow:inset 0 0 0 2px rgba(255,77,94,.45)}
 .iconbtn.gear{color:var(--dim)}.iconbtn.gear:active{color:var(--amber)}
-.gear-float{position:absolute;top:12px;right:max(16px,env(safe-area-inset-right,0px));z-index:2}
+.gear-float{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));z-index:2}
 #optHome{margin-bottom:8px}
 .iconbtn{width:34px;height:34px;flex:none;border-radius:8px;border:1px solid var(--bezel);background:var(--panel);font-family:var(--f-display);font-size:13px;display:grid;place-items:center}
 .linkbtn{background:none;border:0;padding:6px 0;font-family:var(--f-display);font-size:10px;letter-spacing:.1em;color:var(--dim)}
@@ -158,7 +158,7 @@ button:disabled{cursor:default}
 .srow.dbg span{color:#ff8a95}
 #dbgSeg button{white-space:nowrap}
 .htabs[hidden]+.hg-body{margin-top:14px}
-.toast{position:absolute;left:50%;top:76px;z-index:8;transform:translate(-50%,-14px);opacity:0;pointer-events:none;transition:opacity .3s,transform .35s cubic-bezier(.2,.7,.2,1);
+.toast{position:absolute;left:50%;top:calc(76px + env(safe-area-inset-top,0px));z-index:8;transform:translate(-50%,-14px);opacity:0;pointer-events:none;transition:opacity .3s,transform .35s cubic-bezier(.2,.7,.2,1);
   background:rgba(8,14,28,.95);border:1px solid var(--tc);box-shadow:0 0 22px color-mix(in srgb,var(--tc) 35%,transparent);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:220px;text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .toast b{font-family:var(--f-display);font-size:11px;letter-spacing:.08em;color:var(--tc);font-weight:400}
@@ -281,7 +281,7 @@ button:disabled{cursor:default}
 .chart{flex:1;min-height:220px;height:auto;margin:0;border:1px solid var(--bezel);border-radius:14px;background:radial-gradient(ellipse at 50% 40%,#0d1836,#060a16 75%);overflow:hidden;flex:none}
 .chart canvas{width:100%;height:100%;display:block;cursor:pointer;touch-action:none}
 .chart{position:relative}
-.chart.big{position:absolute;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));top:64px;bottom:12px;height:auto;z-index:5;box-shadow:0 0 0 4px #0c1426,0 20px 60px rgba(0,0,0,.6)}
+.chart.big{position:absolute;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));top:calc(64px + env(safe-area-inset-top,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));height:auto;z-index:5;box-shadow:0 0 0 4px #0c1426,0 20px 60px rgba(0,0,0,.6)}
 .chart-ui{position:absolute;right:6px;top:6px;display:flex;gap:4px}
 .chart-ui button{width:28px;height:28px;border-radius:8px;border:1px solid var(--bezel);background:rgba(8,14,28,.85);color:var(--ink);font-family:var(--f-ui);font-size:17px;line-height:1;display:grid;place-items:center}
 .chart.big #zBig{color:var(--amber);border-color:var(--amber)}
@@ -1364,13 +1364,14 @@ function openSound(){audio();renderSound();$('#optHome').hidden=scene==='splash'
 const SP={cv:$('#space'),ctx:null,stars:[],warp:0,warpTarget:0,shipX:0,launching:false,t:0};
 SP.ctx=SP.cv.getContext('2d');
 function sizeSpace(){
-  SP.cv.width=innerWidth*dpr;SP.cv.height=innerHeight*dpr;
+  SP.cv.width=Math.round(innerWidth*dpr);SP.cv.height=Math.round(innerHeight*dpr);
   SP.stars=Array.from({length:150},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,z:.2+Math.random()*.8}));
 }
 function drawSpace(dt){
   const c=SP.ctx;SP.t+=dt;
   SP.warp+=(SP.warpTarget-SP.warp)*Math.min(1,dt*(SP.warpTarget>SP.warp?3:5));
-  c.setTransform(dpr,0,0,dpr,0,0);c.fillStyle='#070b16';c.fillRect(0,0,innerWidth,innerHeight);
+  if(SP.cv.width!==Math.round(innerWidth*dpr)||SP.cv.height!==Math.round(innerHeight*dpr))sizeSpace();
+  c.setTransform(1,0,0,1,0,0);c.fillStyle='#070b16';c.fillRect(0,0,SP.cv.width,SP.cv.height);c.setTransform(dpr,0,0,dpr,0,0);
   const sp=18+SP.warp*1100;
   for(const s of SP.stars){
     s.x-=sp*s.z*dt;if(s.x<-80){s.x=innerWidth+Math.random()*40;s.y=Math.random()*innerHeight;}
@@ -2145,10 +2146,11 @@ function applyBoardShake(dt){const el=B.cv,s=B.shk;if(!s){if(el.style.transform)
   const a=s.m*(1-u)*(1-u),dx=(Math.random()*2-1)*a,dy=(Math.random()*2-1)*a*.7;el.style.transform=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) rotate(${(dx*.15).toFixed(2)}deg)`;}
 /* ================= FX OVERLAY ================= */
 const FX={cv:$('#fx'),ctx:null,parts:[]};FX.ctx=FX.cv.getContext('2d');
-function sizeFx(){FX.cv.width=innerWidth*dpr;FX.cv.height=innerHeight*dpr;}
+function sizeFx(){FX.cv.width=Math.round(innerWidth*dpr);FX.cv.height=Math.round(innerHeight*dpr);}
 function streak(x1,y1,x2,y2,color){FX.parts.push({x1,y1,x2,y2,cx:(x1+x2)/2+(Math.random()-.5)*90,cy:Math.min(y1,y2)-30-Math.random()*50,t:-Math.random()*.08,d:.36+Math.random()*.16,color});}
 function drawFx(dt){
-  const c=FX.ctx;c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,innerWidth,innerHeight);
+  if(FX.cv.width!==Math.round(innerWidth*dpr)||FX.cv.height!==Math.round(innerHeight*dpr))sizeFx();
+  const c=FX.ctx;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,FX.cv.width,FX.cv.height);c.setTransform(dpr,0,0,dpr,0,0);
   for(const p of FX.parts){
     p.t+=dt;if(p.t<0)continue;const u=Math.min(1,p.t/p.d);
     for(let i=0;i<4;i++){const v=Math.max(0,u*u-i*.04),iv=1-v;
@@ -4551,7 +4553,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v62';
+const BUILD='v63';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
