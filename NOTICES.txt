@@ -1,0 +1,7 @@
+Tach 9 · v61
+Concept & design: Michael
+
+Third-party pieces bundled in this folder:
+- Silkscreen font · Copyright 2001 The Silkscreen Project Authors · SIL Open Font License 1.1 (fonts/SILKSCREEN-OFL.txt)
+- Oxanium font · Copyright 2019 The Oxanium Project Authors · SIL Open Font License 1.1 (fonts/OXANIUM-OFL.txt)
+- QR Code Generator for JavaScript, Copyright (c) 2009 Kazuhiko Arase · MIT license
