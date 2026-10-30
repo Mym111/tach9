@@ -70,7 +70,7 @@ button:disabled{cursor:default}
 #splash{justify-content:space-between;gap:12px}
 .sp-menu{display:flex;flex-direction:column;gap:10px;padding-bottom:4px}
 .sp-save{text-align:center;font-family:var(--f-display);font-size:10px;letter-spacing:.12em;color:var(--dim);margin:-2px 0 2px}
-.sp-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:4px}
+.sp-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:4px}
 .sp-small{font-family:var(--f-display);font-size:11px;letter-spacing:.08em;padding:12px 6px;border-radius:9px;border:1px solid var(--bezel);background:rgba(13,21,40,.8);color:var(--ink);backdrop-filter:blur(3px)}
 .sp-small:active{transform:translateY(1px)}
 #newGameBtn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--bezel)}
@@ -157,6 +157,11 @@ button:disabled{cursor:default}
 .mk-near b{text-align:right;color:var(--bucks);font-weight:600}
 .srow.dbg span{color:#ff8a95}
 #dbgSeg button{white-space:nowrap}
+#dbgTach button{white-space:nowrap;min-width:36px}
+#dbgTach #dbgTachN{color:var(--ink);min-width:48px;opacity:1}
+#dbgTach #dbgTachGo{color:#ff8a95}
+#dbgTach #dbgTachGo.armed{background:var(--alert);color:#1b0408}
+#dbgTach #dbgTachGo:disabled{opacity:.35}
 .htabs[hidden]+.hg-body{margin-top:14px}
 .toast{position:absolute;left:50%;top:calc(76px + env(safe-area-inset-top,0px));z-index:8;transform:translate(-50%,-14px);opacity:0;pointer-events:none;transition:opacity .3s,transform .35s cubic-bezier(.2,.7,.2,1);
   background:rgba(8,14,28,.95);border:1px solid var(--tc);box-shadow:0 0 22px color-mix(in srgb,var(--tc) 35%,transparent);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:220px;text-align:center}
@@ -347,7 +352,7 @@ button:disabled{cursor:default}
 .banner.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .banner .b1{font-size:19px;color:var(--ink);text-shadow:0 0 12px rgba(77,166,255,.6),2px 2px 0 #000}
 .banner .b2{font-size:10px;letter-spacing:.2em;color:var(--amber);margin-top:4px;text-shadow:1px 1px 0 #000}
-.engineering{flex:2 1 0;min-height:0;display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:8px 6px 9px;border-radius:14px;border:1px solid var(--bezel);
+.engineering{flex:var(--eng,2) 1 0;min-height:0;display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:8px 6px 9px;border-radius:14px;border:1px solid var(--bezel);
   background:
     radial-gradient(circle at 7px 7px,var(--rivet) 1.6px,transparent 2.2px),
     radial-gradient(circle at calc(100% - 7px) 7px,var(--rivet) 1.6px,transparent 2.2px),
@@ -492,6 +497,26 @@ button:disabled{cursor:default}
 .seg{display:inline-flex;border:1px solid var(--bezel);border-radius:999px;overflow:hidden}
 .seg button{border:0;background:#0a1120;color:var(--dim);font-family:var(--f-display);font-size:10px;padding:8px 11px}
 .seg button[aria-pressed="true"]{background:var(--amber);color:#1b1206}
+.tr-card{max-width:400px;width:100%;margin:auto}.tr-b{padding:0 16px 14px;display:flex;flex-direction:column;gap:10px}.tr-sub{margin:0;font-size:13px;color:#aebbd6;line-height:1.4}
+#trList{display:flex;flex-direction:column;gap:8px}.tr-row{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:center;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--bezel);background:rgba(13,21,40,.8);color:var(--ink)}
+.tr-row i{font-style:normal;font-family:var(--f-display);font-size:12px;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;border:1px solid #7ff3ff;color:#7ff3ff}.tr-row span{display:flex;flex-direction:column;gap:2px}.tr-row b{font-weight:600;font-size:14px}.tr-row em{font-style:normal;font-size:12px;color:var(--dim)}.tr-row.soon{opacity:.45}
+#trUi{position:fixed;inset:0;pointer-events:none;z-index:2}#trUi[hidden]{display:none}
+.trring{position:fixed;border:2px solid #7ff3ff;border-radius:10px;box-shadow:0 0 12px rgba(127,243,255,.6);animation:trpulse 1.1s ease-in-out infinite}@keyframes trpulse{50%{opacity:.3}}
+#trCard{pointer-events:auto;position:absolute;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));max-width:420px;margin:0 auto;padding:10px 12px;border-radius:12px;background:rgba(7,12,24,.97);border:1px solid rgba(127,243,255,.5);display:grid;grid-template-columns:40px 1fr;gap:6px 10px;align-items:start}
+#trCard[data-pos="top"]{bottom:auto;top:calc(max(12px,env(safe-area-inset-top,0px)) + 58px)}
+#trCard.nudge{animation:trshake .3s}@keyframes trshake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+#trPc{width:40px;height:40px;border-radius:8px;border:1px solid rgba(127,243,255,.4);background:#0a1120}
+.trtop{display:flex;justify-content:space-between;align-items:center;gap:8px}#trChap{font-family:var(--f-display);font-size:8px;letter-spacing:.12em;color:#7ff3ff}#trExit{background:none;border:0;color:var(--dim);font-size:14px;padding:2px 6px}
+#trSay{margin:4px 0 0;font-size:13px;line-height:1.4;color:#d5dff2}#trNext{grid-column:1/-1}
+.tilesz{display:flex;flex-direction:column;align-items:center;gap:6px;margin:2px 0 10px}.tz-l{font-family:var(--f-display);font-size:9px;letter-spacing:.16em;color:var(--dim)}.tilesz small{font-size:11.5px;color:var(--dim);text-align:center;min-height:14px}
+.br-pilot{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:start;padding:9px 10px;border:1px solid rgba(127,243,255,.35);border-radius:10px;background:rgba(127,243,255,.05)}
+.br-pilot canvas{width:44px;height:44px;border-radius:8px;border:1px solid rgba(127,243,255,.4);background:#0a1120}
+.br-pilot span{font-family:var(--f-display);font-size:8px;letter-spacing:.14em;color:#7ff3ff}
+.br-pilot p{margin:4px 0 0;font-size:12.5px;line-height:1.4;color:#d5dff2}
+.br-pilot.c p{margin-top:2px;font-size:12px;color:#aebbd6}
+.br-new{margin:0}.br-new li{align-items:flex-start}.br-new i{color:#7ff3ff}
+.brcard{overflow-x:hidden!important;overflow-y:auto!important;max-height:100%}
+.rc-lock{opacity:.85}
 /* ---------- debrief ---------- */
 #debrief{z-index:4;gap:10px;overflow-y:auto;touch-action:pan-y;background:radial-gradient(ellipse at 50% 18%,rgba(22,38,78,.97),rgba(7,11,22,.99) 70%)}
 .db-title{font-family:var(--f-display);font-weight:700;font-size:26px;line-height:1;margin:6px 0 0;text-wrap:balance}
@@ -684,6 +709,7 @@ button:disabled{cursor:default}
 .inst .btn{padding:8px 12px;font-size:12px}.inst-x{border:0;background:none;color:#7f8fb2;font-size:14px;padding:6px;cursor:pointer}
 .inst-steps{margin:0;padding-left:20px;font-size:14px;line-height:1.5;color:#e1e9f7}.inst-steps li{margin:4px 0}.inst-ic{display:inline-flex;vertical-align:-4px;color:#4da6ff}
 </style>
+
 </head>
 <body>
 
@@ -704,6 +730,7 @@ button:disabled{cursor:default}
       <div class="sp-save" id="saveLine" hidden></div>
       <button class="btn" id="newGameBtn">New game</button>
       <div class="sp-row">
+        <button class="sp-small" id="trainBtn">Training</button>
         <button class="sp-small" id="tutBtn">How to play</button>
         <button class="sp-small" id="optBtn">Options</button>
         <button class="sp-small" id="credBtn">Credits</button>
@@ -791,8 +818,9 @@ button:disabled{cursor:default}
         <div class="picks" id="pilots"></div>
         <div class="hg-label">Custom captain</div>
         <div class="face-ed" id="faceEd"></div>
-        <div class="hg-label">Service record</div>
+        <div class="hg-label" id="recLab">Service record</div>
         <div class="record" id="record"></div>
+        <button class="btn" id="pilotDone" style="display:none;margin-top:10px">Confirm pilot · to the map</button>
       </div>
       <div class="hpane" data-p="ship" hidden>
         <div class="hg-label">Ship systems</div>
@@ -836,11 +864,18 @@ button:disabled{cursor:default}
   </section>
 
   <!-- PAUSE -->
+  <section class="screen overlay off" id="trainMenu">
+    <div class="card console tr-card" style="--sc:#7ff3ff">
+      <div class="console-h"><span>TRAINING</span></div>
+      <div class="tr-b"><p class="tr-sub">Short scripted lessons. You can't lose, and nothing here touches your campaign.</p><div id="trList"></div><button class="btn ghost" id="trMenuBack">Back</button></div>
+    </div>
+  </section>
   <section class="screen overlay off" id="pause">
     <div class="card">
       <div class="eyebrow">Console standby</div>
       <h2>Paused</h2>
       <p>The ship holds position while you're away.</p>
+      <div class="tilesz"><span class="tz-l">Tile size</span><div class="seg" id="tileSeg"><button type="button" data-i="0">Standard</button><button type="button" data-i="1">Large</button><button type="button" data-i="2">Huge</button></div><small id="tileNote"></small></div>
       <div class="btnrow">
         <button class="btn" id="resumeBtn">Resume</button>
         <button class="btn ghost" id="guideBtn2">Field guide</button>
@@ -895,6 +930,7 @@ button:disabled{cursor:default}
       <div class="srow"><span>Tester mode</span><button class="tog" id="togQA">On</button></div>
       <div class="srow"><span>Launch countdown</span><div class="seg" id="cdSeg"><button data-v="0">Off</button><button data-v="3">3s</button><button data-v="5">5s</button></div></div>
       <div class="srow dbg"><span>Debug</span><div class="seg" id="dbgSeg"><button data-k="cr">+500 CR</button><button data-k="al">+10 Alloy</button></div></div>
+      <div class="srow dbg"><span>Jump to Tach</span><div class="seg" id="dbgTach"><button type="button" data-d="-1" aria-label="Lower Tach">−</button><button type="button" id="dbgTachN" disabled>1</button><button type="button" data-d="1" aria-label="Higher Tach">+</button><button type="button" id="dbgTachGo">Go</button></div></div>
       <button class="btn ghost" id="optTips">Replay tutorial &amp; tips</button>
       <button class="btn ghost" id="optQA">Tester report</button>
       <button class="btn ghost" id="optReport">Campaign report</button>
@@ -963,6 +999,7 @@ button:disabled{cursor:default}
   </section>
 </div>
 
+<div id="trUi" hidden><div id="trRings"></div><div id="trCard"><canvas id="trPc" class="pix"></canvas><div><div class="trtop"><span id="trChap"></span><button type="button" id="trExit" aria-label="Leave training">✕</button></div><p id="trSay"></p></div><button class="btn" id="trNext" hidden>Next</button></div></div>
 <script>
 (()=>{
 'use strict';
@@ -1196,7 +1233,7 @@ const UP_TEXT={
 const SAVE_KEY='bridgeduty.save.v3';
 const captainName=()=>(S.callsign||'').trim()||PILOTS[S.pilot].n;
 const defaultSave=()=>({bucks:0,cleared:0,up:{wpn:0,shd:0,sns:0,eng:0,fuel:0},paint:0,pilot:0,callsign:'',perks:{},slots:['surge','burn','burn'],career:null,choices:null,gal:null,station:null,legend:0,ver:2,sq:null,deck:null,face:null});
-let hasSave=false,S=defaultSave();
+let hasSave=false,S=defaultSave(),TR=null;   // TR: training session (see TRAINING below)
 // save format version: bump SAVE_VER and add a step to MIGRATE whenever the shape of S changes
 const SAVE_VER=2;
 const MIGRATE={
@@ -1204,7 +1241,7 @@ const MIGRATE={
 };
 function migrate(s){let v=s.ver||1;while(v<SAVE_VER){if(MIGRATE[v])s=MIGRATE[v](s);v++;}s.ver=SAVE_VER;return s;}
 try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));if(s&&s.up){S=Object.assign(defaultSave(),migrate(s));S.perks=S.perks||{};S.slots=S.slots||['surge','burn','burn'];hasSave=true;}}catch(e){}
-function persist(){hasSave=true;try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
+function persist(){if(TR)return;hasSave=true;try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
 SHIP=makeShip(S.paint,S.up);
 function stats(){const u=S.up;return{
   cap:[10+2*u.wpn,10+2*u.shd,10+2*u.sns,10+2*u.eng],
@@ -1358,7 +1395,7 @@ function renderSound(){
   $('#volMusic').disabled=!AUD.music;$('#volSfx').disabled=!AUD.sfx;
   $('#volMasterV').textContent=AUD.master;$('#volMusicV').textContent=AUD.mv;$('#volSfxV').textContent=AUD.sv;
 }
-function openSound(){audio();renderSound();$('#optHome').hidden=scene==='splash'||scene==='game';show('#sound',true);}
+function openSound(){audio();renderSound();dbgTachSync(false);$('#optHome').hidden=scene==='splash'||scene==='game';show('#sound',true);}
 
 /* ================= SPACE BACKDROP ================= */
 const SP={cv:$('#space'),ctx:null,stars:[],warp:0,warpTarget:0,shipX:0,launching:false,t:0};
@@ -1489,7 +1526,7 @@ function spawnEvent(force,opts={}){
   }
   G.sincePlanet=type==='planet'?0:G.sincePlanet+1;if(G.R)G.R.spawn[type]++;
   const add=Math.floor(G.T*.5)+Math.floor(G.prog*2);
-  const reqs=EVENTS[type].reqs.map(([m,c],i)=>({m,c:Math.min(ST.cap[m]-1,Math.max(2,c+add+(Math.random()<.45?1:0)-(opts.light?1:0)-(i?1:0)))}));
+  const reqs=EVENTS[type].reqs.map(([m,c],i)=>({m,c:Math.min(ST.cap[m]-1,Math.max(2,c+add+(Math.random()<.45?1:0)-(opts.light?1:0)-(i?1:0)-easeNeed()))}));
   const e={type,reqs,p:0,y:Math.round(V.H*(.28+Math.random()*.44)),ided:false,resolved:false,passing:false,dead:false,seed:Math.random()*10,interceptor:!!opts.interceptor};
   if(type==='asteroid')e.spr=makeAsteroid(5+Math.min(4,reqs[0].c-3));
   if(type==='planet')e.spr=makePlanet(Math.min(Math.floor(V.H*.3),12+(Math.random()*5|0)));
@@ -1502,7 +1539,7 @@ function spawnEvent(force,opts={}){
 function vpPop(text,color){G.pops.push({text,color,x:shipBaseX()+10,y:(G.shipY??V.H/2)-12-G.pops.filter(p=>p.t<.4).length*8,t:0});}
 function boom(x,y,cols,n=22){G.fx.push({k:'boom',t:0,d:.9,parts:Array.from({length:n},()=>{const a=Math.random()*6.28,s=8+Math.random()*30;return{x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,c:pick(cols)};})});}
 function damage(n,src='other'){
-  if(n<=0||G.ending)return;if(G.R)G.R.hullBy[src]=(G.R.hullBy[src]||0)+Math.min(n,G.hull);G.hull=Math.max(0,G.hull-n);G.shake=.45;G.flash=.5;sfx.hit();
+  if(n>0)n=Math.max(1,Math.round(n*easeDmg()));if(TR&&G.hull-n<ST.hullMax*.3)n=Math.max(0,G.hull-ST.hullMax*.3);if(n<=0||G.ending)return;if(G.R)G.R.hullBy[src]=(G.R.hullBy[src]||0)+Math.min(n,G.hull);G.hull=Math.max(0,G.hull-n);G.shake=.45;G.flash=.5;sfx.hit();
   if(G.hull<=0){G.ending='hull';G.endT=0;G.shipDead=true;boom(shipX()+10,G.shipY,['#ffb547','#ff5c6c','#fff3bf','#c9d4ea'],46);sfx.boom();}
 }
 function addBucks(n,label){if(n<=0)return;G.runBucks+=n;sfx.coin();const el=$('#runBucksEl');el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);if(label)vpPop(`+${n} ${label}`,'#ff7ad9');}
@@ -1559,10 +1596,10 @@ function updateGame(dt){
   }else{
     G.vel=velocity();G.braceT=Math.max(0,G.braceT-dt);G.perkCD=Math.max(0,G.perkCD-dt);updateStrike(dt);
     G.fuel-=drain()*dt;G.R.fuel.drain+=drain()*dt;
-    G.gap-=(.32+.03*G.T)*(SYS.gapRate||1)*(G.tut?.4:1)*dt;
+    if(feat('pursuer'))G.gap-=(.32+.03*G.T)*(SYS.gapRate||1)*(G.tut?.4:1)*dt;else G.gap=100;
     // charge bleeds slowly so you can't bank everything
     G.decayT+=dt;if(G.decayT>=12){G.decayT=0;for(let m=0;m<4;m++)if(G.meters[m]>0)G.meters[m]--;}
-    if(SYS.pursuer==='empire'){G.intT-=dt;if(G.intT<=0&&G.prog<.9){G.intT=Math.max(10,19-G.T);spawnEvent('enemy',{interceptor:true,light:true});vpPop('INTERCEPTOR LAUNCHED','#ff4d5e');sfx.alarm();}}
+    if(SYS.pursuer==='empire'&&feat('intercept')){G.intT-=dt;if(G.intT<=0&&G.prog<.9){G.intT=Math.max(10,19-G.T);spawnEvent('enemy',{interceptor:true,light:true});vpPop('INTERCEPTOR LAUNCHED','#ff4d5e');sfx.alarm();}}
     if(SYS.pursuer==='pirates'&&G.gap<35){G.skimT-=dt;if(G.skimT<=0){G.skimT=5;if(G.runBucks>0){const n=Math.min(3,G.runBucks);G.runBucks-=n;vpPop(`SKIMMED -${n}`,'#ff7ad9');sfx.bad();}}}
     updateDanger(dt);updateStationFX(dt);updatePods();
     if(G.fuel<=0){G.fuel=0;G.ending='fuel';G.endT=0;sfx.down();vpPop('FUEL DEPLETED','#ffd84a');}
@@ -1639,7 +1676,7 @@ function drawViewport(){
     for(let a=0;a<6.28;a+=.06){const lit=((a+t*3)%1.2)<.5;b.fillStyle=lit?'#7ff3ff':'#2f5d8a';b.fillRect(Math.round(gx+Math.cos(a)*5),Math.round(gy+Math.sin(a)*ry),1,1);}
     b.fillStyle='rgba(127,243,255,.12)';b.beginPath();b.ellipse(gx,gy,4,ry,0,0,6.28);b.fill();
   }
-  drawPursuer(b,W,H,t);
+  if(feat('pursuer'))drawPursuer(b,W,H,t);
   for(const e of G.events){
     const x=e.passing?e.x:evX(e.p),y=e.y;
     if(!e.ided){
@@ -1695,9 +1732,9 @@ function drawViewport(){
   c.fillStyle='rgba(56,224,155,.55)';c.textAlign='center';c.fillText('SENSOR RANGE',sxr*k,9);
   // pursuer + gap
   const danger=G.gap<25,gapCol=danger?'#ff4d5e':'#ff8a95';
-  c.textAlign='left';c.fillStyle=danger&&Math.sin(t*10)>0?'#ffffff':gapCol;c.fillText(SYS.pName.toUpperCase(),8,9);
+  c.textAlign='left';if(feat('pursuer')){c.fillStyle=danger&&Math.sin(t*10)>0?'#ffffff':gapCol;c.fillText(SYS.pName.toUpperCase(),8,9);
   c.fillStyle='rgba(5,8,16,.7)';c.fillRect(8,16,64,4);c.fillStyle=gapCol;c.fillRect(8,16,64*clamp(G.gap/100,0,1),4);
-  c.fillStyle='rgba(225,233,247,.6)';c.fillText('GAP',76,18.5);
+  c.fillStyle='rgba(225,233,247,.6)';c.fillText('GAP',76,18.5);}
   // route to gate
   const ry=CH-8,rx0=10,rx1=CW-26;
   c.fillStyle='rgba(5,8,16,.65)';c.fillRect(rx0,ry-1,rx1-rx0,3);
@@ -1739,7 +1776,13 @@ function drawViewport(){
 function rr(c,x,y,w,h,r){w=Math.max(0,w);h=Math.max(0,h);r=Math.max(0,Math.min(r,w/2,h/2));c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 
 /* ================= BOARD ================= */
-const COLS=7,ROWS=8;
+let COLS=7,ROWS=8;
+/* tile size: bigger tiles trade columns and viewport height for easier taps */
+const TILE_MODES=[{n:'Standard',c:7,r:8,e:2,note:'7×8 board'},{n:'Large',c:6,r:8,e:3,note:'6×8 board · bigger tiles, shorter viewport'},{n:'Huge',c:5,r:7,e:3.6,note:'5×7 board · biggest tiles, smallest viewport'}];
+const TILE={pending:null};
+const tileMode=()=>Math.max(0,Math.min(2,(AUD.tile|0)));
+function applyTileDims(){const m=TILE_MODES[tileMode()];COLS=m.c;ROWS=m.r;document.documentElement.style.setProperty('--eng',m.e);}
+applyTileDims();
 const B={cv:$('#board'),ctx:null,grid:[],dying:[],beams:[],pops:[],hazards:[],traces:[],glow:null,tile:0,w:0,h:0,busy:false,sel:null,idle:0,hint:null,waiters:[],t:0};
 B.ctx=B.cv.getContext('2d');
 let uid=0;
@@ -1752,7 +1795,7 @@ function tileWeights(){
   TILE_W=load.map(l=>.7+1.3*l/tot).concat([.8,SYS.bucksW||.35]);TILE_W_FOR=SYS;return TILE_W;
 }
 function crateCount(){let n=0;if(B.grid)for(const row of B.grid)for(const t of row)if(t&&t.t===CRATE)n++;return n;}
-function randType(){const w=tileWeights().concat([CHOICE&&CHOICE.sig==='derelict'?.3:.07]),tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;for(let i=0;i<7;i++){r-=w[i];if(r<=0){if(TILE_POOL[i]===CRATE&&crateCount()>=3)return randType();return TILE_POOL[i];}}return 0;}
+function randType(){const w=tileWeights().concat([CHOICE&&CHOICE.sig==='derelict'?.3:.07]);if(!feat('loot')){w[5]=0;w[6]=0;}const tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;for(let i=0;i<7;i++){r-=w[i];if(r<=0){if(TILE_POOL[i]===CRATE&&crateCount()>=3)return randType();return TILE_POOL[i];}}return 0;}
 const swappable=t=>!!t&&t.t!==DEBRIS&&!t.lock;
 const matchable=t=>t!=null&&(t<5||t===BUCKS||t===CRATE);
 const isWild=t=>t===BUCKS||t===CRATE;
@@ -1886,7 +1929,7 @@ async function cascade(pivots){
       if(run.cells.length>=4){boardShake(run.cells.length);
         const piv=run.cells.find(([r,c])=>pivots.some(p=>p[0]===r&&p[1]===c))||run.cells[Math.floor(run.cells.length/2)];
         const k=piv[0]*COLS+piv[1];
-        if(!makes.some(m=>m.k===k))makes.push({k,r:piv[0],c:piv[1],t:run.cells.length>=5?NOVA:run.t,sp:run.cells.length>=5?3:(run.dir==='h'?1:2)});
+        const nv=run.cells.length>=5&&feat('nova');if(!makes.some(m=>m.k===k)&&(nv||feat('line')))makes.push({k,r:piv[0],c:piv[1],t:nv?NOVA:run.t,sp:nv?3:(run.dir==='h'?1:2)});
       }
     }
     await clearCells(set,chain,makes,wild);await collapse();pivots=[];
@@ -1984,6 +2027,7 @@ function tickFires(dt){
 }
 
 function updateBoard(dt){
+  if(TILE.pending!=null&&!B.busy&&G.running&&!G.ending)applyTileNow();
   B.t+=dt;const g=B.grid;
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
     const t=g[r]&&g[r][c];if(!t)continue;
@@ -2108,7 +2152,7 @@ function drawBoard(){
 }
 function sizeBoard(){
   const r=$('#boardwrap').getBoundingClientRect();if(!r.width||!r.height)return;
-  B.tile=Math.max(24,Math.min(64,Math.floor(Math.min((r.width-64)/COLS,r.height/ROWS))));
+  B.tile=Math.max(24,Math.min(tileMode()?78:64,Math.floor(Math.min((r.width-64)/COLS,r.height/ROWS))));
   B.w=B.tile*COLS;B.h=B.tile*ROWS;
   B.cv.style.width=B.w+'px';B.cv.style.height=B.h+'px';$('#hullBar').style.height=B.h+'px';$('#fuelBar').style.height=B.h+'px';B.cv.width=Math.round(B.w*dpr);B.cv.height=Math.round(B.h*dpr);
   if(!B.traces.length)makeTraces();
@@ -2207,7 +2251,7 @@ const legend=$('#legend');
 legend.insertAdjacentHTML('beforeend',`<div class="lg-note"><b>Swap any two tiles</b> in a row or column if it makes a match. Miss a contact and engineering takes the hit. Reach the jump gate before fuel, hull or your pursuer runs you down.</div>`);
 
 const show=(id,on)=>$(id).classList.toggle('off',!on);
-const ALL=['#qa','#confirm','#resv','#tach','#anom','#brief','#tutorial','#credits','#splash','#map','#station','#hangar','#game','#pause','#debrief','#sysinfo','#tip','#guide','#sound','#report'];
+const ALL=['#trainMenu','#qa','#confirm','#resv','#tach','#anom','#brief','#tutorial','#credits','#splash','#map','#station','#hangar','#game','#pause','#debrief','#sysinfo','#tip','#guide','#sound','#report'];
 function only(...ids){for(const id of ALL)show(id,ids.includes(id));}
 const coin=n=>`<i class="coin"></i>${n}`;
 
@@ -2305,14 +2349,14 @@ function drawToken(c,tok,x,y,sz,pursuer){
   return 0;
 }
 function contactMix(ch){
-  const sys=SYSTEMS[ch.key],w=sys.w,rows=[['rock',w.asteroid,1],['enemy',w.enemy,0],['planet',w.planet,2],['well',w.well,3]];
+  const sys=sysView(ch.key),w=sys.w,rows=[['rock',w.asteroid,1],['enemy',w.enemy,0],['planet',w.planet,2],['well',w.well,3]];
   const gs=(w.gunship||0)*Math.min(1,ch.threat/2);if(gs>0)rows.push(['gunship',gs,0]);
   const max=Math.max(...rows.map(r=>r[1]));return rows.map(([k,v,m])=>({k,f:v/max,m}));
 }
 function drawScan(cv,ch,t){
   const W=cv.clientWidth,H=cv.clientHeight;if(!W||!H)return;
   if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
-  const c=cv.getContext('2d'),sys=SYSTEMS[ch.key];c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+  const c=cv.getContext('2d'),sys=sysView(ch.key);c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
   cv._hits=[];const hit=(x,y,w,h,key)=>cv._hits.push({x,y,w,h,key});
   c.strokeStyle='rgba(77,166,255,.06)';c.lineWidth=1;c.beginPath();
   for(let x=12;x<W;x+=24){c.moveTo(x+.5,0);c.lineTo(x+.5,H);}for(let y=12;y<H;y+=24){c.moveTo(0,y+.5);c.lineTo(W,y+.5);}c.stroke();
@@ -2337,7 +2381,7 @@ function drawScan(cv,ch,t){
   const rows=[
     {key:'pursuer',a:-.8,y:pcy-gapY,col:'#ff4d5e',tok:[['pursuer']].concat(Array(sys.gapRate>1?2:1).fill(['fast']))},
     {key:'twist',a:0,y:pcy,col:'#ffb547',tok:sys.twistT},
-    {key:'bonus',a:.8,y:pcy+gapY,col:'#38e09b',tok:sys.bonusT}];
+    {key:'bonus',a:.8,y:pcy+gapY,col:'#38e09b',tok:sys.bonusT}].filter(r=>r.key==='pursuer'?feat('pursuer'):!!sys[r.key]);
   for(const row of rows){
     const ax=pcx+Math.cos(row.a)*R,ay=pcy+Math.sin(row.a)*R;hit(x0-14,row.y-bh/2-4,bw+18,bh+8,row.key);hit(ax-16,ay-16,32,32,row.key);
     c.strokeStyle=row.col+'aa';c.lineWidth=1;c.beginPath();c.moveTo(ax,ay);c.lineTo(x0-12,row.y);c.lineTo(x0,row.y);c.stroke();
@@ -2390,7 +2434,7 @@ function renderMap(){
   const car=$('#carousel');car.innerHTML='';
   S.choices.forEach((ch,i)=>{
     const sl=document.createElement('div');sl.className='slide';sl.style.animationDelay=(i*.09)+'s';
-    sl.setAttribute('aria-label',`${ch.name}, ${SYSTEMS[ch.key].type}, threat ${ch.threat}`);
+    sl.setAttribute('aria-label',`${ch.name}, ${sysView(ch.key).type}, threat ${ch.threat}`);
     sl.append(document.createElement('canvas'));
     const ib=document.createElement('button');ib.className='info';ib.textContent='i';ib.setAttribute('aria-label','System details');
     ib.onclick=e=>{e.stopPropagation();openInfo(i);};sl.append(ib);car.append(sl);
@@ -2612,12 +2656,12 @@ $('#carousel').addEventListener('scroll',()=>{
 },{passive:true});
 function carGo(d){const car=$('#carousel'),i=clamp(carIdx+d,0,S.choices.length-1);car.scrollTo({left:i*(car.clientWidth+12),behavior:reduceMotion?'auto':'smooth'});}
 function openInfo(i){
-  const ch=S.choices[i],sys=SYSTEMS[ch.key];
+  const ch=S.choices[i],sys=sysView(ch.key);
   $('#siCard').style.setProperty('--sc',sys.star);
   $('#siTitle').textContent=`${ch.name} · ${sys.type}`.toUpperCase();
   const mix=contactMix(ch).sort((a,b)=>b.f-a.f).map(r=>({rock:'asteroids',enemy:'enemy ships',planet:'planets',well:'gravity wells',gunship:'armored gunships'})[r.k]);
   $('#siBody').innerHTML=[
-    ['PURSUER',sys.pName+(sys.gapRate>1?', closing fast':'')],['TWIST',sys.twist],['BONUS',sys.bonus],
+    ...(feat('pursuer')?[['PURSUER',sys.pName+(sys.gapRate>1?', closing fast':'')]]:[]),...(sys.twist?[['TWIST',sys.twist],['BONUS',sys.bonus]]:[]),
     ['CONTACTS','Mostly '+mix.slice(0,2).join(' and ')+'. Bar colors show which system each one needs.'],
     ...(ch.lm?[['LANDMARK',`${LANDMARKS[ch.lm].name}. ${LANDMARKS[ch.lm].desc}`]]:[]),
     ...(ch.sig?[['SIGNAL',`${SIGS[ch.sig].name}. ${SIGS[ch.sig].desc}`]]:[]),
@@ -3093,12 +3137,13 @@ const ANOMALIES={
           {l:'Salute and pass',h:'+4 ★',run:()=>`Your crew stands at attention as you pass. ${gainLeg(4)}.`}]},
 };
 let ANOM=null;
-function rollAnomaly(g,st){if(st.id===g.gate||st.anomDone)return;if(Math.random()<.4){const ks=Object.keys(ANOMALIES);g.pendingAnom={k:ks[Math.floor(Math.random()*ks.length)],star:st.id};st.anomDone=true;}}
+function rollAnomaly(g,st){if(TR)return;if(st.id===g.gate||st.anomDone)return;if(Math.random()<.4){const ks=Object.keys(ANOMALIES);g.pendingAnom={k:ks[Math.floor(Math.random()*ks.length)],star:st.id};st.anomDone=true;}}
 function openAnomaly(){
   const g=S.gal,p=g&&g.pendingAnom;if(!p)return;g.pendingAnom=null;persist();const A=ANOMALIES[p.k],st=g.stars[p.star];ANOM={k:p.k,key:st.key,t:0,title:`ANOMALY · ${A.name.toUpperCase()}`,typed:-1};
   $('#anTitle').textContent='';
   $('#anBody').innerHTML=`<div class="an-top"><canvas id="anCv" class="pix"></canvas><div><b style="color:${A.col}">${A.name}</b><span>${st.name} · survey contact</span><p>${A.txt}</p></div></div>
-    <div class="an-opts">${A.opts.map((o,i)=>`<button class="sec-opt an-opt" data-o="${i}" ${o.ok&&!o.ok()?'disabled':''} style="--oc:${A.col}"><b>${o.l}</b><span class="so-d">${o.h}</span></button>`).join('')}</div>`;
+    <div class="an-opts">${A.opts.map((o,i)=>`<button class="sec-opt an-opt" data-o="${i}" ${o.ok&&!o.ok()?'disabled':''} style="--oc:${A.col}"><b>${o.l}</b><span class="so-d">${o.h}</span></button>`).join('')}<button class="btn ghost" id="anLeave" type="button">Leave it</button></div>`;
+  $('#anLeave').onclick=()=>{sfx.tick();closeAnomaly();};
   $('#anBody').querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{const o=A.opts[+b.dataset.o];const res=o.run();persist();sfx.buy();
     $('#anBody').querySelector('.an-opts').innerHTML=`<div class="an-res"><b>${o.l}</b><p>${res}</p></div><button class="btn" id="anOk">Continue</button>`;
     $('#anOk').onclick=closeAnomaly;if(scene==='map'){$('#mapBucks').innerHTML=wallet();}});
@@ -3128,17 +3173,18 @@ const CONTACT_NAME={rock:'Asteroids',enemy:'Enemy ships',planet:'Planets',well:'
 const CONTACT_SPR=k=>({rock:MINI.rock,enemy:MINI.enemy,gunship:MINI.gunship,planet:MINI.planet,well:MINI.well})[k];
 let BRIEF=null;
 function showBrief(ch){return new Promise(res=>{
-  const sys=SYSTEMS[ch.key],thr=ch.threat,pay=Math.round(gateBonusBase(thr,sys)*(ch.salvage??1)*(ch.sig==='storm'?1.6:1));
+  const sys=sysView(ch.key),thr=ch.threat,pay=Math.round(gateBonusBase(thr,sys)*(ch.salvage??1)*(ch.sig==='storm'?1.6:1));
   const mix=contactMix(ch).sort((a,b)=>b.f-a.f).slice(0,3);
   $('#brTitle').textContent='';
   $('#brBody').innerHTML=`<div class="br-top"><canvas id="brCv" class="pix"></canvas><div class="br-k">
       <div><span>Threat</span><b class="sw-thr">${'▮'.repeat(Math.min(thr+1,8))}</b></div>
       <div><span>Distance</span><b>◎ ${gateLen(thr).toFixed(0)} AU</b></div>
       <div><span>Gate bonus</span><b>${coin(pay)}</b></div>
-      <div><span>Pursuer</span><b style="color:#ff8a95">${sys.pName}${sys.gapRate>1?' · fast':''}</b></div></div></div>
+      <div><span>Pursuer</span>${feat('pursuer')?`<b style="color:#ff8a95">${sys.pName}${sys.gapRate>1?' · fast':''}</b>`:'<b style="color:#7f8fb2">None yet</b>'}</div></div></div>
     <div class="br-lab">Expect</div>
     <div class="br-mix">${mix.map(m=>`<canvas class="pix" data-spr="${m.k}"></canvas><b>${CONTACT_NAME[m.k]}</b><i>→</i><canvas class="pix" data-ic="${m.m}"></canvas><em style="color:${TYPES[m.m].color}">${TYPES[m.m].name}</em>`).join('')}</div>
-    <ul class="br-ul"><li><i class="b-ok">＋</i>${sys.bonus}</li><li><i class="b-bad">！</i>${sys.twist}</li></ul>`;
+    ${sys.twist?`<ul class="br-ul"><li><i class="b-ok">＋</i>${sys.bonus}</li><li><i class="b-bad">！</i>${sys.twist}</li></ul>`:''}`;
+  
   $('#brBody').querySelectorAll('canvas[data-spr]').forEach(cv=>{const img=CONTACT_SPR(cv.dataset.spr);cv.width=img.width;cv.height=img.height;cv.getContext('2d').drawImage(img,0,0);});
   $('#brBody').querySelectorAll('canvas[data-ic]').forEach(cv=>{cv.width=9;cv.height=9;cv.getContext('2d').drawImage(ICONS[+cv.dataset.ic],0,0);});
   BRIEF={key:ch.key,t:0,title:`${ch.name} · ${sys.type}`.toUpperCase(),typed:-1};
@@ -3180,6 +3226,48 @@ function renderCampaignReport(){
 }
 /* ================= TACH DRIVE: push the station past light. One reel per system, and every reel must hold ================= */
 const TACH_GOAL=9;
+/* ================= STAGES: the ten-minute lesson plan. Each Tach attempt introduces one new idea ================= */
+const stageNow=()=>S.gal?clamp(S.gal.num,1,9):1;
+const STAGE_AT={line:2,nova:3,loot:3,pursuer:4,strike:4,rooms:5,perks:6,own:7,mods:8,intercept:8};
+const feat=k=>TR?TR.feats.includes(k):stageNow()>=STAGE_AT[k];
+// early Tachs are gentler: smaller contact requirements and softer hits, easing off as the lessons stack up
+const easeNeed=()=>{const s=stageNow();return s<=2?2:s<=4?1:0;};
+const easeDmg=()=>{const s=stageNow();return s<=2?.55:s<=4?.7:s<=6?.85:1;};
+// a stage's view of a system: later Tachs add its own pursuer, then its twist and bonus
+function sysView(key){const b=SYSTEMS[key];if(stageNow()>=9)return b;const o=Object.assign({},b);
+  if(!feat('own')){o.pursuer='empire';o.pName='Empire cruiser';}
+  if(!feat('mods')){for(const k of ['bounty','bucksW','drainAdd','gapRate','gateMul','richPlanets','sensorAdd','slingBonus','twist','bonus','twistT','bonusT'])delete o[k];}
+  return o;}
+const STAGES=[null,
+ {short:'The basics',obj:'Fly this system and reach the gate. Swap two neighbouring tiles to line up three or more of a colour. Each colour charges one ship system, and that system deals with one kind of contact on the scope. Recover gate parts along the way and the Tach drive can jump us to the next galaxy.',
+  news:['Match 3+: Weapons beat ships, Shields deflect rocks, Sensors scan planets, Engines slingshot wells','Fuel cells top up the tank. Keep an eye on fuel and hull','Nothing is chasing us yet. Take your time and learn the board']},
+ {short:'Line tiles',obj:'Same job, one new trick for the board.',
+  news:['Match 4 in a row to forge a LINE tile','Match a line tile later and it sweeps its whole row or column']},
+ {short:'Nova cores, credits, crates',obj:'The board is getting richer.',
+  news:['Match 5 to forge a NOVA core. Swap it with any tile to clear every tile of that colour','Credits tiles (pink) pay straight into your wallet','Salvage crates join a match of 4+ and crack open for a prize']},
+ {short:'A pursuer, and its attacks',obj:'Something has picked up our trail.',
+  news:['An Empire cruiser now chases us. Watch the GAP bar, top-left of the viewport','Missed contacts close the gap. Perfect clears push it back. At zero we are caught','It launches attacks too. Have enough charge banked in the system it names before the timer ends']},
+ {short:'Station rooms unlock',obj:'Time to build out the station.',
+  news:['Credits and Alloy can now build and upgrade rooms: Comms, Shipyard, War room, Refinery, Habitat, Drone bay and Tach drive','Open the Station from the map to spend']},
+ {short:'Combo perks',obj:'Big chains pay off now.',
+  news:['Chains of 3+ let your crew fire a combo perk','Set the loadout in the War room. Longer chains unlock stronger perks']},
+ {short:'Every pursuer is different',obj:'Each system now has its own pursuer.',
+  news:['Pirates, a black hole, a void leviathan and a supernova shockwave all hunt differently','Each one has its own attack and hits a different system. Read the briefing']},
+ {short:'Twists and bonuses',obj:'Systems have personalities now.',
+  news:['Every system has a TWIST (a handicap) and a BONUS (a perk). They are listed in the briefing','The Empire cruiser launches interceptors, and the others have their own tricks']},
+ {short:'The full gauntlet',obj:'Last jump. Nothing new, everything live.',
+  news:['Every system, pursuer, twist and bonus is switched on','Shore up the weakest reel and make it count']}];
+function stageSeen(n){return !!(S.seenStage&&S.seenStage[n]);}
+function markStage(n){S.seenStage=S.seenStage||{};S.seenStage[n]=1;persist();}
+/* the pilot's report: given on the galaxy map the first time each Tach is reached */
+let READOUT=false;
+async function tachReport(){const n=stageNow();
+  if(TR||READOUT||!S.gal||scene!=='map'||stageSeen(n)||WARP||document.querySelector('.screen.overlay:not(.off)'))return;
+  READOUT=true;markStage(n);const st=STAGES[n],nm=(captainName()||'Pilot').toUpperCase();
+  const pr=askConfirm(`TACH ${n} · ${st.short.toUpperCase()}`,`<div class="br-pilot"><canvas id="rdPc" class="pix"></canvas><div><span>${nm} · PILOT READOUT</span><p>${n===1?'Welcome aboard. ':''}${st.obj}</p></div></div><ul class="br-ul br-new">${st.news.map(t=>`<li><i>▸</i>${t}</li>`).join('')}</ul>`,'Understood');
+  {const c=$('#rdPc');if(c)drawPortrait(c,S.pilot);}$('#cfNo').style.display='none';
+  await pr;$('#cfNo').style.display='';READOUT=false;setTimeout(coachMap,350);}
+const _renderMap2=renderMap;renderMap=function(...a){const r=_renderMap2.apply(this,a);setTimeout(tachReport,300);return r;};
 const tachNow=()=>S.gal?Math.max(0,S.gal.num-1):0;   // the Tach you have reached; galaxy N is where you attempt Tach N
 const TACH_REELS=[
   {k:'sns',name:'Sensors',verb:'Read the fold',col:'#38e09b',ico:2},
@@ -3438,13 +3526,13 @@ const COACH_TIPS={
   brief:{el:'#brGo',t:()=>'Briefing first, always. Threat, distance to the jump gate, the payout, and the contacts we should expect. Give the order when you are ready.'},
   run_start:{el:'#board',run:true,t:()=>'Engineering, this board is our power. Swap two tiles to line up three or more. Each colour charges one system: Weapons, Shields, Sensors and Engines.'},
   run_contact:{el:'#vp',run:true,t:()=>'Contact on scope! The bars beside it show which systems it needs. Charge those before it reaches us and we clear it cleanly.'},
-  run_clear:{el:'#vp',run:true,t:()=>'Clean clear. Perfect clears push the pursuer back. Keep that gap open and keep flying for the jump gate.'},
-  run_chain:{el:'#board',run:true,t:()=>'A chain! Big chains fire a combo perk from the War room loadout. The bigger the chain, the bigger the perk.'},
+  run_clear:{el:'#vp',run:true,t:()=>feat('pursuer')?'Clean clear. Perfect clears push the pursuer back. Keep that gap open and keep flying for the jump gate.':'Clean clear. Keep handling contacts and keep flying for the jump gate.'},
+  run_chain:{el:'#board',run:true,t:()=>feat('perks')?'A chain! Big chains fire a combo perk from the War room loadout. The bigger the chain, the bigger the perk.':'A chain! Cascades clear extra tiles and charge more systems for free.'},
   debrief:{el:'#dbResBtn',t:()=>'Credits banked. Every system we clear pays out, and Legend grows with how well we fly. This planet also has research waiting.'},
   research:{el:'.rv-opts',t:()=>'Science team, pick one project. Each one strengthens a reel of the Tach drive for every jump attempt in this galaxy. One project per planet.'},
   move:{el:'#chartCv',t:()=>'Helm, tap a star one jump away and Move. Jumps cost credits. New stars bring migrants, Alloy markets and sometimes something strange.'},
   part:{el:'#chartCv',t:()=>'See the teal crystal? A gate part. Win the system that holds it and the part calibrates our Luxometer. Four makes for a clean Tach jump.'},
-  station:{el:'#stCv',t:()=>'Our station. Rooms run on Alloy, credits and crew. The Shipyard rebuilds our systems, and the Tach drive will push us past light.'},
+  station:{el:'#stCv',t:()=>feat('rooms')?'Our station. Rooms run on Alloy, credits and crew. The Shipyard rebuilds our systems, and the Tach drive will push us past light.':'Our station. Room upgrades unlock at Tach 5. For now the Shipyard can still rebuild our ship systems.'},
   anomaly:{el:'#anBody',t:()=>'An anomaly. Every choice out here is a trade or a gamble. Read the odds and make the call.'},
   gate:{el:'#chartCv',t:()=>'The Exodus Gate is in reach. From there we attempt the next Tach. Tap it to check our odds before we commit.'},
   tach:{el:'.tc-tot',t:()=>'Five reels, one per system, and all five must hold. The chances multiply, so one weak reel drags the whole jump down. Shore up the weakest first.'},
@@ -3458,6 +3546,7 @@ const CO={q:[],open:null};
   $('#coOk').onclick=()=>{sfx.tick();closeCoach();};})();
 const tipsOn=()=>AUD.tips!==false;
 function coach(id,...args){
+  if(TR)return false;
   const T=COACH_TIPS[id];if(!T||!tipsOn())return false;S.tips=S.tips||{};if(S.tips[id])return false;
   if(T.run&&!(G&&G.tut))return false;
   S.tips[id]=1;persist();CO.q.push({id,text:T.t(...args),el:T.el});if(!CO.open)nextCoach();return true;
@@ -3475,7 +3564,7 @@ function nextCoach(){
 function closeCoach(){$('#coach').hidden=true;$('#coRing').hidden=true;if(CO.paused&&scene==='game'&&$('#pause').classList.contains('off'))paused=false;CO.paused=false;setTimeout(nextCoach,250);}
 function resetTips(){S.tips={};S.tutRunDone=false;persist();toast('<b>Captain’s tips reset</b><span>Your next launch is the guided run, and every tip plays again.</span>','#7ff3ff');}
 // which map tip fits the moment; one at a time
-function coachMap(){if(!S.gal||!S.choices||!tipsOn())return;const g=S.gal,runs=career().runs;
+function coachMap(){if(scene!=='map'||READOUT||!stageSeen(stageNow())||!S.gal||!S.choices||!tipsOn())return;const g=S.gal,runs=career().runs;
   if(!runs){coach('map',g.stars[g.at].name);return;}
   if(S.choices.some(c=>c.gate&&!c.here)&&coach('gate'))return;
   if(S.choices.some(c=>c.shard&&!c.shardClaimed)&&coach('part'))return;
@@ -3505,7 +3594,7 @@ function qaRun(d){const q=qa();q.runs.push([CHOICE.key,G.T,d.win?1:0,d.reason,d.
   q.debriefs++;qaMile('run1');if(d.win)qaMile('win1');}
 function qaTach(T,p,fails,ok){const q=qa();q.tach.push([T,p,fails.map(r=>r.k).join(','),ok?1:0,qaMin()]);if(q.tach.length>20)q.tach.shift();qaMile('tach1');if(ok)qaMile('tachOk1');}
 // quick 1-5 rating at natural pauses
-function rateWidget(ctx){if(!testerOn())return'';return`<div class="qa-rate" data-ctx="${ctx}"><span>Tester · how did that feel?</span><div class="qa-stars">${[1,2,3,4,5].map(v=>`<button data-v="${v}" aria-label="${v} of 5">★</button>`).join('')}</div><input class="qa-note" maxlength="80" placeholder="Optional note (what felt good or bad?)" hidden></div>`;}
+function rateWidget(ctx){return'';if(!testerOn())return'';return`<div class="qa-rate" data-ctx="${ctx}"><span>Tester · how did that feel?</span><div class="qa-stars">${[1,2,3,4,5].map(v=>`<button data-v="${v}" aria-label="${v} of 5">★</button>`).join('')}</div><input class="qa-note" maxlength="80" placeholder="Optional note (what felt good or bad?)" hidden></div>`;}
 function bindRate(root){root.querySelectorAll('.qa-rate').forEach(w=>{if(w._b)return;w._b=1;const btns=w.querySelectorAll('button');
   btns.forEach(b=>b.onclick=e=>{e.stopPropagation();const v=+b.dataset.v;btns.forEach(x=>x.classList.toggle('on',+x.dataset.v<=v));let r=w._r;
     if(!r){r=w._r=[w.dataset.ctx,v,'',qaMin()];const q=qa();q.rate.push(r);if(q.rate.length>30)q.rate.shift();}else r[1]=v;
@@ -3517,7 +3606,7 @@ const qaDevice=()=>{const ua=navigator.userAgent,os=(ua.match(/iPhone|iPad|Andro
 async function qaPack(obj){const s=JSON.stringify(obj);
   if(typeof CompressionStream==='undefined')return'J'+btoa(unescape(encodeURIComponent(s)));
   const buf=await new Response(new Blob([s]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer();let bin='';for(const b of new Uint8Array(buf))bin+=String.fromCharCode(b);return'Z'+btoa(bin);}
-function qaPayload(n){const q=qa(),st=S.station||{};return{v:BUILD,d:qaDevice(),m:qaMin(),s:q.sess,h:tachNow(),ms:q.ms0,r:q.runs.slice(-n),t:q.tach.slice(-Math.ceil(n/2)),e:q.err,rt:q.rate.slice(-n),l:q.last,
+function qaPayload(n){const q=qa(),st=S.station||{};return{v:BUILD,d:qaDevice(),m:qaMin(),s:q.sess,h:tachNow(),dj:q.dbg||0,ms:q.ms0,r:q.runs.slice(-n),t:q.tach.slice(-Math.ceil(n/2)),e:q.err,rt:q.rate.slice(-n),l:q.last,
   up:S.up,rm:st.rooms,cr:S.bucks,al:st.alloy,pop:st.pop,set:{tips:AUD.tips!==false,brief:AUD.brief!==false,cd:AUD.cd??3}};}
 async function qaDrawCode(cv){
   let txt='',n=40;for(;n>=5;n=Math.floor(n*.6)){txt=await qaPack(qaPayload(n));if(txt.length<=2300)break;}
@@ -3530,9 +3619,9 @@ function openQA(){
   const RV={S:5,A:4,B:3,C:2,D:1},avgRank=won.length?['','D','C','B','A','S'][Math.round(won.reduce((a,r)=>a+(RV[r[4]]||0),0)/won.length)]:'—';
   const rates=q.rate.filter(r=>r[1]),avgRate=rates.length?(rates.reduce((a,r)=>a+r[1],0)/rates.length).toFixed(1):'—';
   const tl=q.tach.slice(-6).map(([T,p,f,ok])=>`<i class="${ok?'ok':'bad'}">T${T} ${p}% ${ok?'✓':'✕ '+f.split(',').filter(Boolean).map(k=>k.toUpperCase()).join(' ')}</i>`).join('')||'<i>none yet</i>';
-  $('#qaBody').innerHTML=`<div class="qa-h"><b>${BUILD}</b><span>${qaMin()} min · ${q.sess} session${q.sess>1?'s':''} · Tach ${tachNow()} reached</span><em>${qaDevice()}</em></div>
+  $('#qaBody').innerHTML=`<div class="qa-h"><b>${BUILD}</b><span>${qaMin()} min · ${q.sess} session${q.sess>1?'s':''} · Tach ${tachNow()} reached${q.dbg?' (debug jump)':''}</span><em>${qaDevice()}</em></div>
     <div class="qa-ms">${QA_MS.map(([l,k])=>`<div><span>${l}</span><b>${q.ms0[k]!=null?q.ms0[k]+'m':'—'}</b></div>`).join('')}</div>
-    <div class="qa-row"><div><span>Runs won / lost</span><b>${won.length} / ${lost.length}</b></div><div><span>Avg rank</span><b>${avgRank}</b></div><div><span>Ratings</span><b>${avgRate}${rates.length?` ★ (${rates.length})`:''}</b></div></div>
+    <div class="qa-row"><div><span>Runs won / lost</span><b>${won.length} / ${lost.length}</b></div><div><span>Avg rank</span><b>${avgRank}</b></div></div>
     <div class="qa-line"><span>Losses</span><b>${topWhy}</b></div>
     <div class="qa-line"><span>Tach</span><div class="qa-t">${tl}</div></div>
     <div class="qa-line"><span>Last screen</span><b>${q.last||qaWhere()}</b></div>
@@ -3719,7 +3808,8 @@ function renderStation(){
   const d=roomDef(RM.sel),L=rl(d.k),max=L>=d.max,cost=max?null:d.cost[L];
   const pips=Array.from({length:d.max},(_,j)=>`<i class="${j<L?'on':''}"></i>`).join('');
   let act='';
-  if(max)act=`<div class="up-max">★ MAX LEVEL</div>`;
+  if(!feat('rooms'))act=`<div class="up-max rc-lock">LOCKED · UNLOCKS AT TACH ${STAGE_AT.rooms}</div>`;
+  else if(max)act=`<div class="up-max">★ MAX LEVEL</div>`;
   else{const[a,cr]=cost,okA=stn.alloy>=a,okC=S.bucks>=cr;
     act=`<button class="btn up-btn" id="rcBuild" ${okA&&okC?'':'disabled'}><i class="up-i">${ICO.up}</i>${L?'Upgrade':'Build'} <span class="rc-cost${okA?'':' short'}">${alloyTag(a)}</span><span class="rc-cost${okC?'':' short'}">${coin(cr)}</span></button>`;}
   const nowTxt=L?(rle(d.k)<L?`${rle(d.k)?d.eff(rle(d.k)):'Offline'}<em class="up-warn">${ICO.person} Needs crew · working as ${rle(d.k)?'L'+rle(d.k):'offline'}</em>`:d.eff(L)):'Not built',nav=ROOM_NAV[d.k];
@@ -3964,7 +4054,7 @@ function drawStation(dt){
 function renderHangar(){
   SHIP=makeShip(S.paint,S.up);
   ensureStation();$('#hgBucks').innerHTML=wallet();
-  {const rd=ROOMS.find(r=>r.panel===H.tab);$('#hgTitle').textContent=rd?rd.name:'Station';$('#hangar .htabs').hidden=true;}
+  {const rd=ROOMS.find(r=>r.panel===H.tab);$('#hgTitle').textContent=H.intro?'Create your pilot':rd?rd.name:'Station';$('#record').style.display=$('#recLab').style.display=H.intro?'none':'';$('#pilotDone').style.display=H.intro?'':'none';$('#hangar .htabs').hidden=true;}
   if(!S.slots)S.slots=DEFAULT_SLOTS.slice();
   document.querySelectorAll('.htab').forEach(b=>{const on=b.dataset.t===H.tab;b.setAttribute('aria-selected',on?'true':'false');});
   document.querySelectorAll('.hpane').forEach(p=>p.hidden=p.dataset.p!==H.tab);
@@ -4099,7 +4189,7 @@ const CONTACT_INFO={
   gunship:{t:'Armored gunship',m:[0,1],x:'Needs Weapons and Shields together. Hits hard and starts fires.'},
 };
 function tipFor(key,ch){
-  const sys=SYSTEMS[ch.key];
+  const sys=sysView(ch.key);
   if(key==='threat')return{title:'Threat level',col:'#ff4d5e',art:c=>{const n=Math.min(ch.threat+1,8);for(let i=0;i<8;i++){c.fillStyle=i<n?'#ff4d5e':'rgba(255,77,94,.16)';c.fillRect(c.canvas.clientWidth/2-40+i*10,c.canvas.clientHeight/2-4,7,7);}},
     text:`Threat ${ch.threat}. It climbs region by region as you travel east. Contacts need more charge and hazards hit harder.`};
   if(key==='lm'&&ch.lm){const L=LANDMARKS[ch.lm];return{title:L.name,col:L.col,toks:[['gate']],text:L.desc};}
@@ -4123,7 +4213,7 @@ function tipFor(key,ch){
 function openTip(key,ch){
   const tip=tipFor(key,ch);if(!tip)return;
   $('#tipCard').style.setProperty('--sc',tip.col);$('#tipTitle').textContent=tip.title.toUpperCase();$('#tipText').textContent=tip.text;
-  TIP.draw=(c,W,H)=>{if(tip.art)tip.art(c,W,H);else drawTokensCentered(c,tip.toks,W,H,26,SYSTEMS[ch.key].pursuer);};
+  TIP.draw=(c,W,H)=>{if(tip.art)tip.art(c,W,H);else drawTokensCentered(c,tip.toks,W,H,26,sysView(ch.key).pursuer);};
   sfx.tick();show('#tip',true);
 }
 const TIP={draw:null};
@@ -4461,7 +4551,7 @@ const DEFAULT_SLOTS=['surge','burn','repair'];
 function fixSlots(){if(!S.slots)S.slots=DEFAULT_SLOTS.slice();S.slots=S.slots.map(k=>PERKS.some(p=>p.k===k)?k:'repair');
   const seen=new Set();S.slots=S.slots.map(k=>{if(!seen.has(k)){seen.add(k);return k;}const alt=['surge','burn','repair','control','decoy','lock','mega'].find(x=>!seen.has(x)&&(PERKS.find(p=>p.k===x).cost===0||S.perks[x]));seen.add(alt);return alt;});}
 function maybeOfferPerk(chain){
-  if(chain<3||G.ending||!G.running||G.perkCD>0||CINE)return;
+  if(chain<3||G.ending||!G.running||G.perkCD>0||CINE||!feat('perks'))return;
   const tier=Math.min(3,chain-2),p=PERKS.find(x=>x.k===(S.slots||DEFAULT_SLOTS)[tier-1]);if(!p)return;
   if(G.tut)setTimeout(()=>coach('run_chain'),1400);G.perkCD=10;G.log.perks=(G.log.perks||0)+1;rEvent(`perk ${p.k} (x${chain})`);const np=G.pops.length;p.apply(p,tier);G.pops.length=np;startCine('perk',{p,tier,chain},1.15);
 }
@@ -4471,6 +4561,7 @@ const STRIKES={
   empire:{name:'BROADSIDE',m:1,hz:'fire'},pirates:{name:'BOARDING PARTY',m:0,hz:'fire'},
   blackhole:{name:'TIDAL SURGE',m:3,hz:'lock'},leviathan:{name:'LUNGE',m:3,hz:'debris'},shockwave:{name:'FLARE FRONT',m:1,hz:'debris'}};
 function updateStrike(dt){
+  if(!feat('strike')){G.strike=null;return;}
   if(G.strike){
     const s=G.strike;s.t-=dt;s.klax-=dt;
     if(s.klax<=0){s.klax=s.t<3?.5:1;sfx.klaxon();}
@@ -4553,7 +4644,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v63';
+const BUILD='v69';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -4682,9 +4773,11 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function goSplash(){scene='splash';SP.shipX=-innerWidth*.6;renderSplash();renderInstall();only('#splash');}
 function goMap(){if($('#chartBox'))$('#chartBox').classList.remove('big'),$('#zBig').textContent='⤢',MAP.z=1,MAP.panX=MAP.panY=0;scene='map';renderMap();only('#map');}
 function goHangar(){scene='hangar';renderHangar();only('#hangar');}
+function openPilotIntro(){H.tab='quarters';H.room='habitat';H.intro=true;goHangar();}
+function pilotDone(){H.intro=false;sfx.tick();goMap();}
 function startRun(){
   CINE=null;
-  SYS=SYSTEMS[CHOICE.key];resetGame();G.hold=false;if(peak('shipyard'))for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2);sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
+  SYS=sysView(CHOICE.key);resetGame();G.hold=false;if(peak('shipyard'))for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2);sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
   for(let m=0;m<4;m++)gEls[m].bar.style.setProperty('--n',ST.cap[m]);
   B.waiters.length=0;B.dying=[];B.beams=[];B.pops=[];B.hazards=[];B.sel=null;B.hint=null;B.idle=0;B.glow=null;
   fillBoard();B.busy=true;settle().then(()=>{B.busy=false;});
@@ -4811,7 +4904,7 @@ async function runDebrief(d,ctrEls,rows){
   for(const[l,v]of d.extra||[]){const ex=document.createElement('div');ex.className='xrow';ex.innerHTML=`<span>${l}</span><b>${v}</b>`;pay.append(ex);if(!DB.skip){sfx.coin();await dwait(160);}}
   const wal=document.createElement('div');wal.innerHTML=`<span>Wallet</span><b>${wallet(false)}</b>`;pay.append(wal);
   if(!DB.skip&&d.win)sfx.win();
-  DB.skip=true;$('#dbSkip').hidden=true;if(testerOn()&&qa().debriefs%3===0){$('#dbBtns').insertAdjacentHTML('beforeend',rateWidget('run '+CHOICE.key+' '+d.rank));bindRate($('#dbBtns'));}setTimeout(()=>{if(scene==='debrief'&&$('#dbResBtn'))coach('debrief');},300);
+  DB.skip=true;$('#dbSkip').hidden=true;if(false){$('#dbBtns').insertAdjacentHTML('beforeend',rateWidget('run '+CHOICE.key+' '+d.rank));bindRate($('#dbBtns'));}setTimeout(()=>{if(scene==='debrief'&&$('#dbResBtn'))coach('debrief');},300);
   const bx=$('#dbBtns');bx.innerHTML='';
   const row=document.createElement('div');row.className='ib-row';bx.append(row);
   if(d.win){const rs=S.gal&&S.gal.stars[CHOICE.starId];if(canResearch(rs)){const b=iconBtn(row,'flask','Research','hot',()=>openResearch(rs.id));b.id='dbResBtn';}
@@ -4886,15 +4979,26 @@ function confirmBtn(parent,label,confirmLabel,fn,cls='btn ghost danger'){
   parent.append(b);return b;
 }
 function restartCampaign(){const keep={paint:S.paint,pilot:S.pilot,callsign:S.callsign};S=Object.assign(defaultSave(),keep);S.gal=null;S.choices=genChoices();SHIP=makeShip(S.paint,S.up);persist();goMap();}
-function setPaused(p){if(scene!=='game'||!G.running)return;if(!p&&perkOpen){paused=false;show('#pause',false);return;}paused=p;drag=null;show('#pause',p);}
+function paintTileSeg(){const seg=$('#tileSeg');if(!seg)return;seg.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.i===tileMode()?'true':'false'));
+  $('#tileNote').textContent=TILE.pending!=null?'Applies as soon as the board settles.':TILE_MODES[tileMode()].note+(tileMode()?' · re-deals the board':'');}
+function applyTileNow(){
+  TILE.pending=null;applyTileDims();B.hazards=[];B.dying=[];B.beams=[];B.pops=[];B.sel=null;B.hint=null;B.droneAim=null;B.droneDrag=false;B.traces.length=0;
+  if(G.drone)G.drone=null;resizeAll();fillBoard();
+  if(scene==='game'&&G.running){B.busy=true;settle().then(()=>{B.busy=false;});}
+  paintTileSeg();}
+function setTile(i){if(TR){$('#tileNote').textContent='Tile size is fixed during training.';return;}AUD.tile=i;saveAudio();
+  if(scene==='game'&&G.running&&!G.ending&&B.busy){TILE.pending=i;paintTileSeg();return;}
+  applyTileNow();}
+$('#tileSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{sfx.tick();setTile(+b.dataset.i);});
+function setPaused(p){if(scene!=='game'||!G.running)return;if(!p&&perkOpen){paused=false;show('#pause',false);return;}paused=p;drag=null;if(p){paintTileSeg();$('#abandonBtn').textContent=TR?'Leave training':'Abandon system';}show('#pause',p);}
 
 $('#continueBtn').onclick=()=>{audio();goMap();};
 { // new game: wipes an existing campaign only after a second tap
   let armed=false,timer=0;const b=$('#newGameBtn');
-  const begin=async(fresh)=>{const pick=await askChoice('NEW CAMPAIGN','<p>Want your captain to talk you through it? The first run is a gentler guided flight, and tips pop up the first time each thing happens.</p><p class="cf-dim">You can turn tips off or replay them any time in Settings.</p>','With tutorial','Skip tutorial');
+  const begin=async(fresh)=>{const pick=await askChoice('NEW CAMPAIGN','<p>Want your captain to talk you through it? The first run is a gentler guided flight, and tips pop up the first time each thing happens.</p><p class="cf-dim">You can turn tips off or replay them any time in Settings. For hands-on lessons you cannot lose, try Training on the title screen.</p>','With tutorial','Skip tutorial');
     if(pick==null){if(!fresh){armed=false;b.classList.remove('armed');b.textContent='New game';}return;}
     if(fresh){S.choices=genChoices();}else restartCampaign();
-    AUD.tips=pick==='a';saveAudio();S.tips={};S.tutRunDone=pick!=='a';persist();goMap();};
+    AUD.tips=pick==='a';saveAudio();S.tips={};S.tutRunDone=pick!=='a';persist();openPilotIntro();};
   b.onclick=()=>{audio();
     if(!hasSave){begin(true);return;}
     if(armed){clearTimeout(timer);begin(false);return;}
@@ -4909,8 +5013,10 @@ $('#optHome').onclick=()=>{show('#sound',false);goSplash();};
 $('#credBtn').onclick=()=>{audio();$('#credBuild').textContent=BUILD;show('#credits',true);};
 $('#credClose').onclick=()=>show('#credits',false);
 $('#mapBack').onclick=goSplash;
+$('#mapBack').addEventListener('click',e=>{if(TR){e.stopImmediatePropagation();exitTrain(false);}},true);
 $('#hangarBtn').onclick=goStation;
-$('#hangarBack').onclick=goStation;
+$('#hangarBack').onclick=()=>{if(H.intro){pilotDone();return;}goStation();};
+$('#pilotDone').onclick=pilotDone;
 $('#stBack').onclick=goMap;
 $('#stCv').addEventListener('click',stationTap);
 $('#bayCv').addEventListener('click',e=>{if(H.tab!=='combos')return;const r=e.currentTarget.getBoundingClientRect(),i=clamp(Math.floor((e.clientX-r.left)/r.width*3),0,2);if(i!==H.slot){H.slot=i;sfx.tick();renderHangar();}});
@@ -4925,7 +5031,7 @@ function askChoice(title,html,a,b){return new Promise(res=>{$('#cfTitle').textCo
   const done=v=>{show('#confirm',false);sfx.tick();$('#cfNo').textContent='Back';res(v);};$('#cfYes').onclick=()=>done('a');$('#cfNo').onclick=()=>done('b');$('#cfX').onclick=()=>done(null);show('#confirm',true);sfx.tick();});}
 function askConfirm(title,html,yes='Launch'){return new Promise(res=>{$('#cfTitle').textContent=title;$('#cfBody').innerHTML=html;$('#cfYes').textContent=yes;
   const done=v=>{show('#confirm',false);sfx.tick();res(v);};$('#cfYes').onclick=()=>done(true);$('#cfNo').onclick=$('#cfX').onclick=()=>done(false);show('#confirm',true);sfx.tick();});}
-async function launchChoice(ch){if(ch&&ch.gate){openTach();return;}
+async function launchChoice(ch){if(TR){toast('<b>Launching is turned off in training</b>','#7f8fb2');return;}if(ch&&ch.gate){openTach();return;}
   const st=ch&&S.gal&&S.gal.stars[ch.starId];
   if(st&&st.res&&!(await askConfirm('ALREADY RESEARCHED',`<p><b>${st.name}</b> has already given its research (${st.res.name}). Another run here still pays credits and salvage at <b>${Math.round(salvageOf(st)*100)}%</b>, but no new research.</p><p class="cf-dim">Uncleared planets nearby can still raise your Tach odds.</p>`,'Launch anyway')))return;
   launch(ch);}
@@ -4945,7 +5051,7 @@ $('#gPrev').onclick=()=>guideGo(gIdx-1);$('#gNext').onclick=()=>guideGo(gIdx+1);
 $('#debrief').addEventListener('click',e=>{if(!e.target.closest('button'))DB.skip=true;});
 $('#pauseBtn').onclick=()=>setPaused(true);
 $('#resumeBtn').onclick=()=>setPaused(false);
-$('#abandonBtn').onclick=()=>{paused=false;show('#pause',false);G.ending='abandon';systemFailed('abandon');};
+$('#abandonBtn').onclick=()=>{if(TR){exitTrain(false);return;}paused=false;show('#pause',false);G.ending='abandon';systemFailed('abandon');};
 $('#muteBtn2').onclick=openSound;
 $('#rpClose').onclick=()=>show('#report',false);
 $('#dbgSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ensureStation();
@@ -4954,6 +5060,29 @@ $('#dbgSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(
   if(scene==='station')renderStation();else if(scene==='hangar')renderHangar();else if(scene==='map')updateMapActions();
   if(scene==='splash')renderSplash();
   const t=b.textContent;b.textContent='Added';setTimeout(()=>b.textContent=t,700);});
+/* Debug: jump to Tach N. Tach N means "attempting Tach N", i.e. galaxy N (tachNow() = N-1 reached). Credits, upgrades and station are kept; only the galaxy is rebuilt. */
+const DBG={n:1,armed:false,tm:0};
+const dbgTachOK=()=>scene==='map'||scene==='station'||scene==='hangar'||(scene==='splash'&&hasSave);
+function dbgTachSync(keepN){
+  clearTimeout(DBG.tm);DBG.armed=false;
+  if(!keepN)DBG.n=clamp((S.gal&&S.gal.num)||1,1,TACH_GOAL);
+  const go=$('#dbgTachGo');if(!go)return;
+  $('#dbgTachN').textContent=DBG.n;go.textContent='Go';go.classList.remove('armed');
+  go.disabled=!dbgTachOK();go.title=go.disabled?'Finish or leave the run first':'';
+}
+function debugJumpTach(n){
+  n=clamp(n|0,1,TACH_GOAL);ensureStation();
+  S.gal=genGalaxy((Math.random()*2**31)|0,n);ensureGalaxy();S.choices=genChoices();
+  const q=qa();q.dbg=(q.dbg||0)+1;persist();sfx.buy();
+  show('#sound',false);
+  if(scene==='splash')renderSplash();else goMap();
+  toast(`<b>Debug · Tach ${n}</b><span>Fresh galaxy at Tach ${n} difficulty. Credits, upgrades and station kept.</span>`,'#ff8a95');
+}
+$('#dbgTach').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;
+  if(b.dataset.d){DBG.n=clamp(DBG.n+(+b.dataset.d),1,TACH_GOAL);dbgTachSync(true);sfx.tick();return;}
+  if(b.id!=='dbgTachGo'||!dbgTachOK())return;
+  if(!DBG.armed){DBG.armed=true;b.classList.add('armed');b.textContent='Sure?';clearTimeout(DBG.tm);DBG.tm=setTimeout(()=>dbgTachSync(true),3000);sfx.tick();return;}
+  clearTimeout(DBG.tm);DBG.armed=false;debugJumpTach(DBG.n);});
 $('#soundDone').onclick=()=>show('#sound',false);$('#sound').addEventListener('click',e=>{if(e.target.id==='sound')show('#sound',false);});
 $('#togMusic').onclick=()=>{AUD.music=!AUD.music;if(!AUD.music)musicStop();saveAudio();applyAudio();renderSound();};
 document.querySelectorAll('#cdSeg button').forEach(b=>b.onclick=()=>{AUD.cd=+b.dataset.v;saveAudio();renderSound();sfx.tick();});
@@ -4980,6 +5109,184 @@ resizeAll();G.running=false;G.meters=[0,0,0,0];G.events=[];G.pops=[];G.fx=[];
 fillBoard();
 
 let last=performance.now();
+/* ================= TRAINING: stand-alone scripted lessons. Reuses the real board; cannot be lost; never touches the campaign ================= */
+// layouts: 8 rows x 7 cols of tile codes. 0-4 = the five colours, a-e horizontal line tiles, f-j vertical line tiles, N nova, C credits, X crate
+function trLay(sets){const g=Array.from({length:8},(_,r)=>Array.from({length:7},(_,c)=>String((r+2*c)%5)));for(const[r,c,t]of sets)g[r][c]=String(t);return g.map(a=>a.join(''));}
+const TR_RED=[[2,1,0],[2,2,0],[2,3,3],[2,4,0],[1,6,0],[2,6,0],[3,6,3],[4,6,0]], TR_RED_ALLOW=[[[2,3],[2,4]],[[3,6],[4,6]]];
+const TR_BLUE=[[1,2,1],[1,3,1],[1,4,0],[1,5,1],[2,0,1],[3,0,2],[4,0,1]], TR_BLUE_ALLOW=[[[1,4],[1,5]],[[3,0],[4,0]]];
+const TR_GREEN=[[0,6,3],[1,1,2],[1,2,2],[1,3,0],[1,4,2],[1,6,2],[2,6,2],[4,6,2]], TR_GREEN_ALLOW=[[[1,3],[1,4]],[[3,6],[4,6]]];
+const TR_YEL=[[3,1,4],[3,2,4],[3,3,0],[3,4,4]];
+const trLayLineMake=[[2,0,0],[2,1,0],[2,2,1],[2,3,0],[2,4,3],[3,2,0]];
+const TRAIN_CH=[
+ {k:'basics',t:'Match basics',d:'Swap tiles, make matches, charge your systems.',feats:[],steps:[
+  {say:'Welcome to the bridge. This board is the ship’s power. Line up three or more tiles of one colour and that colour’s system charges.',next:'tap',board:trLay([])},
+  {say:'Swap the two highlighted tiles to line up three red Weapons tiles.',next:'swap',allow:[[[2,3],[2,4]]],ring:'pairs',board:trLay(TR_RED.slice(0,4))},
+  {say:'Weapons charged. Every tile in a match adds charge to the system of its colour. Watch the Weapons gauge.',next:'tap',ring:'gauge:0'},
+  {say:'Vertical lines count too. Swap the highlighted pair to charge Shields.',next:'swap',allow:[[[3,5],[4,5]]],ring:'pairs',board:trLay([[1,5,1],[2,5,1],[3,5,0],[4,5,1]])},
+  {say:'Now you try. Swap any two tiles in a row or column to make a match. Longer matches and chains charge more.',next:'swap',n:2,allow:'any',board:'random'},
+  {say:'That is the whole idea: match tiles to charge systems. Next lesson, those systems get put to work.',next:'end'}]},
+ {k:'contacts',t:'Viewport and contacts',d:'What the ship sees, and which system deals with it.',feats:[],steps:[
+  {say:'Up top is the viewport. Contacts fly in from the right, and each one needs charge from a particular system.',next:'tap',ring:'#viewport',board:trLay([])},
+  {say:'An asteroid. Its bar shows it needs Shields (blue). Match blue tiles to charge Shields before it arrives.',next:'cond',cond:()=>G.meters[1]>=3,assist:[1,3],allow:TR_BLUE_ALLOW,ring:'pairs',board:trLay(TR_BLUE),
+    enter(){trSpawn('asteroid',[[1,3]]);}},
+  {say:'Shields are ready. Watch what happens when the asteroid reaches us.',next:'cond',cond:()=>TR.ev&&TR.ev.resolved,enter(){trRelease();},delay:1400},
+  {say:'A clean clear. Now an enemy ship. It needs Weapons (red). Charge them.',next:'cond',cond:()=>G.meters[0]>=3,assist:[0,3],allow:TR_RED_ALLOW,ring:'pairs',board:trLay(TR_RED),
+    enter(){trSpawn('enemy',[[0,3]]);}},
+  {say:'Target down. The ship fires back only if it gets through.',next:'cond',cond:()=>TR.ev&&TR.ev.resolved,enter(){trRelease();},delay:1400},
+  {say:'A planet. Sensors (green) scan it and top up your fuel. Charge them.',next:'cond',cond:()=>G.meters[2]>=3,assist:[2,3],allow:TR_GREEN_ALLOW,ring:'pairs',board:trLay(TR_GREEN),
+    enter(){trSpawn('planet',[[2,3]]);}},
+  {say:'Scanned. In short: ships need Weapons, asteroids need Shields, planets need Sensors, gravity wells need Engines. The coloured bars on each contact tell you.',next:'cond',cond:()=>TR.ev&&TR.ev.resolved,enter(){trRelease();},delay:900},
+  {say:'You can read every contact the same way. Next lesson shows what happens if you cannot keep up.',next:'end'}]},
+ {k:'costs',t:'Consequences',d:'Misses cost hull and fuel. This is a drill, so you cannot lose.',feats:[],steps:[
+  {say:'Missing a contact has a cost. This is a drill, so the ship cannot be destroyed. Let’s see what a miss does.',next:'tap',board:trLay([])},
+  {say:'An enemy is coming and Weapons are empty. We will let it through. Watch the hull bar.',next:'tap',ring:'#hullBar',enter(){trSpawn('enemy',[[0,6]]);}},
+  {say:'Hit! The hull took damage. At zero hull the run ends.',next:'cond',cond:()=>TR.ev&&TR.ev.resolved,enter(){trRelease();},delay:2200,
+    leave(){G.hull=ST.hullMax;trClearHaz();}},
+  {say:'Hits can also spill onto your board as fire or debris, which gets in the way of matches. The crew has patched the ship for the drill.',next:'tap',ring:'#hullBar'},
+  {say:'Fuel drains as you fly. The tank is low now. Match yellow fuel cells to refill it. If it empties, the run ends.',next:'swap',allow:[[[3,3],[3,4]]],ring:'pairs',board:trLay(TR_YEL),
+    enter(){G.fuel=ST.tank*.35;},leave(){G.fuel=ST.tank;}},
+  {say:'Back to a full tank. In the campaign you win a system by reaching its gate with hull and fuel to spare. Later Tachs add a pursuer, but the drill ends here.',next:'end'}]},
+ {k:'special',t:'Special tiles',d:'Line tiles, nova cores, credits and crates.',feats:['line','nova','loot'],steps:[
+  {say:'Some matches forge special tiles. Make a match of four to forge a line tile.',next:'swap',allow:[[[2,2],[3,2]]],ring:'pairs',board:trLay(trLayLineMake)},
+  {say:'That arrow tile is a line tile. The next time it is part of a match, it fires along its whole row or column.',next:'tap'},
+  {say:'Try it. Match the line tile with the two reds above it.',next:'swap',allow:[[[3,3],[3,4]]],ring:'pairs',board:trLay([[1,3,0],[2,3,0],[3,3,1],[3,4,'a']])},
+  {say:'Five in a row forges a nova core. Swap the highlighted pair to make one.',next:'swap',allow:[[[2,2],[3,2]]],ring:'pairs',board:trLay([[2,0,0],[2,1,0],[2,2,1],[2,3,0],[2,4,0],[3,2,0]])},
+  {say:'A nova core swaps with any tile and wipes every tile of that colour from the board. Swap it with the blue tile.',next:'swap',allow:[[[3,2],[3,3]]],ring:'pairs',board:trLay([[3,2,'N'],[3,3,1]])},
+  {say:'Credits tiles (pink) are wild. They join any match of four or more, and bank money. Make this match.',next:'swap',allow:[[[2,3],[3,3]]],ring:'pairs',board:trLay([[2,0,0],[2,1,'C'],[2,2,0],[2,3,1],[2,4,3],[3,3,0]])},
+  {say:'Salvage crates work the same way: join a match of four or more and the crate cracks open for a random prize.',next:'swap',allow:[[[2,3],[3,3]]],ring:'pairs',board:trLay([[2,0,0],[2,1,'X'],[2,2,0],[2,3,1],[2,4,3],[3,3,0]])},
+  {say:'That is every special tile. In the campaign they unlock one at a time over the first few Tachs, and your pilot will tell you when.',next:'end'}]},
+];
+TRAIN_CH.push(
+ {k:'map',t:'Galaxy map',d:'Moving between stars, gate parts and the action buttons.',sandbox:true,feats:['pursuer','strike','rooms','line','nova','loot','perks'],steps:[
+  {say:'This is the galaxy map. Each dot is a star system, and the ring marks where your station is parked. This lesson runs on a practice save.',next:'tap',ring:'#chartCv',enter(){goMap();}},
+  {say:'The cards underneath are the systems in range. Swipe through them. Each shows its threat, how far the gate is and what to expect.',next:'tap',ring:'#carousel'},
+  {say:'Let’s move. Swipe to a card that is not your current system, then press Move. Jumps cost credits.',next:'cond',cond:()=>S.gal.at!==TR.at0&&!WARP&&!MAP.anim,ring:['#carousel','#moveBtn'],delay:900,enter(){TR.at0=S.gal.at;}},
+  {say:'Arrived. Moving charts new stars and sometimes turns up a strange event. Teal crystals on the chart are gate parts: win the system that holds one to recover it.',next:'tap',ring:'#chartCv'},
+  {say:'The buttons along the bottom: Launch flies the selected system (turned off in training), Research strengthens the Tach drive at planets, and Station and Comms open your base and markets.',next:'tap',ring:'.map-actions'},
+  {say:'Gate parts add up. With enough of them, you reach the Exodus Gate and Launch becomes Tach: the jump to the next galaxy. That is the goal of every campaign.',next:'end'}]},
+ {k:'station',t:'Station upgrades',d:'Rooms, ship systems and crew.',sandbox:true,feats:['pursuer','strike','rooms','line','nova','loot','perks'],steps:[
+  {say:'This is your station. Rooms give it abilities, and you pay for them with Alloy and credits. This lesson runs on a practice save with some resources.',next:'tap',ring:'#stCv',enter(){goStation();}},
+  {say:'Each tab is a room: Comms, Yard, War room, Refinery, Hab, Drone bay and Tach drive. Tap a couple of tabs to read what they do.',next:'cond',cond:()=>RM.sel!==TR.sel0,ring:'#rtabs',delay:900,enter(){TR.sel0=RM.sel;}},
+  {say:'Build the Refinery. It costs Alloy and credits (shown top right) and smelts salvage into more Alloy.',next:'cond',cond:()=>S.station.rooms.refinery>=1,ring:['#rcBuild'],delay:1200,enter(){RM.sel='refinery';renderStation();}},
+  {say:'Built. Rooms have levels, and they need crew to run at full strength. The card tells you when one is short. The Habitat holds your people.',next:'tap',ring:'#roomCard'},
+  {say:'Now the Shipyard. Press Open to go to the ship bay.',next:'cond',cond:()=>scene==='hangar',ring:'#rcOpen',delay:700,enter(){RM.sel='shipyard';renderStation();}},
+  {say:'Here you upgrade ship systems: weapons, shields, sensors, engines and fuel. Upgrades cost credits. Upgrade any one of them.',next:'cond',cond:()=>JSON.stringify(S.up)!==TR.up0,ring:'#upgrades',delay:1000,enter(){TR.up0=JSON.stringify(S.up);}},
+  {say:'Upgraded. The Shipyard’s level caps how far each system can go, so building rooms keeps you growing. Tap the back arrow to return to the station.',next:'cond',cond:()=>scene==='station',ring:'#hangarBack',delay:500},
+  {say:'One more room worth knowing: the War room sets your combo perks, so bigger chains fire stronger effects. That is the whole station loop: earn, build, upgrade, launch.',next:'end',enter(){RM.sel='war';renderStation();}}]});
+let TRSOON=[];
+
+function trRects(st){
+  const out=[],rc=r=>({left:r.left,top:r.top,width:r.width,height:r.height}),pad=(r,p)=>({left:r.left-p,top:r.top-p,width:r.width+2*p,height:r.height+2*p});
+  const ring=st&&st.ring;if(!ring)return out;
+  if(ring==='pairs'&&Array.isArray(st.allow)){const R=B.cv.getBoundingClientRect(),T=B.tile;
+    for(const[[r1,c1],[r2,c2]]of st.allow){const x=Math.min(c1,c2),y=Math.min(r1,r2),w=Math.abs(c1-c2)+1,h=Math.abs(r1-r2)+1;out.push(pad({left:R.left+x*T,top:R.top+y*T,width:w*T,height:h*T},3));}}
+  else if(typeof ring==='string'&&ring.startsWith('gauge:')){const g=gEls[+ring.slice(6)];if(g)out.push(pad(rc(g.g.getBoundingClientRect()),3));}
+  else for(const sel of Array.isArray(ring)?ring:[ring]){const el=document.querySelector(sel);if(el){const r=el.getBoundingClientRect();if(r.width>2&&r.height>2)out.push(pad(rc(r),3));}}
+  return out;
+}
+function trPaintRings(){const box=$('#trRings'),rs=trRects(TR&&TR.step);
+  while(box.children.length<rs.length){const d=document.createElement('div');d.className='trring';box.append(d);}
+  [...box.children].forEach((d,i)=>{const r=rs[i];d.style.display=r?'':'none';if(r){d.style.left=r.left+'px';d.style.top=r.top+'px';d.style.width=r.width+'px';d.style.height=r.height+'px';}});}
+function trPaint(){const ch=TRAIN_CH[TR.ci],st=TR.step;if(!st)return;
+  $('#trChap').textContent=`LESSON ${TR.ci+1} · ${ch.t.toUpperCase()} · ${TR.i+1}/${ch.steps.length}`;
+  $('#trSay').textContent=st.say;
+  const nb=$('#trNext');nb.hidden=!(st.next==='tap'||st.next==='end');nb.textContent=st.next==='end'?'Finish lesson':'Next';
+  $('#trCard').dataset.pos=st.pos||(TR.sandbox?'top':'bottom');
+  const pc=$('#trPc');if(pc)drawPortrait(pc,S.pilot);}
+function trSpawn(type,reqs){spawnEvent(type);const e=G.events[G.events.length-1];e.reqs=reqs.map(([m,c])=>({m,c}));e.p=.08;e.hold=Math.min(.9,Math.max(.6,G.sensor+.1));TR.ev=e;}
+function trRelease(){if(TR.ev)TR.ev.hold=null;}
+function trClearHaz(){B.hazards=[];for(const row of B.grid)for(const t of row)if(t){t.lock=false;if(t.t===DEBRIS)t.t=randType();}}
+function trBoard(rows){
+  B.waiters.length=0;B.dying=[];B.beams=[];B.pops=[];B.hazards=[];B.sel=null;B.hint=null;B.idle=0;B.glow=null;
+  if(!rows)fillBoard();
+  else B.grid=rows.map((row,r)=>[...row].map((ch,c)=>{const k='abcdefghij'.indexOf(ch);let t,sp=0;
+    if(k>=0){t=k%5;sp=k<5?1:2;}else if(ch==='N'){t=NOVA;sp=3;}else if(ch==='C')t=BUCKS;else if(ch==='X')t=CRATE;else t=+ch;
+    const tl=newTile(t,r,c,r-ROWS-1-c*.35);tl.sp=sp;return tl;}));
+  B.busy=true;settle().then(()=>{B.busy=false;});}
+async function trGo(i){
+  const ch=TRAIN_CH[TR.ci];TR.advancing=true;TR.step=null;
+  if(i>=ch.steps.length){exitTrain(true);return;}
+  const st=ch.steps[i];TR.i=i;
+  if(st.board!==undefined){await until(()=>!B.busy);if(!TR)return;trBoard(st.board==='random'?null:st.board);}
+  TR.good=0;TR.t=0;TR.step=st;TR.advancing=false;TR.nudge=0;
+  if(st.enter)st.enter();trPaint();}
+function trAdvance(){if(!TR||TR.advancing||!TR.step)return;TR.advancing=true;const st=TR.step;TR.step=null;
+  setTimeout(()=>{if(!TR)return;if(st.leave)st.leave();trGo(TR.i+1);},st.delay??500);}
+function trAllow(st,r1,c1,r2,c2){if(!st||!st.allow)return false;if(st.allow==='any')return testPair(r1,c1,r2,c2);
+  return st.allow.some(([[a,b],[c,d]])=>(a===r1&&b===c1&&c===r2&&d===c2)||(a===r2&&b===c2&&c===r1&&d===c1));}
+const _attemptSwap=attemptSwap;
+attemptSwap=async function(r1,c1,r2,c2){
+  if(!TR)return _attemptSwap(r1,c1,r2,c2);
+  const st=TR.step;if(B.busy)return;
+  if(!trAllow(st,r1,c1,r2,c2)){sfx.bad();B.sel=null;TR.nudge=.5;return;}
+  const before=G.R.swaps-G.R.invalid;await _attemptSwap(r1,c1,r2,c2);
+  if(TR&&G.R.swaps-G.R.invalid>before){TR.good++;trAfterSwap();}};
+function trAfterSwap(){const st=TR.step;if(st&&st.next==='swap'&&TR.good>=(st.n||1))trAdvance();}
+function trPoll(){const st=TR.step;
+  if(st&&!TR.advancing){
+    if(st.next==='cond'){
+      if(st.assist&&TR.good>=2&&G.meters[st.assist[0]]<st.assist[1])G.meters[st.assist[0]]=st.assist[1];
+      let ok=false;try{ok=st.cond();}catch(e){}if(ok)trAdvance();}
+    if(scene==='game'&&st.allow&&Array.isArray(st.allow)&&!B.busy){B.hint=st.allow[0];B.idle=7;}
+  }}
+function updateTrain(dt){
+  TR.t+=dt;G.time+=dt;G.fuel=Math.min(G.fuel,ST.tank);if(G.shipY==null)G.shipY=V.H/2;
+  trPoll();
+  const T=travel(),pxs=((V.W+14)-(shipBaseX()+24))/T;
+  for(const e of G.events){
+    if(e.passing){e.x-=pxs*dt;if(e.x<-40)e.dead=true;continue;}
+    if(e.resolved)continue;
+    e.p=Math.min(e.hold!=null?e.hold:1,e.p+dt/T*1.4);
+    if(!e.ided&&e.p>=G.sensor){e.ided=true;sfx.ping();}
+    if(e.p>=1)resolve(e);}
+  G.events=G.events.filter(e=>!e.dead);
+  for(const s of V.stars){s.x-=[3,9,20][s.L]*dt;if(s.x<0){s.x+=V.W;s.y=Math.random()*V.H;}}
+  G.nebX-=1.2*dt;
+  for(const f of G.fx){f.t+=dt;if(f.parts)for(const p of f.parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.96;p.vy*=.96;}}
+  G.fx=G.fx.filter(f=>f.t<f.d);
+  for(const p of G.pops){p.t+=dt;p.y-=6*dt;}G.pops=G.pops.filter(p=>p.t<1.4);
+  G.shake=Math.max(0,G.shake-dt);G.flash=Math.max(0,G.flash-dt*1.5);G.wobble=Math.max(0,G.wobble-dt);
+  G.hull=Math.max(G.hull,ST.hullMax*.3);G.gap=100;
+  TR.nudge=Math.max(0,(TR.nudge||0)-dt);$('#trCard').classList.toggle('nudge',TR.nudge>0);
+  trPaintRings();}
+function startTrain(ci){
+  audio();show('#trainMenu',false);
+  const ch=TRAIN_CH[ci];
+  TR={ci,i:-1,snap:JSON.stringify(S),had:hasSave,tile:AUD.tile|0,feats:ch.feats,step:null,advancing:true,good:0,t:0,ev:null,sandbox:!!ch.sandbox};
+  if(ch.sandbox){
+    const keep={paint:S.paint,pilot:S.pilot,face:S.face,callsign:S.callsign,cmd:S.cmd};
+    S=Object.assign(defaultSave(),keep);S.gal=null;S.choices=genChoices();SHIP=makeShip(S.paint,S.up);S.bucks=600;ensureStation().alloy=12;
+    G.running=false;G.events=[];CHOICE=null;$('#trUi').hidden=false;trGo(0);return;}
+  AUD.tile=0;applyTileDims();
+  CHOICE={key:'asteroid',name:'Training',threat:0,hold:false};SYS=Object.assign({},SYSTEMS.asteroid);
+  resetGame();G.hold=false;G.tut=false;G.hull=ST.hullMax;
+  sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
+  for(let m=0;m<4;m++)gEls[m].bar.style.setProperty('--n',ST.cap[m]);
+  B.waiters.length=0;B.dying=[];B.beams=[];B.pops=[];B.hazards=[];B.sel=null;B.hint=null;B.idle=0;B.glow=null;
+  G.patched=false;G.droneT=1e9;G.drone=null;B.droneAim=null;B.droneDrag=false;G.rescued=0;G.podsSpawned=99;G.strayPod=false;
+  G.cdTotal=G.countdown=0;G.cdArrived=true;G.cdBoost=0;G.spawnT=1e9;G.strikeT=1e9;
+  fillBoard();B.busy=true;settle().then(()=>{B.busy=false;});
+  scene='game';paused=false;only('#game');$('#trUi').hidden=false;
+  trGo(0);}
+function exitTrain(done){
+  if(!TR)return;const ci=TR.ci,snap=TR.snap,had=TR.had,tile=TR.tile;
+  if(done){AUD.trained=AUD.trained||{};AUD.trained[TRAIN_CH[ci].k]=1;}
+  AUD.tile=tile;saveAudio();
+  TR=null;paused=false;show('#pause',false);$('#trUi').hidden=true;
+  try{S=JSON.parse(snap);SHIP=makeShip(S.paint,S.up);}catch(e){}hasSave=had;if(had)persist();else{try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
+  G.running=false;G.events=[];G.ending=null;CHOICE=null;B.hazards=[];B.hint=null;B.sel=null;
+  applyTileNow();scene='splash';only('#splash');renderSplash();openTrainMenu();}
+function openTrainMenu(){
+  const tr=AUD.trained||{};
+  $('#trList').innerHTML=TRAIN_CH.map((c,i)=>`<button class="tr-row" data-i="${i}"><i>${tr[c.k]?'✓':i+1}</i><span><b>${c.t}</b><em>${c.d}</em></span></button>`).join('')
+    +TRSOON.map(c=>`<button class="tr-row soon" disabled><i>·</i><span><b>${c.t}</b><em>${c.d}</em></span></button>`).join('');
+  $('#trList').querySelectorAll('button[data-i]').forEach(b=>b.onclick=()=>{sfx.tick();startTrain(+b.dataset.i);});
+  show('#trainMenu',true);}
+$('#trainBtn').onclick=()=>{audio();sfx.tick();openTrainMenu();};
+$('#trMenuBack').onclick=()=>{sfx.tick();show('#trainMenu',false);};
+$('#trNext').onclick=()=>{if(!TR||!TR.step)return;sfx.tick();if(TR.step.next==='end'){TR.advancing=true;exitTrain(true);}else trAdvance();};
+$('#trExit').onclick=()=>exitTrain(false);
+
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
   // one bad frame must never stop the loop
@@ -4995,9 +5302,10 @@ function frame(now){
     drawSpace(dt);qaTick(dt);
     if(scene==='game'){
       if(!paused&&G.megaQ&&!B.busy&&!CINE&&G.running&&!G.ending)fireMega();
-      if(!paused){if(CINE)updateCine(dt);else if(G.countdown>0)updateCountdown(dt);else{updateGame(dt);updateBoard(dt);}}
+      if(!paused){if(CINE)updateCine(dt);else if(G.countdown>0)updateCountdown(dt);else{if(TR)updateTrain(dt);else updateGame(dt);updateBoard(dt);}}
       drawViewport();applyBoardShake(dt);drawBoard();updateUI();drawGauges(SP.t);
     }
+    if(TR&&scene!=='game'){TR.t+=dt;trPoll();trPaintRings();}
     if(scene==='map'){drawChart(SP.t);drawWidgetScan(SP.t);}
     if(scene==='hangar')drawBay(dt);
     if(scene==='station')drawStation(dt);
@@ -5013,7 +5321,6 @@ requestAnimationFrame(frame);
 })();
 </script>
 
-<style>html,body{height:100%;height:100dvh}</style>
 <script>if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
 </body>
 </html>
