@@ -3545,23 +3545,35 @@ const CO={q:[],open:null};
   const r=document.createElement('div');r.id='coRing';r.className='co-ring';r.hidden=true;document.body.append(r,d);
   $('#coOk').onclick=()=>{sfx.tick();closeCoach();};})();
 const tipsOn=()=>AUD.tips!==false;
+// a tip target only counts if it is really on screen: not inside a closed screen, not zero-size, not hidden
+const COACH_OVER=['#sound','#report','#qa','#confirm','#pause','#guide','#tip','#credits','#trainMenu','#sysinfo','#resv'];
+function coachShown(el){if(!el||el.closest('.off'))return false;const r=el.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(el).visibility!=='hidden';}
+// something else (options, report, confirm...) is open on top of the tip's own screen
+function coachCovered(el){return COACH_OVER.some(id=>{const o=document.querySelector(id);return o&&!o.classList.contains('off')&&!(el&&o.contains(el));});}
 function coach(id,...args){
   if(TR)return false;
   const T=COACH_TIPS[id];if(!T||!tipsOn())return false;S.tips=S.tips||{};if(S.tips[id])return false;
   if(T.run&&!(G&&G.tut))return false;
+  if(T.el){const tg=document.querySelector(T.el);if(tg&&(!coachShown(tg)||coachCovered(tg)))return false;}   // delayed hooks can fire after the screen has closed: keep the tip for later
   S.tips[id]=1;persist();CO.q.push({id,text:T.t(...args),el:T.el});if(!CO.open)nextCoach();return true;
 }
 function nextCoach(){
   const it=CO.q.shift();if(!it){CO.open=null;return;}CO.open=it;
   const pc=$('#coPc');pc.width=pc.height=10;drawPortrait(pc,S.pilot);
   $('#coName').textContent=`${captainName().toUpperCase()} · CAPTAIN`;$('#coText').textContent=it.text;
-  const box=$('#coach'),ring=$('#coRing'),tg=it.el&&document.querySelector(it.el),r=tg&&tg.offsetParent!==null?tg.getBoundingClientRect():null;
+  const box=$('#coach'),ring=$('#coRing'),tg=it.el&&document.querySelector(it.el),r=tg&&coachShown(tg)?tg.getBoundingClientRect():null;it.sc=scene;
   box.classList.toggle('low',!!(r&&r.top+r.height/2<innerHeight*.45));
   if(r&&r.width){ring.style.cssText=`left:${r.left-5}px;top:${r.top-5}px;width:${r.width+10}px;height:${r.height+10}px`;ring.hidden=false;}else ring.hidden=true;
   if(scene==='game'&&G.running){CO.paused=!paused;paused=true;}
   box.hidden=false;box.classList.remove('in');void box.offsetWidth;box.classList.add('in');tone(740,.05,'square',.02);setTimeout(()=>tone(990,.06,'square',.02),70);
 }
-function closeCoach(){$('#coach').hidden=true;$('#coRing').hidden=true;if(CO.paused&&scene==='game'&&$('#pause').classList.contains('off'))paused=false;CO.paused=false;setTimeout(nextCoach,250);}
+// keep the tip honest: follow its target, and withdraw it (to be shown again later) if its screen closes or something covers it
+function dropCoach(){const it=CO.open;if(!it)return;if(S.tips&&it.id)S.tips[it.id]=0;CO.q.length=0;closeCoach(true);}
+setInterval(()=>{const it=CO.open;if(!it||$('#coach').hidden)return;
+  const tg=it.el&&document.querySelector(it.el);
+  if(scene!==it.sc||(tg&&!coachShown(tg))||coachCovered(tg)){dropCoach();return;}
+  if(tg){const r=tg.getBoundingClientRect(),ring=$('#coRing');if(!ring.hidden)ring.style.cssText=`left:${r.left-5}px;top:${r.top-5}px;width:${r.width+10}px;height:${r.height+10}px`;}},250);
+function closeCoach(drop){$('#coach').hidden=true;$('#coRing').hidden=true;if(CO.paused&&scene==='game'&&$('#pause').classList.contains('off'))paused=false;CO.paused=false;if(drop)CO.open=null;else setTimeout(nextCoach,250);}
 function resetTips(){S.tips={};S.tutRunDone=false;persist();toast('<b>Captain’s tips reset</b><span>Your next launch is the guided run, and every tip plays again.</span>','#7ff3ff');}
 // which map tip fits the moment; one at a time
 function coachMap(){if(scene!=='map'||READOUT||!stageSeen(stageNow())||!S.gal||!S.choices||!tipsOn())return;const g=S.gal,runs=career().runs;
@@ -3571,7 +3583,7 @@ function coachMap(){if(scene!=='map'||READOUT||!stageSeen(stageNow())||!S.gal||!
   coach('move');}
 // hook the moments without touching each screen
 const _renderMap=renderMap;renderMap=function(...a){const r=_renderMap.apply(this,a);setTimeout(coachMap,450);return r;};
-const _showBrief=showBrief;showBrief=function(...a){const p=_showBrief.apply(this,a);setTimeout(()=>coach('brief'),700);return p;};
+const _showBrief=showBrief;showBrief=function(...a){const p=_showBrief.apply(this,a);setTimeout(()=>{if(!$('#brief').classList.contains('off'))coach('brief');},700);return p;};
 const _openResearch=openResearch;openResearch=function(...a){_openResearch.apply(this,a);setTimeout(()=>coach('research'),500);};
 const _goStation=goStation;goStation=function(...a){_goStation.apply(this,a);setTimeout(()=>coach('station'),500);};
 const _openTach=openTach;openTach=function(...a){_openTach.apply(this,a);setTimeout(()=>coach('tach'),700);};
@@ -4644,7 +4656,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v69';
+const BUILD='v70';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
