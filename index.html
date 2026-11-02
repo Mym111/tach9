@@ -156,12 +156,7 @@ button:disabled{cursor:default}
 .mk-near div{display:grid;grid-template-columns:1fr auto 52px;gap:8px;align-items:center;font-size:12px;color:var(--dim);padding:0 4px}
 .mk-near b{text-align:right;color:var(--bucks);font-weight:600}
 .srow.dbg span{color:#ff8a95}
-#dbgSeg button{white-space:nowrap}
-#dbgTach button{white-space:nowrap;min-width:36px}
-#dbgTach #dbgTachN{color:var(--ink);min-width:48px;opacity:1}
-#dbgTach #dbgTachGo{color:#ff8a95}
-#dbgTach #dbgTachGo.armed{background:var(--alert);color:#1b0408}
-#dbgTach #dbgTachGo:disabled{opacity:.35}
+#dbgSeg button,#dbgTf button{white-space:nowrap}
 .htabs[hidden]+.hg-body{margin-top:14px}
 .toast{position:absolute;left:50%;top:calc(76px + env(safe-area-inset-top,0px));z-index:8;transform:translate(-50%,-14px);opacity:0;pointer-events:none;transition:opacity .3s,transform .35s cubic-bezier(.2,.7,.2,1);
   background:rgba(8,14,28,.95);border:1px solid var(--tc);box-shadow:0 0 22px color-mix(in srgb,var(--tc) 35%,transparent);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:220px;text-align:center}
@@ -944,7 +939,7 @@ button:disabled{cursor:default}
       <div class="srow"><span>Tester mode</span><button class="tog" id="togQA">On</button></div>
       <div class="srow"><span>Launch countdown</span><div class="seg" id="cdSeg"><button data-v="0">Off</button><button data-v="3">3s</button><button data-v="5">5s</button></div></div>
       <div class="srow dbg"><span>Debug</span><div class="seg" id="dbgSeg"><button data-k="cr">+500 CR</button><button data-k="al">+10 Alloy</button></div></div>
-      <div class="srow dbg"><span>Jump to Tach</span><div class="seg" id="dbgTach"><button type="button" data-d="-1" aria-label="Lower Tach">−</button><button type="button" id="dbgTachN" disabled>1</button><button type="button" data-d="1" aria-label="Higher Tach">+</button><button type="button" id="dbgTachGo">Go</button></div></div>
+      <div class="srow dbg"><span>Test Terraform</span><div class="seg" id="dbgTf"><button type="button" data-t="0">Easy</button><button type="button" data-t="9">Mid</button><button type="button" data-t="16">Hard</button></div></div>
       <button class="btn ghost" id="optTips">Replay tutorial &amp; tips</button>
       <button class="btn ghost" id="optQA">Tester report</button>
       <button class="btn ghost" id="optReport">Campaign report</button>
@@ -1440,7 +1435,7 @@ function renderSound(){
   $('#volMusic').disabled=!AUD.music;$('#volSfx').disabled=!AUD.sfx;
   $('#volMasterV').textContent=AUD.master;$('#volMusicV').textContent=AUD.mv;$('#volSfxV').textContent=AUD.sv;
 }
-function openSound(){audio();renderSound();dbgTachSync(false);$('#optHome').hidden=scene==='splash'||scene==='game';show('#sound',true);}
+function openSound(){audio();renderSound();$('#optHome').hidden=scene==='splash'||scene==='game';show('#sound',true);}
 
 /* ================= SPACE BACKDROP ================= */
 const SP={cv:$('#space'),ctx:null,stars:[],warp:0,warpTarget:0,shipX:0,launching:false,t:0};
@@ -3517,8 +3512,8 @@ function tfPlan(st){const th=clamp(1+Math.floor((st.threat||0)/3),1,6),d=depthNo
   return{th,bw:(.078-.007*th)*(d===0?1.25:d===2?.9:1)*(sn>=3?1.2:1),sp:(.5+.05*th)*(sn>=2?.85:1),limit:Math.max(3,4+(d===0?1:0)-(d===2?1:0)),sn,mul:DEPTH_PAY[d]};}
 let TF=null;
 const tfT=t=>{const s=Math.max(0,Math.round((performance.now()-t.t0)/1000));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
-function openTerra(st){if(!canTerra(st)||TF||TR)return;const p=tfPlan(st);
-  TF={s:st,p,fails:0,free:1,slow:0,t0:performance.now(),last:performance.now(),flash:0,done:null,fc:0,ft:0,fm:0,
+function openTerra(st,test){if(!test&&!canTerra(st))return;if(TF||TR)return;const p=tfPlan(st);
+  TF={s:st,p,test:!!test,fails:0,free:1,slow:0,t0:performance.now(),last:performance.now(),flash:0,done:null,fc:0,ft:0,fm:0,
     rep:{taps:0,amber:0,haz:0,cat:0,locks:[]},log:'Tap a gauge while its marker is in the green.',
     geo:GEO.map((g,i)=>({k:g.k,locked:false,q:'',cu:.28+Math.random()*.44,ph:Math.random()*2,bw:p.bw,sp:p.sp*Math.pow(g.vol,.7),sp0:p.sp*Math.pow(g.vol,.7),u:.5,miss:0}))};
   show('#terra',true);sfx.tick();tfRows();requestAnimationFrame(tfLoop);}
@@ -3535,11 +3530,12 @@ function tfCat(){const t=TF;if(!t||t.done||t.slow>performance.now())return;if(t.
   if(t.free>0)t.free--;else{const b=bagNow(),k=b.indexOf(Math.max(...b));b[k]--;}
   t.slow=performance.now()+4500;t.rep.cat++;t.log='Catalyst: every gauge slows for a few seconds.';sfx.perk&&sfx.perk(1);persist();tfBtns();}
 function tfEnd(kind){const t=TF;t.done=kind;const g=S.gal,st=t.s,pf=t.rep.locks.filter(l=>l.q==='perfect').length;
-  if(kind==='win'){const sur=Math.max(0,t.p.limit-t.fails-1)+Math.floor(pf/2),cr=Math.round((40+25*t.p.th+sur*14)*t.p.mul),al=1+Math.floor(sur/2);
+  if(kind==='win'&&t.test){t.cr=0;t.al=0;t.sur=0;sfx.coin();}
+  else if(kind==='win'){const sur=Math.max(0,t.p.limit-t.fails-1)+Math.floor(pf/2),cr=Math.round((40+25*t.p.th+sur*14)*t.p.mul),al=1+Math.floor(sur/2);
     S.bucks+=cr;if(S.station)S.station.alloy+=al;st.terra=true;g.terra=terraDone(g)+1;t.cr=cr;t.al=al;t.sur=sur;
     if(sur>=3&&unl('relics')){const rr=rollRelics(2);S.pendRelics=rr.map(x=>x.id);t.relic=rr.length>0;}sfx.coin();}
   else sfx.boom();
-  t.text=tfReport();S.tfLog=(S.tfLog||[]).concat([t.text]).slice(-12);persist();tfRows();}
+  t.text=tfReport();if(!t.test){S.tfLog=(S.tfLog||[]).concat([t.text]).slice(-12);persist();}tfRows();}
 function tfReport(){const t=TF,r=t.rep,pf=r.locks.filter(l=>l.q==='perfect').length,fps=t.fc?(1000/(t.ft/t.fc)).toFixed(0):'-';
   return [`TERRAFORM REPORT · ${t.s.name.toUpperCase()} · ${BUILD}`,
    `${t.done==='win'?'WIN':'LOST (instability)'} · ${tfT(t)} · threat tier ${t.p.th} · ${DEPTH_NAME[depthNow()]} · sensors L${t.p.sn}`,
@@ -3547,7 +3543,7 @@ function tfReport(){const t=TF,r=t.rep,pf=r.locks.filter(l=>l.q==='perfect').len
    `taps ${r.taps}: ${r.locks.length} locked, ${r.amber} early/late, ${r.haz} hazard`,
    `lock order: ${r.locks.map(l=>`${l.k} ${l.t} ${l.q}`).join(' · ')||'none'}`,
    `perf: ${fps} fps avg, worst frame ${t.fm.toFixed(0)} ms`].join('\n');}
-function tfClose(){const t=TF;if(!t)return;show('#terra',false);TF=null;const g=S.gal;
+function tfClose(){const t=TF;if(!t)return;show('#terra',false);TF=null;const g=S.gal;if(t.test)return;
   if(t.done==='win'){const left=terraNeed(g)-terraDone(g);toast(left>0?`<b>${t.s.name} terraformed</b><span>${left} more world${left>1?'s':''} before the Exodus Gate unseals.</span>`:`<b>${t.s.name} terraformed</b><span>The Exodus Gate is unsealed.</span>`,'#5ef0d0');}
   showStarWidget(t.s);updateMapActions();if(t.done==='win'&&t.relic)setTimeout(openRelicOffer,400);}
 // ---- the planet: a small pixel sphere that changes as geo-forms settle
@@ -5059,7 +5055,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v84';
+const BUILD='v85';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5486,29 +5482,10 @@ $('#dbgSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(
   if(scene==='station')renderStation();else if(scene==='hangar')renderHangar();else if(scene==='map')updateMapActions();
   if(scene==='splash')renderSplash();
   const t=b.textContent;b.textContent='Added';setTimeout(()=>b.textContent=t,700);});
-/* Debug: jump to Tach N. Tach N means "attempting Tach N", i.e. galaxy N (tachNow() = N-1 reached). Credits, upgrades and station are kept; only the galaxy is rebuilt. */
-const DBG={n:1,armed:false,tm:0};
-const dbgTachOK=()=>scene==='map'||scene==='station'||scene==='hangar'||(scene==='splash'&&hasSave);
-function dbgTachSync(keepN){
-  clearTimeout(DBG.tm);DBG.armed=false;
-  if(!keepN)DBG.n=clamp((S.gal&&S.gal.num)||1,1,TACH_GOAL);
-  const go=$('#dbgTachGo');if(!go)return;
-  $('#dbgTachN').textContent=DBG.n;go.textContent='Go';go.classList.remove('armed');
-  go.disabled=!dbgTachOK();go.title=go.disabled?'Finish or leave the run first':'';
-}
-function debugJumpTach(n){
-  n=clamp(n|0,1,TACH_GOAL);ensureStation();
-  S.gal=genGalaxy((Math.random()*2**31)|0,n);ensureGalaxy();S.choices=genChoices();
-  const q=qa();q.dbg=(q.dbg||0)+1;persist();sfx.buy();
-  show('#sound',false);
-  if(scene==='splash')renderSplash();else goMap();
-  toast(`<b>Debug · Tach ${n}</b><span>Fresh galaxy at Tach ${n} difficulty. Credits, upgrades and station kept.</span>`,'#ff8a95');
-}
-$('#dbgTach').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;
-  if(b.dataset.d){DBG.n=clamp(DBG.n+(+b.dataset.d),1,TACH_GOAL);dbgTachSync(true);sfx.tick();return;}
-  if(b.id!=='dbgTachGo'||!dbgTachOK())return;
-  if(!DBG.armed){DBG.armed=true;b.classList.add('armed');b.textContent='Sure?';clearTimeout(DBG.tm);DBG.tm=setTimeout(()=>dbgTachSync(true),3000);sfx.tick();return;}
-  clearTimeout(DBG.tm);DBG.armed=false;debugJumpTach(DBG.n);});
+/* Debug: Terraform test with a dummy world. Nothing is saved or paid out. */
+$('#dbgTf').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||TF||TR)return;
+  if(!(scene==='map'||scene==='station'||scene==='hangar')){toast('<b>Terraform test</b><span>Open it from the map or the station.</span>','#ff8a95');return;}
+  show('#sound',false);openTerra({id:-1,name:'Test World',threat:+b.dataset.t,clears:1,terra:false},true);});
 $('#soundDone').onclick=()=>show('#sound',false);$('#sound').addEventListener('click',e=>{if(e.target.id==='sound')show('#sound',false);});
 $('#togMusic').onclick=()=>{AUD.music=!AUD.music;if(!AUD.music)musicStop();saveAudio();applyAudio();renderSound();};
 document.querySelectorAll('#cdSeg button').forEach(b=>b.onclick=()=>{AUD.cd=+b.dataset.v;saveAudio();renderSound();sfx.tick();});
