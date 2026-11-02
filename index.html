@@ -2395,7 +2395,7 @@ function drawScan(cv,ch,t){
   c.textAlign='left';c.textBaseline='alphabetic';c.fillStyle='#e1e9f7';c.font='700 16px Silkscreen, monospace';c.fillText(ch.name.toUpperCase(),14,30);{const nw=c.measureText(ch.name.toUpperCase()).width,lab=ch.here?'STATION HERE':'1 JUMP',col=ch.here?'#7ff3ff':'#ffb547';c.font='8px Silkscreen, monospace';const lw2=c.measureText(lab).width+12;c.strokeStyle=col;c.lineWidth=1;rr(c,22+nw,17,lw2,16,5);c.stroke();c.fillStyle=col;c.textBaseline='middle';c.fillText(lab,28+nw,25.5);c.textBaseline='alphabetic';}
   const tp=Math.min(ch.threat+1,8);for(let i=0;i<8;i++){c.fillStyle=i<tp?'#ff4d5e':'rgba(255,77,94,.16)';c.fillRect(14+i*10,40,7,7);}
   hit(8,8,W*.5,26,'system');hit(8,34,92,20,'threat');
-  const pills=[];if(ch.gate)pills.push([`TACH ${S.gal.num} · ${pctTxt(tachPlan().total)}`,'#5ef0d0','gatepill']);if(ch.shard)pills.push([ch.shardClaimed?'PART · RECOVERED':'PART · GUARDED',SHARD_COL,'shard']);if(ch.lm)pills.push([LANDMARKS[ch.lm].short,LANDMARKS[ch.lm].col,'lm']);
+  const pills=[];if(ch.gate)pills.push([S.gal.cons?(S.gal.gateWon?'GATE OPEN':'EXODUS GATE'):`TACH ${S.gal.num} · ${pctTxt(tachPlan().total)}`,'#5ef0d0','gatepill']);if(ch.shard)pills.push([ch.shardClaimed?'PART · RECOVERED':'PART · GUARDED',SHARD_COL,'shard']);if(ch.lm)pills.push([LANDMARKS[ch.lm].short,LANDMARKS[ch.lm].col,'lm']);
   if(ch.sig)pills.push([SIGS[ch.sig].short,SIGS[ch.sig].col,'sig']);
   if(pills.length){let px0=104;c.font='8px Silkscreen, monospace';
     for(const[lab,pc,key]of pills){const lw=c.measureText(lab).width+14;if(px0+lw>W-12)break;c.fillStyle=pc+'22';rr(c,px0,36,lw,16,5);c.fill();c.strokeStyle=pc;c.lineWidth=1;c.stroke();
@@ -2460,7 +2460,7 @@ function drawScans(t){const car=$('#carousel'),pos=car.scrollLeft/(car.clientWid
 function renderMap(){
   S.choices=genChoices();const g=S.gal;
   drawPortrait($('#mapPilot'),S.pilot);$('#mapCall').textContent=captainName();
-  $('#mapSub').textContent=`Tach ${tachNow()} · ${g.regions[g.stars[g.at].r].name}`;
+  $('#mapSub').textContent=g.cons?`Tach ${g.num} · ${g.cons.name}`:`Tach ${tachNow()} · ${g.regions[g.stars[g.at].r].name}`;
   ensureStation();$('#mapBucks').innerHTML=wallet();
   const car=$('#carousel');car.innerHTML='';
   S.choices.forEach((ch,i)=>{
@@ -2483,7 +2483,7 @@ const REGION_COLS=['#4da6ff','#c792ff','#ff9640'];
 const REGION_BIAS=[{asteroid:3,nebula:2.5,horizon:1,imperial:1,flare:.8},{imperial:3,horizon:2.5,nebula:1.5,asteroid:1,flare:1.2},{flare:3,horizon:2,imperial:2.5,nebula:1,asteroid:1}];
 function seededRng(seed){let s=(seed>>>0)||1;return()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0;return s/4294967296;};}
 const starDist=(a,b)=>Math.hypot((a.x-b.x)*1.7,a.y-b.y);
-function genGalaxy(seed,num=1){
+function genGalaxyLegacy(seed,num=1){
   const R=seededRng(seed),rp=a=>a[Math.floor(R()*a.length)],stars=[],names=new Set();
   const usedA=new Set(),regions=[0,1,2].map(i=>{let a;do a=rp(REGION_A);while(usedA.has(a));usedA.add(a);return{name:`${a} ${rp(REGION_B)}`,col:REGION_COLS[i]};});
   let tries=0;
@@ -2511,6 +2511,32 @@ function genGalaxy(seed,num=1){
   const g={seed,num,stars,regions,at:start.id,gate:gate.id,turn:0,visited:[start.id]};
   revealAround(g);return g;
 }
+/* ================= v73: CONSTELLATION MAPS. Each Tach is a real constellation, star to star, to the Exodus Gate at the far end ================= */
+// s: [name, x, y] on a 0..1 chart; e: lines between stars. The leftmost star is where the station starts, the rightmost is the Exodus Gate.
+const CONSTELLATIONS=[
+ {name:'Crux',s:[['Mimosa',.08,.50],['Ginan',.46,.52],['Gacrux',.46,.10],['Acrux',.46,.90],['Imai',.92,.45]],e:[[0,1],[1,2],[1,3],[1,4]]},
+ {name:'Cassiopeia',s:[['Caph',.07,.30],['Schedar',.28,.72],['Cih',.50,.35],['Ruchbah',.72,.72],['Segin',.93,.28]],e:[[0,1],[1,2],[2,3],[3,4]]},
+ {name:'Lyra',s:[['Vega',.07,.22],['Zeta',.30,.30],['Delta',.42,.68],['Sheliak',.62,.40],['Sulafat',.72,.82],['Aladfar',.93,.48]],e:[[0,1],[1,3],[3,4],[4,2],[2,1],[3,5]]},
+ {name:'Cygnus',s:[['Albireo',.07,.55],['Sadr',.40,.50],['Gienah',.46,.12],['Fawaris',.44,.90],['Deneb',.78,.46],['Azelfafage',.93,.18]],e:[[0,1],[1,4],[1,2],[1,3],[4,5]]},
+ {name:'Ursa Major',s:[['Alkaid',.07,.35],['Mizar',.24,.47],['Alioth',.40,.52],['Megrez',.54,.42],['Phecda',.60,.74],['Merak',.86,.74],['Dubhe',.93,.38]],e:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,3]]},
+ {name:'Leo',s:[['Regulus',.07,.78],['Algenubi',.19,.60],['Algieba',.30,.42],['Adhafera',.33,.20],['Rasalas',.18,.10],['Zosma',.58,.54],['Chertan',.62,.28],['Denebola',.93,.52]],e:[[0,1],[1,2],[2,3],[3,4],[2,5],[5,6],[6,7],[5,7]]},
+ {name:'Gemini',s:[['Tejat',.07,.88],['Propus',.12,.62],['Mebsuta',.34,.40],['Castor',.45,.14],['Pollux',.64,.12],['Wasat',.62,.50],['Mekbuda',.78,.78],['Alhena',.93,.88]],e:[[0,1],[1,2],[2,3],[2,5],[3,4],[4,5],[5,6],[6,7]]},
+ {name:'Scorpius',s:[['Lesath',.07,.90],['Shaula',.10,.72],['Sargas',.22,.58],['Girtab',.34,.68],['Wei',.38,.48],['Antares',.55,.40],['Alniyat',.62,.58],['Dschubba',.78,.24],['Graffias',.93,.40]],e:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[5,7],[7,8],[6,8]]},
+ {name:'Orion',s:[['Betelgeuse',.08,.20],['Meissa',.36,.08],['Bellatrix',.70,.14],['Alnitak',.28,.52],['Alnilam',.50,.50],['Mintaka',.70,.48],['Saiph',.22,.90],['Hatysa',.50,.72],['Rigel',.93,.86]],e:[[0,1],[1,2],[0,3],[2,5],[3,4],[4,5],[3,6],[4,7],[5,8]]}];
+function genGalaxy(seed,num=1){
+  const C=CONSTELLATIONS[(num-1)%CONSTELLATIONS.length],R=seededRng(seed),stars=[];
+  const xs=C.s.map(a=>a[1]),mn=Math.min(...xs),mx=Math.max(...xs);
+  const regions=[0,1,2].map(i=>({name:`${C.name} · ${['Approach','Core','Reach'][i]}`,col:REGION_COLS[i]}));
+  C.s.forEach(([name,x,y],i)=>{const r=Math.min(2,Math.floor(3*(x-mn)/(mx-mn+1e-6))),bias=REGION_BIAS[r],keys=Object.keys(bias),tot=keys.reduce((a,k)=>a+bias[k],0);let q=R()*tot,key=keys[0];
+    for(const k of keys){q-=bias[k];if(q<=0){key=k;break;}}
+    stars.push({id:i,name,x,y,r,key,threat:r*2+(R()<.5?1:0)+(num-1)*2,links:[],clears:0,seen:false});});
+  for(const[a,b]of C.e){stars[a].links.push(b);stars[b].links.push(a);}
+  const start=stars.reduce((a,b)=>b.x<a.x?b:a),gate=stars.reduce((a,b)=>b.x>a.x?b:a);
+  start.key='asteroid';start.threat=(num-1)*2;gate.key='imperial';
+  const g={seed,num,stars,regions,at:start.id,gate:gate.id,turn:0,visited:[start.id],cons:{name:C.name}};
+  revealAround(g);return g;
+}
+async function gateJump(){const g=S.gal;if(!g||!g.gateWon)return;nextGalaxy();}
 function revealAround(g){const depth=1+Math.max(1,rle('comms'));let front=[g.at],seen=new Set(front);g.stars[g.at].seen=true;
   for(let d=0;d<depth;d++){const nx=[];for(const id of front)for(const j of g.stars[id].links)if(!seen.has(j)){seen.add(j);g.stars[j].seen=true;nx.push(j);}front=nx;}}
 const salvageOf=st=>Math.max(.25,1-.3*st.clears);
@@ -2618,7 +2644,7 @@ function showStarWidget(s){
   if(i>=0){MAP.selOut=false;selectCard(i);}else{MAP.selOut=true;updateMapActions();}
   if(!s.seen){MAP.wFull=false;w.classList.remove('full');w.innerHTML=`<div class="sw-h"><span></span><div><b>Unexplored star</b><span>Beyond your scanners</span></div><button class="sw-x" aria-label="Close">✕</button></div>`;}
   else{alloyInit(s);const thr=s.threat+(s.shard&&!s.shardClaimed?1:0),pay=Math.round(gateBonusBase(thr,sys)*salvageOf(s)*(s.sig==='storm'?1.6:1));
-    const chips=[s.id===g.gate?['»',`Tach ${g.num} attempt · ${pctTxt(tachPlan().total)} chance`,'#5ef0d0']:null,s.shard?[glyphTag('crystal',SHARD_COL),s.shardClaimed?'Gate part · recovered':'Gate part · guarded',SHARD_COL]:null,s.lm?[glyphTag(LM_GLYPH[s.lm]||'ring',LANDMARKS[s.lm].col),LANDMARKS[s.lm].name,LANDMARKS[s.lm].col]:null,s.sig?[glyphTag(SIG_GLYPH[s.sig]||'signal',SIGS[s.sig].col),SIGS[s.sig].name,SIGS[s.sig].col]:null,
+    const chips=[s.id===g.gate?(g.cons?['»',g.gateWon?'Exodus Gate · open. Jump on':`Exodus Gate · clear it to reach Tach ${g.num}`,'#5ef0d0']:['»',`Tach ${g.num} attempt · ${pctTxt(tachPlan().total)} chance`,'#5ef0d0']):null,s.shard?[glyphTag('crystal',SHARD_COL),s.shardClaimed?'Gate part · recovered':'Gate part · guarded',SHARD_COL]:null,s.lm?[glyphTag(LM_GLYPH[s.lm]||'ring',LANDMARKS[s.lm].col),LANDMARKS[s.lm].name,LANDMARKS[s.lm].col]:null,s.sig?[glyphTag(SIG_GLYPH[s.sig]||'signal',SIGS[s.sig].col),SIGS[s.sig].name,SIGS[s.sig].col]:null,
       s.res?['⚗',`Researched · ${s.res.name} · ${reelDef(s.res.k).name} +${s.res.amt}`,reelDef(s.res.k).col]:canResearch(s)?['⚗','Research ready · park here','#ffd84a']:s.id!==g.gate&&!s.clears?['⚗','Clear it to unlock research','#7f8fb2']:null,
       s.clears?['✓',`Cleared ${s.clears}× · salvage ${Math.round(salvageOf(s)*100)}%`,'#38e09b']:null].filter(Boolean);
     const sub=here?'Station here':i>=0?'One jump':'Out of range';
@@ -2638,7 +2664,7 @@ function hideStarWidget(){$('#sWidget').hidden=true;MAP.wSel=null;MAP.wFull=fals
 function chartTap(e){
   const g=S.gal;if(!g||MAP.anim)return;const{cv,px,py}=chartGeom(),r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
   let best=null;for(const s of g.stars){const d=Math.hypot(px(s.x)-x,py(s.y)-y);if(d<20&&(!best||d<best.d))best={s,d};}
-  if(best){showStarWidget(best.s);if(best.s.id===g.gate)openTach();return;}
+  if(best){showStarWidget(best.s);if(best.s.id===g.gate&&!g.cons)openTach();return;}
   {const H2=cv.clientHeight,W2=cv.clientWidth;for(let i=0;i<3;i++){const bd=regionBody(g,i),bs=Math.min(W2*.3,H2*.42)*(MAP.z||1),bx=px(.05+i*.3+.15),by=H2/2+(i===1?-H2*.14:H2*.1)*(MAP.z||1);
     if(Math.hypot(x-bx,y-by)<bs*.42){sfx.tick();toast(`<b>${bd.name} · ${bd.kind}</b><span>${bd.fact} This region of the map is modelled on it.</span>`,g.regions[i].col);return;}}}
 }
@@ -2673,7 +2699,7 @@ function updateMapActions(){
   const ib=(b,ico,lab)=>{b.classList.add('mib');b.innerHTML=`<span class="ib-i">${ICO[ico]}</span><span class="ib-t">${lab}</span>`;};
   ib($('#hangarBtn'),'station','Station');ib($('#commsBtn'),'signal','Comms');
   {const rb=$('#resBtn'),here=S.gal.stars[S.gal.at];rb.hidden=out||!ch.here||!canResearch(here);rb.disabled=busy;ib(rb,'flask','Research');}
-  jb.hidden=out||!ch.here;jb.disabled=busy;if(ch.gate)ib(jb,'tach',`Tach ${S.gal.num}`);else ib(jb,'rocket','Launch');jb.classList.toggle('tachb',!!ch.gate);
+  jb.hidden=out||!ch.here;jb.disabled=busy;if(ch.gate)ib(jb,'tach',S.gal.cons?(S.gal.gateWon?'Jump on':'Exodus Gate'):`Tach ${S.gal.num}`);else ib(jb,'rocket','Launch');jb.classList.toggle('tachb',!!ch.gate);
   mb.hidden=out||ch.here;
   if(!ch.here&&!out){const cost=moveCost(S.gal.stars[ch.starId]);mb.disabled=busy||S.bucks<cost;ib(mb,'jumpb',`Move · ${cost}`);}
 }
@@ -2903,7 +2929,7 @@ const LANDMARKS={
         desc:'An old navigation relay. The first time your station parks here, it charts every star in this region and the next.'},
 };
 function initPhase4(g){
-  g.td=1;
+  g.td=1;if(g.cons)g.shardInit=true;
   // v53: the breach is gone. Older saves drop their enemies, roles and defenses.
   if(!g.calm){g.calm=1;g.waves=[];delete g.front;delete g.nextWave;delete g.sq;delete g.acts;
     for(const s of g.stars){s.occ=false;delete s.role;delete s.def;delete s.refugees;}}
@@ -3056,7 +3082,7 @@ function scheduleHold(i,t){
 function nextGalaxy(){
   const g=S.gal;S.legacy=(S.legacy||[]);S.legacy.push({num:g.num,rating:rating(),runs:glog().exp.length});
   S.gal=genGalaxy((Math.random()*2**31)|0,g.num+1);ensureGalaxy();S.choices=genChoices();persist();goMap();
-  toast(`<b>Tach ${tachNow()} · a new galaxy</b><span>Threat is higher out here. Recover new gate parts to calibrate the next jump.</span>`,'#5ef0d0');
+  toast(S.gal.cons?`<b>Tach ${S.gal.num} · ${S.gal.cons.name}</b><span>${g.num>=TACH_GOAL?'Tach 9 is behind us. Nobody has gone faster, and the chart keeps going. ':''}A new constellation. Threat is higher out here, and the Exodus Gate waits at the far end.</span>`:`<b>Tach ${tachNow()} · a new galaxy</b><span>Threat is higher out here. Recover new gate parts to calibrate the next jump.</span>`,'#5ef0d0');
 }
 /* ================= PHASE 3: population, legend, signals, crates ================= */
 const SIGS={
@@ -3392,7 +3418,7 @@ function sysView(key){const b=SYSTEMS[key];if(stageNow()>=9)return b;const o=Obj
   if(!feat('mods')){for(const k of ['bounty','bucksW','drainAdd','gapRate','gateMul','richPlanets','sensorAdd','slingBonus','twist','bonus','twistT','bonusT'])delete o[k];}
   return o;}
 const STAGES=[null,
- {short:'The basics',obj:'Fly this system and reach the gate. Swap two neighbouring tiles to line up three or more of a colour. Each colour charges one ship system, and that system deals with one kind of contact on the scope. Recover gate parts along the way and the Tach drive can jump us to the next galaxy.',
+ {short:'The basics',obj:'Fly this system and reach the gate. Swap two neighbouring tiles to line up three or more of a colour. Each colour charges one ship system, and that system deals with one kind of contact on the scope. Work your way along the constellation, star by star, to the Exodus Gate at the far end. Clear that last system and the station jumps on to the next Tach.',
   news:['Match 3+: Weapons beat ships, Shields deflect rocks, Sensors scan planets, Engines slingshot wells','Fuel cells top up the tank. Keep an eye on fuel and hull','Nothing is chasing us yet. Take your time and learn the board']},
  {short:'Line tiles',obj:'Same job, one new trick for the board.',
   news:['Match 4 in a row to forge a LINE tile','Match a line tile later and it sweeps its whole row or column']},
@@ -3417,7 +3443,7 @@ let READOUT=false;
 async function tachReport(){const n=stageNow();
   if(TR||READOUT||!S.gal||scene!=='map'||stageSeen(n)||WARP||document.querySelector('.screen.overlay:not(.off)'))return;
   READOUT=true;markStage(n);const st=STAGES[n],nm=(captainName()||'Pilot').toUpperCase();
-  const pr=askConfirm(`TACH ${n} · ${st.short.toUpperCase()}`,`<div class="br-pilot"><canvas id="rdPc" class="pix"></canvas><div><span>${nm} · PILOT READOUT</span><p>${n===1?'Welcome aboard. ':''}${st.obj}</p></div></div><ul class="br-ul br-new">${st.news.map(t=>`<li><i>▸</i>${t}</li>`).join('')}</ul>`,'Understood');
+  const pr=askConfirm(`TACH ${n} · ${st.short.toUpperCase()}`,`<div class="br-pilot"><canvas id="rdPc" class="pix"></canvas><div><span>${nm} · PILOT READOUT</span><p>${n===1?'Welcome aboard. ':''}${st.obj}${S.gal.cons?` Tonight we chart <b>${S.gal.cons.name}</b>: ${S.gal.stars.length} stars, and the Exodus Gate waits at <b>${S.gal.stars[S.gal.gate].name}</b>.`:''}</p></div></div><ul class="br-ul br-new">${st.news.map(t=>`<li><i>▸</i>${t}</li>`).join('')}</ul>`,'Understood');
   {const c=$('#rdPc');if(c)drawPortrait(c,S.pilot);}$('#cfNo').style.display='none';
   await pr;$('#cfNo').style.display='';READOUT=false;setTimeout(coachMap,350);}
 const _renderMap2=renderMap;renderMap=function(...a){const r=_renderMap2.apply(this,a);setTimeout(tachReport,300);return r;};
@@ -3642,7 +3668,7 @@ const RESEARCH={
 const RES_LEAN={asteroid:['eng','shd'],nebula:['sns','lux'],imperial:['wpn','sns'],flare:['shd','eng'],horizon:['lux','eng']};
 const RES_AMT=[1,1.5,2];   // further east, bigger breakthroughs
 const resOf=g=>{if(!g.res)g.res={sns:0,wpn:0,shd:0,eng:0,lux:0};return g.res;};
-const canResearch=st=>!!(st&&S.gal&&st.clears>0&&!st.res&&st.id!==S.gal.gate);
+const canResearch=st=>!!(st&&S.gal&&!S.gal.cons&&st.clears>0&&!st.res&&st.id!==S.gal.gate);
 const reelDef=k=>TACH_REELS.find(r=>r.k===k);
 function researchOptions(st){
   const g=S.gal,R=seededRng((g.seed^(st.id*2654435761))>>>0),lean=RES_LEAN[st.key]||['sns','wpn'],amt=RES_AMT[st.r]||1;
@@ -3687,7 +3713,7 @@ const COACH_TIPS={
   part:{el:'#chartCv',t:()=>'See the teal crystal? A gate part. Win the system that holds it and the part calibrates our Luxometer. Four makes for a clean Tach jump.'},
   station:{el:'#stCv',t:()=>feat('rooms')?'Our station. Rooms run on Alloy, credits and crew. The Shipyard rebuilds our systems, and the Tach drive will push us past light.':'Our station. Room upgrades unlock at Tach 5. For now the Shipyard can still rebuild our ship systems.'},
   anomaly:{el:'#anBody',t:()=>'An anomaly. Every choice out here is a trade or a gamble. Read the odds and make the call.'},
-  gate:{el:'#chartCv',t:()=>'The Exodus Gate is in reach. From there we attempt the next Tach. Tap it to check our odds before we commit.'},
+  gate:{el:'#chartCv',t:()=>'The Exodus Gate is in reach. It is the last system in this constellation. Clear it and we jump on to the next. Tap it to see what is waiting.'},
   tach:{el:'.tc-tot',t:()=>'Five reels, one per system, and all five must hold. The chances multiply, so one weak reel drags the whole jump down. Shore up the weakest first.'},
   tach_fail:{el:'.tc-res',t:()=>'We lost a level on every system that failed. Hard lesson. Rebuild at the planets, research what broke, and we go again.'},
   depth:{el:'#brDepth',t:()=>'Your call on how deep we dive. Fly-by is quiet and pays less. Deep survey brings every threat, pays more, and offers better relics. The depth sets the stakes, so choose it before you give the order.'},
@@ -3840,9 +3866,9 @@ const ROOMS=[
   {k:'drone',name:'Drone bay',col:'#c792ff',max:3,cost:[[3,60],[5,120],[8,200]],panel:'drones',open:'Drone payloads',
    desc:'Drones ride along on every expedition. Every so often one drops onto the board carrying the payload you picked: a line clearer, a bomb or a hazard seeker. Higher levels mean more frequent drops and bigger payloads, and from level 2 drones also seal one hull breach when the hull runs low.',
    eff:L=>L?`A drone every ${DRONE_T[L]}s · ${PAYLOADS[payload()].name.toLowerCase()} ${PAYLOADS[payload()].eff(L)}${PATCH[L]?` · seals ${PATCH[L]} hull once`:''}`:'Offline'},
-  {k:'tach',name:'Tach drive',col:'#5ef0d0',max:3,cost:[null,[6,150],[10,300]],panel:'tach',open:'Tach readout',
-   desc:'The drive that pushes the station past light. Its Luxometer calibrates the jump against the gate parts you recover; a bigger drive calibrates better.',
-   eff:L=>`Calibration ${['','base','+1.5','+3'][L]}`},
+  {k:'tach',name:'Tach drive',col:'#5ef0d0',max:3,cost:[null,[6,150],[10,300]],panel:'tach',open:'Drive status',
+   desc:'The drive that pushes the station past light. It spools for the Exodus Gate at the end of each constellation, and a bigger drive pays out more when the gate system is cleared.',
+   eff:L=>`Gate payout ${['','base','+25%','+50%'][L]}`},
 ];
 {const ord=['comms','shipyard','war','habitat','refinery','drone','tach'];ROOMS.sort((a,b)=>ord.indexOf(a.k)-ord.indexOf(b.k));}
 const roomDef=k=>ROOMS.find(r=>r.k===k);
@@ -4056,7 +4082,7 @@ function paintCrew(d){const k=d.k,stn=S.station,cap=crewCap(k),v=stn.crew[k]||0,
   $('#crewNote').innerHTML=st==='low'?`Below half crew this room works one level lower${L===1?' (offline)':''}.`:st==='peak'?`Full-crew bonus: <b>${PEAK[k]}</b>.`:`At full crew: <b>${PEAK[k]}</b>.`;}
 function autoCrew(){const stn=S.station;if(!stn.crew)stn.crew={};for(const k of CREWED)stn.crew[k]=0;let left=stn.pop;const built=CREWED.filter(k=>rl(k));
   while(left>0){const open=built.filter(k=>stn.crew[k]<crewCap(k));if(!open.length)break;open.sort((a,b)=>stn.crew[a]/crewCap(a)-stn.crew[b]/crewCap(b));stn.crew[open[0]]++;left--;}}
-function openRoom(k){if(k==='tach'){openTach();return;}const d=roomDef(k);if(!d||!d.panel)return;H.tab=d.panel;H.room=k;sfx.tick();goHangar();$('#hangar .hg-body').scrollTop=0;}
+function openRoom(k){if(k==='tach'){if(S.gal&&S.gal.cons){toast(`<b>Tach drive · level ${rl('tach')}</b><span>It spools for the Exodus Gate. Each level above 1 adds 25% to the final system's payout.</span>`,'#5ef0d0');return;}openTach();return;}const d=roomDef(k);if(!d||!d.panel)return;H.tab=d.panel;H.room=k;sfx.tick();goHangar();$('#hangar .hg-body').scrollTop=0;}
 function stationTap(e){
   const cv=$('#stCv'),r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,inR=q=>q&&x>=q.x-4&&x<=q.x+q.w+4&&y>=q.y-4&&y<=q.y+q.h+4;
   for(const k in RM.badges)if(inR(RM.badges[k])){RM.sel=k;if(!roomDef(k).panel){sfx.tick();renderStation();return;}openRoom(k);return;}
@@ -4813,7 +4839,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v72';
+const BUILD='v73';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5002,7 +5028,8 @@ function buildDebrief(win,reason){
   }
   {const dp=G.depth==null?1:G.depth,base=pay.reduce((a,p)=>a+p[1],0);
    if(win&&dp!==1&&base>0)pay.push([`${DEPTH_NAME[dp]} · pay ${dp<1?'−40%':'+60%'}`,Math.round(base*(DEPTH_PAY[dp]-1))]);
-   if(win&&base>0&&relicHas('salvager'))pay.push(['Salvager relic · +20%',Math.round(base*.2)]);}
+   if(win&&base>0&&relicHas('salvager'))pay.push(['Salvager relic · +20%',Math.round(base*.2)]);
+   if(win&&base>0&&CHOICE.gate&&S.gal&&S.gal.cons&&rl('tach')>1)pay.push(['Tach drive spool',Math.round(base*.25*(rl('tach')-1))]);}
   d.pay=pay;d.total=pay.reduce((a,p)=>a+p[1],0);
   // bank immediately so leaving early never loses anything
   S.bucks+=d.total;if(win)S.cleared++;if(G.tut)S.tutRunDone=true;
@@ -5015,6 +5042,7 @@ function buildDebrief(win,reason){
    if(win&&CHOICE.sig==='sos'&&st&&st.sig==='sos')st.sig=null;
    if(win&&st&&st.lm==='ark'&&!st.lmDone){st.lmDone=true;const[took,away]=addPop(12);S.legend=legendOf()+10;d.extra.push(['Derelict Ark',`<em style="color:#38e09b">+${took} people · +10 ★</em>${away?` <small>${away} turned away</small>`:''}`]);}
    if(win&&st&&st.shard&&!st.shardClaimed){st.shardClaimed=true;qaMile('part1');d.extra.push(['Gate part recovered',`<em style="color:#5ef0d0">${shardsMine(S.gal)} / ${SHARD_NEED}</em>`]);}
+   if(win&&CHOICE.gate&&S.gal&&S.gal.cons&&!S.gal.gateWon){S.gal.gateWon=true;const T=S.gal.num,cr=60*T,lg=10*T;S.bucks+=cr;S.legend=legendOf()+lg;d.extra.push(['Exodus Gate reached',`<em style="color:#5ef0d0">+${cr} CR · +${lg} ★</em>`]);}
    d.legend=legendFor(d);S.legend=legendOf()+d.legend;
    if(d.legend)d.extra.push(['Legend',`<em style="color:#ffd84a">+${d.legend} ★</em>`]);
 }
@@ -5084,6 +5112,7 @@ async function runDebrief(d,ctrEls,rows){
     iconBtn(row,'map','Galaxy map',canResearch(rs)?'':'hot',goMap);iconBtn(row,'station','Station','',goStation);}
   else{iconBtn(row,'map','Galaxy map','hot',goMap);iconBtn(row,'station','Station','',goStation);}
   if(d.win&&(S.pendRelics||[]).length){const b=iconBtn(row,'hexa','Relic','hot',openRelicOffer);b.id='dbRelicBtn';setTimeout(()=>{if(scene==='debrief'&&(S.pendRelics||[]).length)openRelicOffer();},800);}
+  if(d.win&&CHOICE.gate&&S.gal&&S.gal.cons){iconBtn(row,'tach','Jump on','hot',gateJump);const mp=row.querySelector('.ibtn.hot');}
   const small=document.createElement('div');small.className='db-small';bx.append(small);
   addBtn(small,'Flight report','linkbtn',renderReport);if(!d.win)confirmBtn(small,'Restart campaign','Tap again to wipe all progress',restartCampaign,'linkbtn danger');
 }
@@ -5205,7 +5234,8 @@ function askChoice(title,html,a,b){return new Promise(res=>{$('#cfTitle').textCo
   const done=v=>{show('#confirm',false);sfx.tick();$('#cfNo').textContent='Back';res(v);};$('#cfYes').onclick=()=>done('a');$('#cfNo').onclick=()=>done('b');$('#cfX').onclick=()=>done(null);show('#confirm',true);sfx.tick();});}
 function askConfirm(title,html,yes='Launch'){return new Promise(res=>{$('#cfTitle').textContent=title;$('#cfBody').innerHTML=html;$('#cfYes').textContent=yes;
   const done=v=>{show('#confirm',false);sfx.tick();res(v);};$('#cfYes').onclick=()=>done(true);$('#cfNo').onclick=$('#cfX').onclick=()=>done(false);show('#confirm',true);sfx.tick();});}
-async function launchChoice(ch){if(TR){toast('<b>Launching is turned off in training</b>','#7f8fb2');return;}if(ch&&ch.gate){openTach();return;}
+async function launchChoice(ch){if(TR){toast('<b>Launching is turned off in training</b>','#7f8fb2');return;}if(ch&&ch.gate&&!(S.gal&&S.gal.cons)){openTach();return;}
+  if(ch&&ch.gate&&S.gal.gateWon){if(await askConfirm('JUMP ON',`<p>The Exodus Gate is open. Jump on to <b>Tach ${S.gal.num}</b> and the next constellation? Credits and upgrades come with us.</p>`,'Jump'))gateJump();return;}
   const st=ch&&S.gal&&S.gal.stars[ch.starId];
   if(st&&st.res&&!(await askConfirm('ALREADY RESEARCHED',`<p><b>${st.name}</b> has already given its research (${st.res.name}). Another run here still pays credits and salvage at <b>${Math.round(salvageOf(st)*100)}%</b>, but no new research.</p><p class="cf-dim">Uncleared planets nearby can still raise your Tach odds.</p>`,'Launch anyway')))return;
   launch(ch);}
