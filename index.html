@@ -970,7 +970,7 @@ button:disabled{cursor:default}
       <div class="srow"><span>Overdrive button</span><div class="seg" id="odSideSeg"><button data-v="left">Left</button><button data-v="right">Right</button></div></div>
       <div class="srow"><span>Launch countdown</span><div class="seg" id="cdSeg"><button data-v="0">Off</button><button data-v="3">3s</button><button data-v="5">5s</button></div></div>
       <div class="srow dbg"><span>Debug</span><div class="seg" id="dbgSeg"><button data-k="cr">+500 CR</button><button data-k="al">+10 Alloy</button></div></div>
-      <div class="srow dbg"><span>Test Overdrive</span><div class="seg" id="dbgOd"><button type="button" data-m="counter">Counter</button><button type="button" data-m="gun">Gunnery</button><button type="button" data-m="repair">Repair</button></div></div>
+      <div class="srow dbg"><span>Test Overdrive</span><div class="seg" id="dbgOd"><button type="button" data-m="counter">Counter</button><button type="button" data-m="pipe">Fuel</button><button type="button" data-m="repair">Repair</button></div></div>
       <div class="srow dbg"><span>Test Terraform</span><div class="seg" id="dbgTf"><button type="button" data-t="0">Easy</button><button type="button" data-t="9">Mid</button><button type="button" data-t="16">Hard</button></div></div>
       <button class="btn ghost" id="optTips">Replay tutorial &amp; tips</button>
       <button class="btn ghost" id="optQA">Tester report</button>
@@ -994,7 +994,7 @@ button:disabled{cursor:default}
       <div class="console-h"><span>OVERDRIVE</span></div>
       <div class="br-b"><div class="od-tiles">
         <button class="od-tile" id="bpCounter"><i>⌖</i><b>Counterfire</b><small>push back the pursuer</small></button>
-        <button class="od-tile" id="bpGun"><i>✦</i><b>Gunnery</b><small>credits and fuel</small></button>
+        <button class="od-tile" id="bpGun"><i>⌗</i><b>Fuel line</b><small>pipe fuel to the tank</small></button>
         <button class="od-tile" id="bpRepair"><i>▤</i><b>Repair</b><small>stack blocks, mend hull</small></button></div>
         <p class="od-hint">Tap every target. The first miss ends it.</p></div>
       <div class="br-btns" style="grid-template-columns:1fr"><button class="btn ghost" id="bpNo">Not now</button></div>
@@ -3455,56 +3455,122 @@ function startBurst(mode){const cv=$('#ilCv');$('#brstPick').hidden=true;cv.hidd
   if(mode==='counter'){const k=(SYS&&SYS.pursuer)||'empire';if(k==='empire'||k==='pirates'){const spr=k==='empire'?CRUISER:PIRATE,sc=Math.max(3,Math.floor(W*.8/spr.width));
       IL.fig={spr,sc,w:spr.width*sc,h:spr.height*sc,x:(W-spr.width*sc)/2,y:H*.4-spr.height*sc/2};}
     else{const R=W*.3;IL.fig={disc:true,col:{blackhole:'#b48cff',leviathan:'#2c8f86'}[k]||'#ffb547',w:R*2,h:R*2,x:W/2-R,y:H*.4-R};}}
-  if(mode==='repair')stkInit();
+  if(mode==='repair')stkInit();if(mode==='pipe')pipeInit();if(mode==='counter')gunInit();
   sfx.perk(2);requestAnimationFrame(ilFrame);}
 function ilSpawn(life,k){const s=IL,r=s.mode==='counter'?Math.max(20,34*k):26;
   if(s.mode==='counter'){const f=s.fig;let x,y,tries=0;do{x=f.x+f.w*(.12+Math.random()*.76);y=f.y+f.h*(.12+Math.random()*.76);tries++;}while(tries<8&&s.tg.some(g=>Math.hypot(g.x-x,g.y-y)<r*1.6));
     s.tg.push({x,y,r,life,age:0});}
   else{const kind=['enemy','rock','gunship'][Math.floor(Math.random()*3)];s.tg.push({y:s.H*(.2+Math.random()*.55),x:s.W+30,r,life,age:0,kind,moving:true});}}
-function ilHit(x,y){const s=IL;if(s.mode==='repair')return stkTap(x,y);let best=null,bd=1e9;for(const g of s.tg){if(g.dead)continue;const gx=g.moving?s.W+30-(g.age/g.life)*(s.W+60):g.x,d=Math.hypot(gx-x,g.y-y);if(d<g.r+12&&d<bd){best=g;bd=d;}}
+function ilHit(x,y){const s=IL;if(s.mode==='repair')return stkTap(x,y);if(s.mode==='pipe')return pipeTap(x,y);if(s.mode==='counter')gunFire(x,y);let best=null,bd=1e9;for(const g of s.tg){if(g.dead)continue;const gx=g.moving?s.W+30-(g.age/g.life)*(s.W+60):g.x,d=Math.hypot(gx-x,g.y-y);if(d<g.r+12&&d<bd){best=g;bd=d;}}
   if(!best){if(s.over){ilEnd();}else sfx.tick();return;}
   best.dead=true;if(s.over)s.ho++;else s.hw++;const n=s.hw+s.ho,gx=best.moving?s.W+30-(best.age/best.life)*(s.W+60):best.x;
   tone(480+Math.min(14,n)*55,.05,'square',.03);if(s.mode==='counter')sfx.laser();else sfx.boom();
   s.fx.push({x:gx,y:best.y,t:0,txt:s.over?'+2':'+1',boom:true});s.flash=.18;}
 function ilEnd(){if(!IL||IL.end)return;IL.end=true;setTimeout(ilResult,350);}
-function ilResult(){const s=IL;if(!s)return;if(s.mode==='repair')return ilRepairResult();const tst=!!s.test;const hw=s.hw,ho=s.ho,lines=[];
+function ilResult(){const s=IL;if(!s)return;if(s.mode==='repair')return ilRepairResult();if(s.mode==='pipe')return ilPipeResult();const tst=!!s.test;const hw=s.hw,ho=s.ho,lines=[];
   if(s.mode==='counter'){const gap=Math.round(hw*2+ho*4);if(!tst)G.gap=Math.min(100,G.gap+gap);lines.push(['Pursuer pushed back',`+${gap}`]);}
   else{const cr=Math.round((hw+ho*2)*(1+G.T*.25)),fu=Math.round(hw*.5+ho*1.5);if(!tst){if(cr)addBucks(cr);if(fu){G.fuel=Math.min(ST.tank,G.fuel+fu);pulseFuel();}}lines.push(['Credits',`+${cr}`],['Fuel',`+${fu}`]);}
   if(!tst){G.od=0;odSync();}
   $('#ilCv').hidden=true;$('#brstRes').hidden=false;$('#brstT').textContent=(s.mode==='counter'?'COUNTERFIRE':'GUNNERY')+(tst?' · TEST':'');
   $('#brstBody').innerHTML=`<p class="rl-h">${hw+ho} hits. ${hw} in the window${ho?`, ${ho} in overtime`:', and we never reached overtime'}.</p><div class="payout">${lines.map(l=>`<div><span>${l[0]}</span><b>${l[1]}</b></div>`).join('')}</div>`;
   sfx.win();}
-function stkInit(){const s=IL,W=s.W,H=s.H,fw=Math.min(W-70,280),fx=(W-fw)/2,bh=Math.min(24,Math.floor(H*.5/14)),by=Math.round(H*.72);
-  const w0=Math.round(fw*.55);s.stk={fw,fx,bh,by,layers:[{x:fx+(fw-w0)/2,w:w0}],n:0,pf:0,ph:0,w:w0,x:fx,over:false,fail:false,dead:[],bank:null};}
+function stkInit(){const s=IL,W=s.W,H=s.H,fw=Math.min(W-70,280),fx=(W-fw)/2,bh=Math.min(26,Math.floor(H*.5/14)),by=Math.round(H*.72);
+  const w0=Math.round(fw*.55);s.stk={fw,fx,bh,by,layers:[{x:fx+(fw-w0)/2,w:w0,weld:0}],n:0,pf:0,ph:0,w:w0,x:fx,over:false,fail:false,dead:[],bank:null,sp:[]};}
 const stkRep=(n,pf)=>n*4+pf*2,STK_MAX=12;
-function stkStep(dt){const s=IL,k=s.stk;if(!k||s.end)return;k.ph+=dt*(.85+.11*k.n);const m=k.ph%2,u=m<1?m:2-m;k.x=k.fx+(k.fw-k.w)*u;
-  for(const d of k.dead){d.y+=dt*260;d.vy=(d.vy||0)+dt*500;d.y+=d.vy*dt;}k.dead=k.dead.filter(d=>d.y<s.H+40);}
+function stkStep(dt){const s=IL,k=s.stk;if(!k)return;
+  if(!s.end){k.ph+=dt*(.85+.11*k.n);const m=k.ph%2,u=m<1?m:2-m;k.x=k.fx+(k.fw-k.w)*u;}
+  for(const d of k.dead){d.vy=(d.vy||0)+dt*500;d.y+=d.vy*dt;}k.dead=k.dead.filter(d=>d.y<s.H+40);
+  for(const l of k.layers)l.weld=Math.max(0,(l.weld||0)-dt*1.4);
+  for(const q of k.sp){q.vy+=dt*420;q.x+=q.vx*dt;q.y+=q.vy*dt;q.t+=dt;}k.sp=k.sp.filter(q=>q.t<.6);}
+function stkSolder(x,w,y){const k=IL.stk;for(let i=0;i<18;i++)k.sp.push({x:x+Math.random()*w,y,vx:(Math.random()-.5)*160,vy:-60-Math.random()*150,t:0});}
 function stkTap(x,y){const s=IL,k=s.stk;if(!k||s.end)return;
   if(k.n>0&&k.bank&&x>=k.bank.x&&x<=k.bank.x+k.bank.w&&y>=k.bank.y&&y<=k.bank.y+k.bank.h){s.bankd=true;sfx.coin();return ilEnd();}
   const p=k.layers[k.layers.length-1],ov=Math.min(k.x+k.w,p.x+p.w)-Math.max(k.x,p.x),cy=k.by-(k.n+1)*k.bh;
-  if(ov<=3){k.dead.push({x:k.x,w:k.w,y:cy,vy:0});k.fail=true;sfx.bad();s.flash=.2;return ilEnd();}
-  let nx=Math.max(k.x,p.x),nw=ov;if(Math.abs(k.x-p.x)<=5){nx=p.x;nw=p.w;k.pf++;s.fx.push({x:s.W/2,y:cy,t:0,txt:'PERFECT',boom:false});sfx.good();}
-  else{const cut=k.w-nw;if(k.x<p.x)k.dead.push({x:k.x,w:p.x-k.x,y:cy,vy:0});else k.dead.push({x:p.x+p.w,w:k.x+k.w-(p.x+p.w),y:cy,vy:0});tone(300+k.n*30,.05,'square',.03);}
-  k.layers.push({x:nx,w:nw});k.n++;k.w=nw;if(nw<6||k.n>=STK_MAX){s.bankd=true;sfx.coin();ilEnd();}}
-function stkDraw(c,s,t){const k=s.stk;if(!k)return;const W=s.W;
-  c.fillStyle='rgba(127,243,255,.08)';c.fillRect(k.fx,k.by-(STK_MAX+1)*k.bh,k.fw,(STK_MAX+1)*k.bh+k.bh);
-  c.strokeStyle='rgba(127,243,255,.25)';c.lineWidth=1;c.strokeRect(k.fx+.5,k.by-(STK_MAX+1)*k.bh+.5,k.fw-1,(STK_MAX+1)*k.bh+k.bh-1);
-  k.layers.forEach((l,i)=>{const y=k.by-i*k.bh;c.fillStyle=i===0?'#3a5a8c':`hsl(${170-i*6},70%,${52+i}%)`;c.fillRect(Math.round(l.x),y,Math.round(l.w),k.bh-2);});
-  for(const d of k.dead){c.fillStyle='#ff5c6c88';c.fillRect(Math.round(d.x),Math.round(d.y),Math.round(d.w),k.bh-2);}
-  if(!s.end){const y=k.by-(k.n+1)*k.bh;c.fillStyle='#e1f9ff';c.fillRect(Math.round(k.x),y,Math.round(k.w),k.bh-2);}
+  if(ov<=3){k.dead.push({x:k.x,w:k.w,y:cy,vy:0,t:k.n%4});k.fail=true;sfx.bad();s.flash=.2;return ilEnd();}
+  let nx=Math.max(k.x,p.x),nw=ov;if(Math.abs(k.x-p.x)<=5){nx=p.x;nw=p.w;k.pf++;s.fx.push({x:s.W/2,y:cy-6,t:0,txt:'PERFECT WELD',boom:false});sfx.good();}
+  else{if(k.x<p.x)k.dead.push({x:k.x,w:p.x-k.x,y:cy,vy:0,t:k.n%4});else k.dead.push({x:p.x+p.w,w:k.x+k.w-(p.x+p.w),y:cy,vy:0,t:k.n%4});tone(300+k.n*30,.05,'square',.03);}
+  k.layers.push({x:nx,w:nw,weld:1});stkSolder(nx,nw,cy+k.bh-2);k.n++;k.w=nw;if(nw<6||k.n>=STK_MAX){s.bankd=true;sfx.coin();ilEnd();}}
+function stkTiles(c,x,y,w,h,t,glow){c.save();c.beginPath();c.rect(Math.round(x),y,Math.round(w),h);c.clip();let ty=0,td;try{td=tdef(t);}catch(e){td={color:'#7ff3ff',dark:'#0e1830'};}
+  for(let tx=x;tx<x+w;tx+=h){c.fillStyle=td.dark;c.strokeStyle=td.color+(glow?'ff':'b0');c.lineWidth=glow?2:1.5;c.beginPath();c.roundRect(Math.round(tx)+1,y+1,h-3,h-3,4);c.fill();c.stroke();
+    try{c.drawImage(ICONS[t],Math.round(tx)+4,y+4,h-9,h-9);}catch(e){}}c.restore();}
+function stkDraw(c,s,t){const k=s.stk;if(!k)return;const W=s.W,top=k.by-(STK_MAX+1)*k.bh;
+  c.fillStyle='rgba(127,243,255,.06)';c.fillRect(k.fx,top,k.fw,(STK_MAX+2)*k.bh);c.strokeStyle='rgba(127,243,255,.22)';c.lineWidth=1;c.setLineDash([3,4]);c.strokeRect(k.fx+.5,top+.5,k.fw-1,(STK_MAX+2)*k.bh-1);c.setLineDash([]);
+  k.layers.forEach((l,i)=>{const y=k.by-i*k.bh;if(i===0){c.fillStyle='#22345a';c.fillRect(Math.round(l.x),y,Math.round(l.w),k.bh-1);c.fillStyle='#3a5a8c';c.fillRect(Math.round(l.x),y,Math.round(l.w),3);}else stkTiles(c,l.x,y,l.w,k.bh,(i-1)%4);
+    if(l.weld>0&&i>0){c.strokeStyle=`rgba(255,${190+Math.round(60*l.weld)},90,${l.weld})`;c.lineWidth=3;c.beginPath();c.moveTo(l.x,y+k.bh-1);c.lineTo(l.x+l.w,y+k.bh-1);c.stroke();
+      c.fillStyle=`rgba(255,230,160,${l.weld*.6})`;for(let rx=l.x+4;rx<l.x+l.w;rx+=8)c.fillRect(Math.round(rx),y+k.bh-3,2,2);}
+    else if(i>0){c.fillStyle='rgba(255,200,120,.25)';c.fillRect(Math.round(l.x),y+k.bh-2,Math.round(l.w),1);}});
+  for(const d of k.dead){c.globalAlpha=.7;stkTiles(c,d.x,Math.round(d.y),d.w,k.bh,d.t);c.globalAlpha=1;}
+  if(!s.end){const y=k.by-(k.n+1)*k.bh;stkTiles(c,k.x,y,k.w,k.bh,k.n%4,true);c.strokeStyle='rgba(225,249,255,.9)';c.lineWidth=1.5;c.strokeRect(Math.round(k.x)+.5,y+.5,Math.round(k.w)-1,k.bh-2);}
+  for(const q of k.sp){c.globalAlpha=Math.max(0,1-q.t/.6);c.fillStyle=q.t<.2?'#fff3bf':'#ffb547';c.fillRect(Math.round(q.x),Math.round(q.y),2,2);}c.globalAlpha=1;
   const pending=stkRep(k.n,k.pf);c.textAlign='center';c.fillStyle='#5ef0d0';c.font='700 22px Oxanium, sans-serif';c.fillText(`+${pending} hull`,W/2,56);
-  c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText(k.n?`${k.n} OF ${STK_MAX} LAYERS · A MISS KEEPS ONLY 40%`:'TAP TO DROP THE BLOCK',W/2,72);
+  c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText(k.n?`${k.n} OF ${STK_MAX} PLATES WELDED · A MISS KEEPS 40%`:'TAP TO LOWER THE PLATE AND WELD IT',W/2,72);
   const bw=Math.min(220,W-90),bx=(W-bw)/2,byy=s.H-96;k.bank={x:bx,y:byy,w:bw,h:34};
   if(k.n>0&&!s.end){c.fillStyle='rgba(94,240,208,.18)';c.strokeStyle='#5ef0d0';c.lineWidth=2;c.beginPath();c.roundRect(bx,byy,bw,34,10);c.fill();c.stroke();c.fillStyle='#e1f9ff';c.font='700 11px Silkscreen, monospace';c.fillText(`BANK +${pending}`,W/2,byy+22);}}
+/* ---- Counterfire: cockpit guns */
+function gunInit(){const s=IL;s.gn={l:{r:0,f:0},r:{r:0,f:0},alt:0};s.sh=[];}
+function gunStep(dt){const s=IL;if(!s.gn)return;for(const g of[s.gn.l,s.gn.r]){g.r=Math.max(0,g.r-dt*7);g.f=Math.max(0,g.f-dt);}for(const q of s.sh)q.t+=dt;s.sh=s.sh.filter(q=>q.t<.16);}
+const gunPose=(s,left)=>{const W=s.W,H=s.H,bx=left?W*.2:W*.8,by=H-58,tx=W/2-bx,ty=H*.4-by,L=Math.hypot(tx,ty),dx=tx/L,dy=ty/L;return{bx,by,dx,dy};};
+function gunFire(x,y){const s=IL;if(!s.gn||s.end)return;const left=s.gn.alt===0;s.gn.alt^=1;const g=left?s.gn.l:s.gn.r,P=gunPose(s,left),len=96;g.r=1;g.f=.09;
+  const mx=P.bx+P.dx*(len-g.r*10),my=P.by+P.dy*(len-g.r*10);s.sh.push({x0:mx,y0:my,x1:x,y1:y,t:0});tone(180+Math.random()*60,.06,'sawtooth',.03);}
+function gunDraw(c,s,t){if(!s.gn)return;
+  for(const q of s.sh){c.globalAlpha=1-q.t/.16;c.strokeStyle='#ffe27a';c.lineWidth=3;c.beginPath();c.moveTo(q.x0,q.y0);c.lineTo(q.x1,q.y1);c.stroke();c.strokeStyle='#fff';c.lineWidth=1;c.beginPath();c.moveTo(q.x0,q.y0);c.lineTo(q.x1,q.y1);c.stroke();c.globalAlpha=1;}
+  for(const left of[true,false]){const g=left?s.gn.l:s.gn.r,P=gunPose(s,left),rec=g.r*10,x=P.bx-P.dx*rec,y=P.by-P.dy*rec,len=96,tx=x+P.dx*len,ty=y+P.dy*len,nx=-P.dy,ny=P.dx;
+    c.lineCap='round';c.strokeStyle='#161d30';c.lineWidth=20;c.beginPath();c.moveTo(x,y);c.lineTo(tx,ty);c.stroke();
+    c.strokeStyle='#3a4666';c.lineWidth=14;c.beginPath();c.moveTo(x,y);c.lineTo(tx,ty);c.stroke();
+    c.strokeStyle='#7f8fb2';c.lineWidth=3;c.beginPath();c.moveTo(x+nx*3,y+ny*3);c.lineTo(tx+nx*3,ty+ny*3);c.stroke();
+    c.strokeStyle='#ff5c6c';c.lineWidth=3;c.beginPath();c.moveTo(x+P.dx*30,y+P.dy*30);c.lineTo(x+P.dx*44,y+P.dy*44);c.stroke();
+    c.fillStyle='#0b1020';c.beginPath();c.arc(P.bx-P.dx*6,P.by-P.dy*6,17,0,6.28);c.fill();c.strokeStyle='#27406b';c.lineWidth=2;c.stroke();c.lineCap='butt';
+    if(g.f>0){const a=g.f/.09,R=14+18*a;c.globalAlpha=a;c.fillStyle='#fff3bf';c.beginPath();c.arc(tx,ty,R*.55,0,6.28);c.fill();c.strokeStyle='#ffb547';c.lineWidth=3;for(let i=0;i<8;i++){const an=i*.785+t*9;c.beginPath();c.moveTo(tx+Math.cos(an)*R*.4,ty+Math.sin(an)*R*.4);c.lineTo(tx+Math.cos(an)*R*1.2,ty+Math.sin(an)*R*1.2);c.stroke();}c.globalAlpha=1;}}}
+/* ---- Fuel line: a quick pipe puzzle */
+const PDX=[0,1,0,-1],PDY=[-1,0,1,0];
+const pipePiece=()=>{const r=Math.random();return r<.1?15:[10,5,3,6,12,9][Math.floor(Math.random()*6)];};
+function pipeInit(){const s=IL,W=s.W,H=s.H,C=6,R=7,cs=Math.floor(Math.min((W-60)/C,(H-330)/R,62)),gx=Math.round((W-C*cs)/2),gy=Math.round(H*.16);
+  const cells=Array.from({length:R},()=>Array.from({length:C},()=>({m:0,lock:false,fl:[]})));const sr=1+Math.floor(Math.random()*(R-2));cells[sr][0]={m:2,lock:true,fl:[],src:true};
+  s.pp={C,R,cs,gx,gy,cells,q:Array.from({length:5},pipePiece),lead:5,t:0,fl:null,n:0,cross:0,leak:null,TL:30,sr,sp:[]};}
+function pipeStep(dt){const s=IL,p=s.pp;if(!p)return;if(s.end)return;p.t+=dt;
+  if(!p.fl){if(p.t>=p.lead){const pass={from:-1,dir:1};p.fl={cx:0,cy:p.sr,dir:1,pr:.5,pass};p.cells[p.sr][0].fl.push(pass);p.n=1;sfx.good();}return;}
+  if(p.t-p.lead>=p.TL)return ilEnd();
+  const f=p.fl,v=.85+.04*p.n;f.pr+=dt*v;
+  while(f.pr>=1&&!s.end){f.pr-=1;const nx=f.cx+PDX[f.dir],ny=f.cy+PDY[f.dir],entry=(f.dir+2)%4;
+    const leak=()=>{p.leak={x:p.gx+(f.cx+.5)*p.cs+PDX[f.dir]*p.cs/2,y:p.gy+(f.cy+.5)*p.cs+PDY[f.dir]*p.cs/2,t:0};f.pr=1;sfx.bad();s.flash=.2;ilEnd();};
+    if(nx<0||ny<0||nx>=p.C||ny>=p.R)return leak();
+    const c=p.cells[ny][nx];if(!(c.m&(1<<entry)))return leak();
+    let ex;if(c.m===15){ex=f.dir;if(c.fl.length)p.cross++;}else ex=[0,1,2,3].find(d=>d!==entry&&(c.m&(1<<d)));
+    f.cx=nx;f.cy=ny;f.dir=ex;f.pass={from:entry,dir:ex};c.fl.push(f.pass);p.n++;tone(380+Math.min(20,p.n)*22,.04,'sine',.03);}
+  if(p.leak)p.leak.t+=dt;}
+function pipeTap(x,y){const s=IL,p=s.pp;if(!p||s.end)return;const cx=Math.floor((x-p.gx)/p.cs),cy=Math.floor((y-p.gy)/p.cs);if(cx<0||cy<0||cx>=p.C||cy>=p.R)return;
+  const c=p.cells[cy][cx];if(c.lock||c.fl.length){sfx.bad();return;}c.m=p.q.shift();p.q.push(pipePiece());sfx.tick();}
+function pipeShape(c,x,y,m,half,w,col){c.strokeStyle=col;c.lineWidth=w;c.lineCap='butt';for(let d=0;d<4;d++)if(m&(1<<d)){c.beginPath();c.moveTo(x,y);c.lineTo(x+PDX[d]*half,y+PDY[d]*half);c.stroke();}c.fillStyle=col;c.beginPath();c.arc(x,y,w/2,0,6.28);c.fill();}
+function pipeDraw(c,s,t){const p=s.pp;if(!p)return;const cs=p.cs,half=cs/2;
+  for(let r=0;r<p.R;r++)for(let q=0;q<p.C;q++){const cl=p.cells[r][q],x=p.gx+q*cs,y=p.gy+r*cs,mx=x+half,my=y+half;
+    c.fillStyle=cl.src?'#1a2848':'#0a1226';c.fillRect(x+1,y+1,cs-2,cs-2);c.strokeStyle='rgba(127,243,255,.14)';c.lineWidth=1;c.strokeRect(x+.5,y+.5,cs-1,cs-1);
+    if(cl.m)pipeShape(c,mx,my,cl.m,half,cs*.3,cl.src?'#5c7bb0':'#4a5678');
+    if(cl.src){c.fillStyle='#ffd84a';c.font='700 9px Silkscreen, monospace';c.textAlign='center';c.fillText('TANK',mx-4,my+3);}
+    for(const pass of cl.fl){const pr=(p.fl&&pass===p.fl.pass)?p.fl.pr:1;c.strokeStyle='#ffd84a';c.lineWidth=cs*.16;c.lineCap='butt';
+      if(pass.from>=0){const ex=mx+PDX[pass.from]*half,ey=my+PDY[pass.from]*half,fr=Math.min(pr,.5)*2;c.beginPath();c.moveTo(ex,ey);c.lineTo(ex+(mx-ex)*fr,ey+(my-ey)*fr);c.stroke();}
+      if(pr>.5){const fr=(pr-.5)*2;c.beginPath();c.moveTo(mx,my);c.lineTo(mx+PDX[pass.dir]*half*fr,my+PDY[pass.dir]*half*fr);c.stroke();}
+      c.fillStyle='#ffd84a';c.beginPath();c.arc(mx,my,cs*.08,0,6.28);c.fill();}}
+  if(p.leak){const L=p.leak,a=Math.max(0,1-L.t/1.2);c.fillStyle=`rgba(255,92,108,${a})`;for(let i=0;i<10;i++){const an=i*.63,d=6+L.t*60;c.beginPath();c.arc(L.x+Math.cos(an)*d,L.y+Math.sin(an)*d*.8+L.t*L.t*30,3,0,6.28);c.fill();}}
+  const qy=p.gy+p.R*cs+18;c.textAlign='center';c.fillStyle='#7f8fb2';c.font='8px Silkscreen, monospace';c.fillText('NEXT PIPES',s.W/2,qy);
+  const qs=cs*.62,gap=8,tw=5*qs+4*gap,qx0=(s.W-tw)/2;
+  p.q.forEach((m,i)=>{const x=qx0+i*(qs+gap),y=qy+8,sz=i===0?qs:qs*.82;c.fillStyle='#0a1226';c.fillRect(x,y,qs,qs);c.strokeStyle=i===0?'#ffd84a':'rgba(127,243,255,.25)';c.lineWidth=i===0?2:1;c.strokeRect(x+.5,y+.5,qs-1,qs-1);pipeShape(c,x+qs/2,y+qs/2,m,qs/2,qs*.28,i===0?'#e1e9f7':'#6a7898');});
+  const fu=Math.min(48,Math.round(p.n*2+p.cross*3));c.fillStyle='#ffd84a';c.font='700 22px Oxanium, sans-serif';c.fillText(`+${fu} fuel`,s.W/2,56);
+  c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';
+  if(!p.fl)c.fillText(`FLOW STARTS IN ${Math.max(1,Math.ceil(p.lead-p.t))} · TAP A CELL TO LAY A PIPE`,s.W/2,72);
+  else if(!s.end){const u=Math.max(0,1-(p.t-p.lead)/p.TL);c.fillStyle='#1a2440';c.fillRect(s.W*.2,66,s.W*.6,6);c.fillStyle='#ffd84a';c.fillRect(s.W*.2,66,s.W*.6*u,6);}
+  if(s.end){c.fillStyle='rgba(4,7,16,.45)';c.fillRect(0,0,s.W,s.H);}}
+function ilPipeResult(){const s=IL,p=s.pp,tst=!!s.test,fu=Math.min(48,Math.round(p.n*2+p.cross*3));let real=fu;if(!tst){const was=G.fuel;G.fuel=Math.min(ST.tank,G.fuel+fu);real=Math.round(G.fuel-was);pulseFuel();G.od=0;odSync();}
+  $('#ilCv').hidden=true;$('#brstRes').hidden=false;$('#brstT').textContent='FUEL LINE'+(tst?' · TEST':'');
+  $('#brstBody').innerHTML=`<p class="rl-h">${p.n} section${p.n===1?'':'s'} filled${p.cross?`, ${p.cross} crossover${p.cross>1?'s':''}`:''}${p.leak?'. The line sprang a leak.':'. Time ran out.'}</p><div class="payout"><div><span>Fuel</span><b>+${real}</b></div></div>`;sfx.win();}
 function ilRepairResult(){const s=IL,k=s.stk,full=stkRep(k.n,k.pf),gain=k.fail?Math.floor(full*.4):full,tst=!!s.test;let real=gain;if(!tst){const was=G.hull;G.hull=Math.min(ST.hullMax,G.hull+gain);real=Math.round(G.hull-was);G.od=0;odSync();if(real>0)vpPop(`REPAIR +${real}`,'#5ef0d0');}
   $('#ilCv').hidden=true;$('#brstRes').hidden=false;$('#brstT').textContent='EMERGENCY REPAIR'+(tst?' · TEST':'');
   $('#brstBody').innerHTML=`<p class="rl-h">${k.n} layer${k.n===1?'':'s'} stacked${k.pf?`, ${k.pf} perfect`:''}${k.fail?'. The stack collapsed.':s.bankd?'. Banked.':'.'}</p><div class="payout"><div><span>Hull restored</span><b>+${real}</b></div>${k.fail&&full>gain?`<div><span>Lost in the collapse</span><b>-${full-gain}</b></div>`:''}</div>`;
   sfx.win();}
 function ilFrame(now){const s=IL;if(!s||s.pick)return;const cv=$('#ilCv');if(cv.hidden)return;
   const dt=Math.min(.05,(now-s.last)/1000);s.last=now;
-  if(s.mode==='repair')stkStep(dt);
-  if(!s.end){s.t+=dt;if(s.mode!=='view'&&s.mode!=='repair'&&!s.over&&s.t>=IL_WIN){s.over=true;s.msg=1.5;sfx.good();}if(s.over)s.ot+=dt;
-    s.sp-=dt;if(s.mode!=='view'&&s.mode!=='repair'&&s.sp<=0){const n=s.ho,u=Math.min(1,s.t/IL_WIN),k=s.over?Math.pow(.955,n):1;
+  if(s.mode==='repair')stkStep(dt);if(s.mode==='pipe')pipeStep(dt);if(s.mode==='counter')gunStep(dt);
+  if(!s.end){s.t+=dt;if(s.mode==='counter'&&!s.over&&s.t>=IL_WIN){s.over=true;s.msg=1.5;sfx.good();}if(s.over)s.ot+=dt;
+    s.sp-=dt;if(s.mode==='counter'&&s.sp<=0){const n=s.ho,u=Math.min(1,s.t/IL_WIN),k=s.over?Math.pow(.955,n):1;
       s.sp=s.over?Math.max(.2,.5*k):.85-.3*u;ilSpawn(s.over?Math.max(.5,1.1*k):1.7-.4*u,k);}
     for(const g of s.tg){g.age+=dt;if(g.age>=g.life&&!g.dead){g.dead=true;g.expired=true;if(s.over&&!s.end){ilEnd();break;}}}
     s.tg=s.tg.filter(g=>!g.dead);}
@@ -3531,7 +3597,7 @@ function ilDraw(cv,s,t){const c=cv.getContext('2d'),W=s.W,H=s.H;c.setTransform(d
     c.globalAlpha=.55;c.beginPath();c.arc(x,g.y,g.r*(1+u*.9),0,6.28);c.stroke();c.globalAlpha=1;
     c.beginPath();c.moveTo(x-g.r*.5,g.y);c.lineTo(x+g.r*.5,g.y);c.moveTo(x,g.y-g.r*.5);c.lineTo(x,g.y+g.r*.5);c.stroke();}
   for(const f of s.fx){c.globalAlpha=1-f.t/.7;c.fillStyle='#ffd84a';c.font='700 18px Oxanium, sans-serif';c.textAlign='center';c.fillText(f.txt,f.x,f.y-f.t*40);c.strokeStyle='#ffd84a';c.lineWidth=2;c.beginPath();c.arc(f.x,f.y,10+f.t*60,0,6.28);c.stroke();c.globalAlpha=1;}
-  if(s.mode==='repair')stkDraw(c,s,t);
+  if(s.mode==='repair')stkDraw(c,s,t);if(s.mode==='pipe')pipeDraw(c,s,t);if(s.mode==='counter')gunDraw(c,s,t);
   {const m=11,rr=22,e2=Math.min(1,s.t/.7);c.save();
    c.fillStyle='#070c18';c.beginPath();c.rect(0,0,W,H);c.roundRect(m,m,W-2*m,H-2*m,rr);c.fill('evenodd');
    c.strokeStyle='#27406b';c.lineWidth=2;c.beginPath();c.roundRect(m,m,W-2*m,H-2*m,rr);c.stroke();
@@ -3543,9 +3609,9 @@ function ilDraw(cv,s,t){const c=cv.getContext('2d'),W=s.W,H=s.H;c.setTransform(d
    const gl=c.createLinearGradient(m,m,W*.7,H*.45);gl.addColorStop(0,'rgba(190,230,255,.10)');gl.addColorStop(.35,'rgba(190,230,255,.02)');gl.addColorStop(1,'rgba(190,230,255,0)');
    c.fillStyle=gl;c.beginPath();c.roundRect(m+4,m+4,W-2*m-8,H-2*m-8,rr-3);c.fill();c.restore();}
   if(s.mode==='view'){c.textAlign='center';c.fillStyle='#7ff3ff';c.font='9px Silkscreen, monospace';c.fillText('VIEWPORT',W/2,26);c.fillStyle='rgba(225,233,247,'+(.45+.25*Math.sin(t*3))+')';c.fillText('TAP ANYWHERE TO RETURN',W/2,H-34);return;}
-  c.textAlign='center';c.fillStyle='#7ff3ff';c.font='9px Silkscreen, monospace';c.fillText(s.mode==='counter'?'COUNTERFIRE':s.mode==='repair'?'EMERGENCY REPAIR':'GUNNERY',W/2,26);
-  if(s.mode==='repair'){if(s.end){c.fillStyle='rgba(4,7,16,.5)';c.fillRect(0,0,W,H);}return;}
-  c.fillStyle='#e1e9f7';c.font='700 22px Oxanium, sans-serif';c.fillText(String(s.hw+s.ho),W/2,56);
+  c.textAlign='center';c.fillStyle='#7ff3ff';c.font='9px Silkscreen, monospace';c.fillText(s.mode==='counter'?'COUNTERFIRE':s.mode==='repair'?'EMERGENCY REPAIR':'FUEL LINE',W/2,26);
+  if(s.mode==='repair'||s.mode==='pipe'){if(s.end){c.fillStyle='rgba(4,7,16,.5)';c.fillRect(0,0,W,H);}return;}
+  c.fillStyle='#7ff3ff';c.font='700 22px Oxanium, sans-serif';c.fillText('+'+Math.round(s.hw*2+s.ho*4)+' push-back',W/2,56);
   if(!s.over){const u=s.t/IL_WIN;c.fillStyle='#1a2440';c.fillRect(W*.2,68,W*.6,6);c.fillStyle='#7ff3ff';c.fillRect(W*.2,68,W*.6*(1-u),6);}
   else{c.fillStyle='#ffb547';c.font='9px Silkscreen, monospace';c.fillText('OVERTIME · FIRST MISS ENDS IT',W/2,72);}
   if(s.msg>0){c.globalAlpha=Math.min(1,s.msg);c.fillStyle='#ffb547';c.font='700 26px Oxanium, sans-serif';c.fillText('OVERTIME',W/2,H*.82);c.globalAlpha=1;}
@@ -3554,7 +3620,7 @@ function ilDraw(cv,s,t){const c=cv.getContext('2d'),W=s.W,H=s.H;c.setTransform(d
   $('#odBtn').onclick=()=>{audio();openView();};
   $('#odGo').onclick=()=>{audio();if(!feat('burst'))return;if((G.od||0)>=odNeed())openBurst();else{sfx.tick();toast(`<b>Overdrive charging</b><span>Perfect clears charge it: ${G.od||0} of ${odNeed()}.</span>`,'#7ff3ff');}};
   $('#bpRepair').onclick=()=>{audio();startBurst('repair');};
-  $('#bpCounter').onclick=()=>{audio();startBurst('counter');};$('#bpGun').onclick=()=>{audio();startBurst('gun');};
+  $('#bpCounter').onclick=()=>{audio();startBurst('counter');};$('#bpGun').onclick=()=>{audio();startBurst('pipe');};
   $('#bpNo').onclick=()=>{sfx.tick();closeBurst();};$('#brstGo').onclick=()=>{sfx.tick();closeBurst();};})();
 /* ================= v79: TERRAFORM, geo-forms (push-your-luck dice, after Zombie Dice) ================= */
 const terraNeed=g=>g&&g.cons?Math.min(4,1+Math.ceil(g.num/3)):0;
@@ -4005,7 +4071,7 @@ const COACH_TIPS={
   tach_fail:{el:'.tc-res',t:()=>'We lost a level on every system that failed. Hard lesson. Rebuild at the planets, research what broke, and we go again.'},
   depth:{el:'#brDepth',t:()=>'Your call on how deep we dive. Fly-by is quiet and pays less. Deep survey brings every threat, pays more, and offers better ship systems. The depth sets the stakes, so choose it before you give the order.'},
   load:{el:'#brLoad',t:()=>'We only have room for so many special tiles. Tap one to swap it in. Upgrading the Refinery adds a slot.'},
-  burst:{el:'#odGo',t:()=>'Overdrive is charged. Press Engage under the systems. Counterfire pushes the pursuer back, Gunnery earns credits and fuel, and Repair is a stacking game that mends the hull: bank early or push your luck.'},
+  burst:{el:'#odGo',t:()=>'Overdrive is charged. Press Engage under the systems. Counterfire pushes the pursuer back, Fuel line is a pipe puzzle that tops up the tank, and Repair is a stacking game that mends the hull: bank early or push your luck.'},
   relic:{el:'#relicCards',t:()=>'A ship system. It stays installed for the whole campaign, so choose what we will lean on. We only have three slots.'},
   trade:{el:'#commsBody',t:()=>'The sensor array reaches further now. We can buy Alloy from systems in range, straight from their cards.'},
 };
@@ -5126,7 +5192,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v88';
+const BUILD='v89';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5555,7 +5621,7 @@ $('#dbgSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(
   const t=b.textContent;b.textContent='Added';setTimeout(()=>b.textContent=t,700);});
 /* Debug: Overdrive test. Plays the mini-game with nothing paid out or changed. */
 $('#dbgOd').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||IL||TF||TR)return;
-  show('#sound',false);IL_WAS=paused;paused=true;show('#burst',true);startBurst(b.dataset.m);IL.test=true;});
+  show('#sound',false);IL_WAS=paused;paused=true;$('#brstRes').hidden=true;$('#brstPick').hidden=true;show('#burst',true);startBurst(b.dataset.m);IL.test=true;});
 /* Debug: Terraform test with a dummy world. Nothing is saved or paid out. */
 $('#dbgTf').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||TF||TR)return;
   if(!(scene==='map'||scene==='station'||scene==='hangar')){toast('<b>Terraform test</b><span>Open it from the map or the station.</span>','#ff8a95');return;}
