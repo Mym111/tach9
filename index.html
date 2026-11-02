@@ -218,6 +218,7 @@ button:disabled{cursor:default}
 #zBig{display:none}
 #map .chart{flex:1 1 auto;min-height:240px}
 .swidget.full{top:8px}
+.swidget{max-height:calc(100% - 16px);overflow-y:auto;gap:6px;padding:8px 10px}.swidget:not(.full) .sw-dn,.swidget:not(.full) .sw-d small,.swidget:not(.full) .pull{display:none}.swidget:not(.full) .sw-d button{padding-top:6px;padding-bottom:6px}.swidget .pull{margin-top:14px}
 #swScan{display:none;width:100%;flex:1;min-height:0;border-radius:10px;background:radial-gradient(ellipse at 30% 35%,#14224a,#0a1122 72%)}
 .swidget.full #swScan{display:block}
 .sw-more{background:none;border:1px solid var(--bezel);border-radius:8px;color:var(--amber);font-family:var(--f-display);font-size:9px;letter-spacing:.1em;padding:7px}
@@ -5057,7 +5058,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v81';
+const BUILD='v82';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
