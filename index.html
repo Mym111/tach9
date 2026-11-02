@@ -575,6 +575,30 @@ button:disabled{cursor:default}
 .pulls{display:flex;gap:10px;align-items:stretch}.pulls .pull{flex:1 1 0;min-width:0}.pulls .pull.ship{flex:0 0 auto}.pulls .pull-h em{display:none}.pulls .ldi,.pulls .rlx{width:38px;height:38px}.pulls .pull-b{gap:6px}.pulls .pull{padding-left:8px;padding-right:8px}.pulls .rlx i{font-size:18px}.pull{position:relative;margin-top:18px;padding:16px 10px 10px;border:1px solid #27406b;border-radius:12px;background:repeating-linear-gradient(0deg,rgba(127,243,255,.035) 0 1px,transparent 1px 4px),linear-gradient(180deg,#0b1428,#070d1c);box-shadow:inset 0 0 18px rgba(127,243,255,.06);animation:pullOut .35s ease-out both}.pull::before{content:'';position:absolute;top:-18px;left:50%;width:2px;height:18px;background:linear-gradient(#27406b,transparent)}.pull.ship{border-color:#4a4330}.pull.ship::before{background:linear-gradient(#ffb547aa,transparent)}
 .pull-h{position:absolute;top:-9px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}.pull-h span{background:#0b1428;border:1px solid #27406b;border-radius:6px;padding:1px 8px;font:8px Silkscreen,monospace;letter-spacing:.14em;color:#7ff3ff;text-transform:uppercase}.pull.ship .pull-h span{color:#ffb547;border-color:#5a4a2a}.pull-h em{font-style:normal;font-size:9px;color:var(--dim);background:#0b1428;padding:0 4px}.pull-b{display:flex;gap:8px;flex-wrap:wrap}.pull .ldn{flex-basis:100%;margin:8px 0 0;font-size:10.5px;color:var(--dim)}
 .tile-i{width:100%;height:100%;image-rendering:pixelated;display:block}.ldi:not(.on) .tile-i{filter:grayscale(.85) brightness(.55)}.ldi.empty{border:1px dashed #2b3b5e;background:transparent}.rlx{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--rc);background:color-mix(in srgb,var(--rc) 14%,#0a1120);color:var(--rc);box-shadow:0 0 10px color-mix(in srgb,var(--rc) 25%,transparent)}.rlx i{font-style:normal;font-size:22px}.rlx.empty{border:1px dashed #3a3a2a;background:transparent;box-shadow:none}.rl-o{width:46px;height:46px;padding:0;display:grid;place-items:center}@keyframes pullOut{from{opacity:0;transform:translateY(-8px)}}
+#terra{padding:0;align-items:stretch;justify-content:stretch;background:#03060e;backdrop-filter:none;z-index:16}
+.tfstage{position:relative;flex:1;overflow:hidden;background:radial-gradient(ellipse at 50% 50%,#0b1a2e,#03060e 70%)}
+#terra #tfCv{position:absolute;inset:0;width:100%;height:100%;max-width:none;aspect-ratio:auto;margin:0;image-rendering:pixelated}
+#tfLn{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.tfstage::after{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(94,240,208,.03) 0 1px,transparent 1px 4px);box-shadow:inset 0 0 60px rgba(0,0,0,.7)}
+.tf-hd{position:absolute;top:max(10px,env(safe-area-inset-top,0px));left:14px;right:14px;display:flex;justify-content:space-between;font:9px var(--f-display);letter-spacing:.14em;color:#5ef0d0;z-index:3}
+.tf-hd span:last-child{color:#aebbd6}
+#tfBody{position:absolute;inset:0;pointer-events:none;z-index:3}
+#tfBody .tf-pips{position:absolute;top:calc(max(10px,env(safe-area-inset-top,0px)) + 18px);left:14px;right:14px;margin:0;pointer-events:none}
+#tfBody .tf-log{position:absolute;left:14px;right:14px;bottom:78px;text-align:center;margin:0;text-shadow:0 0 8px #000;font-size:12.5px}
+#tfBody .geos{display:block;margin:0}
+#tfBody .geo{position:absolute;width:31%;pointer-events:auto;grid-template-columns:22px 1fr;grid-template-areas:"i m" ". v";gap:2px 6px;padding:5px 7px;background:rgba(8,14,28,.82);backdrop-filter:blur(2px);touch-action:manipulation}
+#tfBody .geo .g-i{grid-area:i}#tfBody .geo .g-m{grid-area:m;min-width:0}#tfBody .geo .g-v{grid-area:v}
+#tfBody .g-i svg{width:20px;height:20px}#tfBody .g-m b{font-size:10.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+#tfBody .g-m small,#tfBody .g-tags{display:none}
+#tfBody .g-v{display:flex;justify-content:space-between;gap:4px;font-size:10px;min-width:0;white-space:nowrap}#tfBody .g-v em{display:inline;font-size:7.5px}
+#tfBody .geo[data-g=grav]{top:calc(max(10px,env(safe-area-inset-top,0px)) + 44px);left:50%;transform:translateX(-50%);width:56%}
+#tfBody .geo[data-g=rad]{bottom:104px;left:50%;transform:translateX(-50%);width:56%}
+#tfBody .geo[data-g=pres]{left:8px;top:calc(50% - 74px)}#tfBody .geo[data-g=oxy]{left:8px;top:calc(50% + 6px)}
+#tfBody .geo[data-g=temp]{right:8px;top:calc(50% - 74px)}#tfBody .geo[data-g=h2o]{right:8px;top:calc(50% + 6px)}
+#tfBody .tf-done{position:absolute;left:14px;right:14px;top:50%;transform:translateY(-50%);pointer-events:auto;background:rgba(6,10,20,.92);border:1px solid #5ef0d0;border-radius:14px;padding:14px;max-height:80%;overflow:auto}
+#tfBody .tf-rep{font-size:10px;white-space:pre-wrap;color:#aebbd6;margin:8px 0}
+.tf-ft{position:absolute;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom,0px));width:min(260px,70%);z-index:4}
+.tf-ft .btn{width:100%}
 .map-actions .mib.dim{opacity:.4;filter:grayscale(.85);animation:none}.g-tags{display:flex;justify-content:space-between;gap:6px;margin-top:3px}.g-tags .tg-l,.g-tags .tg-r{display:flex;flex-wrap:wrap;gap:4px}.g-tags .tg-r{justify-content:flex-end}#terra{z-index:16;background:rgba(4,7,16,.9);backdrop-filter:blur(3px)}.tfcard{max-width:380px;width:100%;margin:auto}#tfCv{width:100%;max-width:250px;aspect-ratio:128/84;image-rendering:pixelated;display:block;margin:0 auto 8px}.tf-bar{position:relative;height:22px;border-radius:8px;background:#0e1830;border:1px solid #2b3b5e;overflow:hidden}.tf-bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#1f8f6a,#5ef0d0)}.tf-bar b{position:relative;display:block;text-align:center;font:700 12px/22px var(--f-display);color:#e1f9ff}.tf-pips{display:flex;gap:5px;align-items:center;margin:8px 0}.tf-pips i{width:14px;height:14px;border-radius:50%;border:2px solid #ff5c6c55}.tf-pips i.on{background:#ff5c6c;border-color:#ff5c6c}.tf-pips span{font-size:11px;color:var(--dim);margin-left:4px}.tf-bag{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.tf-bag span{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:8px;border:1px solid var(--c);font-size:10px;color:var(--c);background:#0a1120}.tf-bag span b{font-size:16px;color:#e1e9f7}.tf-bag span.aff{box-shadow:0 0 8px var(--c)}.tf-bag em{position:absolute;top:2px;right:4px;font-style:normal;font-size:9px;color:#ffd84a}.tf-log{margin:10px 0 2px;min-height:18px;font-weight:600;font-size:13px}.tf-hint{margin:0;font-size:11.5px;color:#aebbd6;line-height:1.35}.tf-res{font-weight:700;font-size:14px;margin:6px 0}.tf-res.ok{color:#5ef0d0}.tf-res.bad{color:#ff8a95}.sw-tf{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;color:#aebbd6}.sw-tf button{font:inherit;font-weight:700;font-size:12px;background:rgba(94,240,208,.14);border:1px solid #5ef0d0;color:#e1f9ff;border-radius:8px;padding:7px 12px;cursor:pointer}.tf-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}.tf-top b{font-family:var(--f-display);font-size:11px;letter-spacing:.08em;color:#5ef0d0}.tf-top span{font-size:11px;color:#aebbd6}.tf-bar u{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,#5ef0d0aa 0 4px,#5ef0d055 4px 8px)}.tf-dice{display:flex;gap:8px;justify-content:center;margin:12px 0 4px;min-height:64px;align-items:center}.tf-d{display:flex;flex-direction:column;align-items:center;justify-content:center;width:62px;height:62px;border-radius:12px;border:2px solid var(--c);background:#0a1120;box-shadow:inset 0 0 12px color-mix(in srgb,var(--c) 25%,transparent)}.tf-d i{font-style:normal;font-size:28px;line-height:1}.tf-d small{font-size:9px;color:#aebbd6}.tf-empty{font-size:12px;color:var(--dim)}.tf-cup{display:flex;gap:10px;align-items:center;font-size:12px;font-weight:700;margin:2px 0 8px}.tf-cup span{color:var(--c)}.tf-cup em{font-style:normal;font-weight:400;font-size:10px;color:var(--dim)}.tf-toks{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.tf-toks button{position:relative;font:inherit;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px 5px;border-radius:8px;border:1px solid var(--c);background:#0a1120;color:var(--c);cursor:pointer}.tf-toks button b{font-size:11px}.tf-toks button small{font-size:8.5px;color:#aebbd6;text-align:center;line-height:1.15}.tf-toks button em{position:absolute;top:2px;right:4px;font-style:normal;font-size:10px;color:#e1e9f7}.tf-toks button:disabled{opacity:.3}.geos{display:flex;flex-direction:column;gap:5px;margin:6px 0}.geo{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;padding:6px 8px;border-radius:10px;border:1px solid #243557;background:#0a1120;cursor:pointer}.g-i svg{width:26px;height:26px;display:block}.g-m b{font-size:12px;color:#e1e9f7}.g-m small{display:block;font-size:9.5px;color:var(--dim);margin-bottom:3px}.g-bar{position:relative;height:7px;border-radius:4px;background:#1a2440;overflow:hidden}.g-bar i{position:absolute;top:0;bottom:0}.g-id{background:#38e09b66}.g-hz{background:#ff5c6c44}.g-mk{position:absolute;top:-1px;bottom:-1px;width:3px;margin-left:-1px;background:#fff;box-shadow:0 0 6px #fff;border-radius:2px}.g-v{text-align:right;font:700 12px var(--f-display);color:#e1e9f7;min-width:74px}.g-v em{display:block;font-style:normal;font-size:8.5px;letter-spacing:.1em;color:var(--dim)}.geo.ideal{border-color:#38e09b}.geo.ideal .g-v em{color:#38e09b}.geo.haz{border-color:#ff5c6c}.geo.haz .g-v em{color:#ff6b7a}.geo.drift .g-v em{color:#ffb547}.geo.lk{opacity:.6;border-color:#5ef0d0}.geo.lk .g-v em{color:#5ef0d0}.geo.miss{animation:tfMiss .25s}@keyframes tfMiss{50%{transform:translateX(3px)}}.g-mk.fixed{background:#5ef0d0;box-shadow:0 0 6px #5ef0d0}.g-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}.g-tags i{font-style:normal;font-size:8.5px;padding:1px 5px;border-radius:6px;background:#0e1830}.g-tags i.up{color:#5ef0d0}.g-tags i.dn{color:#ff8a95}.tf-rep{white-space:pre-wrap;font:10px/1.45 ui-monospace,monospace;color:#aebbd6;background:#080d1a;border:1px solid #243557;border-radius:8px;padding:8px;margin:8px 0}.tf-copy{font:inherit;font-weight:700;font-size:12px;background:rgba(94,240,208,.14);border:1px solid #5ef0d0;color:#e1f9ff;border-radius:8px;padding:8px 12px;width:100%;cursor:pointer}.sw-tf.ok{color:#5ef0d0}.map-actions .mib.tfready{background:#5ef0d0;color:#06201c;border-color:#5ef0d0;box-shadow:0 4px 0 #2b8f80;animation:coPulse 1.6s ease-in-out infinite}.sw-tf.dim{color:var(--dim)}.sw-d{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.sw-d button,.sw-ld button{font:inherit;background:#0e1830;border:1px solid #2b3b5e;color:#aebbd6;border-radius:8px;padding:6px 3px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:11.5px;font-weight:600;cursor:pointer}.sw-d button small{font-size:9px;font-weight:400;color:var(--dim)}.sw-d button.on,.sw-ld button.on{border-color:#7ff3ff;color:#e1f9ff;background:rgba(127,243,255,.12)}.sw-d button.lk,.br-seg button.lk{opacity:.45}.sw-dn{margin:0;font-size:11.5px;line-height:1.35;color:#aebbd6}.sw-ld{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.sw-ld span{font-family:var(--f-display);font-size:8px;letter-spacing:.12em;color:var(--dim);margin-right:2px}.sw-ld button.ldi{padding:0}.ldi{width:46px;height:46px;border-radius:12px;display:grid!important;place-items:center;padding:0;color:#aebbd6;background:transparent;border:0}.ldi svg{width:26px;height:26px}.ldi.on{filter:drop-shadow(0 0 6px #7ff3ffaa)}.ldn{flex-basis:100%;font-style:normal;font-size:10.5px;color:var(--dim)}
 .rlcard{max-width:400px;width:100%;margin:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:12px}.rl-b{padding:0 16px;display:flex;flex-direction:column;gap:10px}.rl-h{margin:0;font-size:13px;line-height:1.4;color:#d5dff2}
 .rl-cards{display:grid;gap:8px}.rl-c{display:grid;grid-template-columns:30px 1fr;grid-template-rows:auto auto;column-gap:10px;text-align:left;font:inherit;background:#0e1830;border:1px solid #2b3b5e;border-radius:10px;padding:10px;color:#e1e9f7;cursor:pointer}.rl-c i{grid-row:span 2;font-style:normal;font-size:22px;color:var(--rc);align-self:center;text-align:center}.rl-c b{font-size:14px}.rl-c span{font-size:12px;color:#aebbd6;line-height:1.35}.rl-c.sel{border-color:var(--rc);box-shadow:0 0 0 1px var(--rc)}
@@ -973,10 +997,11 @@ button:disabled{cursor:default}
     </div>
   </section>
   <section class="screen overlay off" id="terra">
-    <div class="card console tfcard" style="--sc:#5ef0d0">
-      <div class="console-h"><span id="tfT">TERRAFORM</span></div>
-      <div class="br-b"><canvas id="tfCv" class="pix" width="128" height="84"></canvas><div id="tfBody"></div></div>
-      <div class="br-btns"><button class="btn ghost" id="tfBank">Catalyst</button><button class="btn" id="tfRoll">Scan</button></div>
+    <div class="tfstage">
+      <canvas id="tfCv" class="pix"></canvas><canvas id="tfLn"></canvas>
+      <div class="tf-hd"><span id="tfT">TERRAFORM</span><span id="tfStage"></span></div>
+      <div id="tfBody"></div>
+      <div class="tf-ft"><button class="btn ghost" id="tfRoll">Leave</button></div>
     </div>
   </section>
   <section class="screen overlay off" id="relic">
@@ -3513,22 +3538,20 @@ function tfPlan(st){const th=clamp(1+Math.floor((st.threat||0)/3),1,6),d=depthNo
 let TF=null;
 const tfT=t=>{const s=Math.max(0,Math.round((performance.now()-t.t0)/1000));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
 function openTerra(st,test){if(!test&&!canTerra(st))return;if(TF||TR)return;const p=tfPlan(st);
-  TF={s:st,p,test:!!test,fails:0,free:1,slow:0,t0:performance.now(),last:performance.now(),flash:0,done:null,fc:0,ft:0,fm:0,
+  TF={s:st,p,test:!!test,fails:0,free:0,slow:0,lines:[],pulse:null,t0:performance.now(),last:performance.now(),flash:0,done:null,fc:0,ft:0,fm:0,
     rep:{taps:0,amber:0,haz:0,cat:0,locks:[]},log:'Tap a gauge while its marker is in the green.',
     geo:GEO.map((g,i)=>({k:g.k,locked:false,q:'',cu:.28+Math.random()*.44,ph:Math.random()*2,bw:p.bw,sp:p.sp*Math.pow(g.vol,.7),sp0:p.sp*Math.pow(g.vol,.7),u:.5,miss:0}))};
-  show('#terra',true);sfx.tick();tfRows();requestAnimationFrame(tfLoop);}
+  show('#terra',true);sfx.tick();_pimg=null;requestAnimationFrame(()=>{tfSize();tfRows();requestAnimationFrame(tfLoop);});}
+function tfSize(){const cv=$('#tfCv'),st=cv.parentNode,w=st.clientWidth||400,h=st.clientHeight||700;cv.width=88;cv.height=Math.max(60,Math.round(88*h/w));const ln=$('#tfLn');ln.width=w;ln.height=h;_pimg=null;}
 function tfTap(k){const t=TF;if(!t||t.done)return;const o=t.geo.find(x=>x.k===k);if(!o||o.locked)return;
   const d=Math.abs(o.u-o.cu),r=t.rep;r.taps++;
-  if(d<=o.bw){o.locked=true;o.q=d<=o.bw*.3?'perfect':'good';r.locks.push({k,t:tfT(t),q:o.q});sfx.good();
+  if(d<=o.bw){o.locked=true;t.pulse={k,t:performance.now()};o.q=d<=o.bw*.3?'perfect':'good';r.locks.push({k,t:tfT(t),q:o.q});sfx.good();
     const ef=COUP[k]||{},ch=[];for(const j in ef){const x=t.geo.find(y=>y.k===j);if(!x||x.locked)continue;x.bw*=ef[j][0];x.sp*=ef[j][1];x.sp0*=ef[j][1];const e=coupEase(ef[j]);ch.push(`${GEO.find(g=>g.k===j).n} ${e>0?'eases':e<0?'worsens':'shifts'}`);}
     t.log=`${GEO.find(g=>g.k===k).n} locked${o.q==='perfect'?' dead centre':''}.${ch.length?' '+ch.join(', ')+'.':''}`;
     if(t.geo.every(x=>x.locked))return tfEnd('win');tfRows();}
   else if(d<=o.bw*3.2){r.amber++;o.miss=1;o.sp=Math.min(o.sp0*1.9,o.sp*1.1);t.log='Too early or late. That gauge runs hotter.';sfx.tick();}
   else{r.haz++;t.fails++;o.miss=1;o.sp=Math.min(o.sp0*1.9,o.sp*1.18);t.flash=1;t.log=`Hazard zone. Instability ${t.fails} of ${t.p.limit}.`;sfx.bad();
     if(t.fails>=t.p.limit)return tfEnd('fail');tfRows();}}
-function tfCat(){const t=TF;if(!t||t.done||t.slow>performance.now())return;if(t.free+bagTotal()<1)return;
-  if(t.free>0)t.free--;else{const b=bagNow(),k=b.indexOf(Math.max(...b));b[k]--;}
-  t.slow=performance.now()+4500;t.rep.cat++;t.log='Catalyst: every gauge slows for a few seconds.';sfx.perk&&sfx.perk(1);persist();tfBtns();}
 function tfEnd(kind){const t=TF;t.done=kind;const g=S.gal,st=t.s,pf=t.rep.locks.filter(l=>l.q==='perfect').length;
   if(kind==='win'&&t.test){t.cr=0;t.al=0;t.sur=0;sfx.coin();}
   else if(kind==='win'){const sur=Math.max(0,t.p.limit-t.fails-1)+Math.floor(pf/2),cr=Math.round((40+25*t.p.th+sur*14)*t.p.mul),al=1+Math.floor(sur/2);
@@ -3539,7 +3562,7 @@ function tfEnd(kind){const t=TF;t.done=kind;const g=S.gal,st=t.s,pf=t.rep.locks.
 function tfReport(){const t=TF,r=t.rep,pf=r.locks.filter(l=>l.q==='perfect').length,fps=t.fc?(1000/(t.ft/t.fc)).toFixed(0):'-';
   return [`TERRAFORM REPORT · ${t.s.name.toUpperCase()} · ${BUILD}`,
    `${t.done==='win'?'WIN':'LOST (instability)'} · ${tfT(t)} · threat tier ${t.p.th} · ${DEPTH_NAME[depthNow()]} · sensors L${t.p.sn}`,
-   `instability ${t.fails}/${t.p.limit} · catalysts ${r.cat} · perfect locks ${pf}/${r.locks.length}`,
+   `instability ${t.fails}/${t.p.limit} · perfect locks ${pf}/${r.locks.length}`,
    `taps ${r.taps}: ${r.locks.length} locked, ${r.amber} early/late, ${r.haz} hazard`,
    `lock order: ${r.locks.map(l=>`${l.k} ${l.t} ${l.q}`).join(' · ')||'none'}`,
    `perf: ${fps} fps avg, worst frame ${t.fm.toFixed(0)} ms`].join('\n');}
@@ -3553,8 +3576,8 @@ const _n=(x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf
 const _f=(x,y)=>_n(x,y)*.55+_n(x*2.1,y*2.1)*.3+_n(x*4.3,y*4.3)*.15;
 let _pimg=null;
 function tfPlanet(now){const t=TF,cv=$('#tfCv');if(!t||!cv)return;
-  const W=cv.width,H=cv.height,c=cv.getContext('2d');if(!_pimg||_pimg.width!==W)_pimg=c.createImageData(W,H);
-  const d=_pimg.data,L=k=>t.geo.find(o=>o.k===k).locked,tm=(now-t.t0)/1000,rot=tm*.35,R=Math.min(W,H)*.42,cx=W/2+(L('grav')?0:Math.sin(tm*5)*1.2),cy=H/2;
+  const W=cv.width,H=cv.height,c=cv.getContext('2d');if(!_pimg||_pimg.width!==W||_pimg.height!==H)_pimg=c.createImageData(W,H);
+  const d=_pimg.data,L=k=>t.geo.find(o=>o.k===k).locked,tm=(now-t.t0)/1000,rot=tm*.35,R=Math.min(W,H)*.27,cx=W/2+(L('grav')?0:Math.sin(tm*5)*1.2),cy=H/2;
   const lush=(L('oxy')?.5:0)+(L('temp')?.25:0)+(L('h2o')?.25:0);
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4,dx=(x-cx)/R,dy=(y-cy)/R,r2=dx*dx+dy*dy;
     let rr,gg,bb;
@@ -3572,6 +3595,15 @@ function tfPlanet(now){const t=TF,cv=$('#tfCv');if(!t||!cv)return;
     d[i]=rr<0?0:rr>255?255:rr;d[i+1]=gg<0?0:gg>255?255:gg;d[i+2]=bb<0?0:bb>255?255:bb;d[i+3]=255;}
   c.putImageData(_pimg,0,0);}
 // ---- live loop: markers sweep, the planet breathes
+function tfLines(now){const t=TF,cv=$('#tfLn');if(!t||!cv)return;const c=cv.getContext('2d'),st=cv.parentNode.getBoundingClientRect();c.clearRect(0,0,cv.width,cv.height);if(t.done)return;
+  const pos={};for(const o of t.geo){const el=document.getElementById('gr-'+o.k);if(!el)continue;const r=el.getBoundingClientRect();pos[o.k]={x:r.left+r.width/2-st.left,y:r.top+r.height/2-st.top,w:r.width,h:r.height};}
+  const ph=(now/90)%16;c.lineWidth=1.6;
+  const draw=(a,b,e,al)=>{const A=pos[a],B=pos[b];if(!A||!B)return;const col=e>0?'94,240,160':e<0?'255,92,108':'255,181,71';c.strokeStyle=`rgba(${col},${al})`;c.setLineDash([6,5]);c.lineDashOffset=-ph;
+    const dx=B.x-A.x,dy=B.y-A.y,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,tr=(P,sx,sy)=>{const k=Math.min(P.w/2/Math.abs(sx||1e-6),P.h/2/Math.abs(sy||1e-6));return k;},k1=tr(A,ux,uy)+2,k2=tr(B,ux,uy)+5;
+    const x1=A.x+ux*k1,y1=A.y+uy*k1,x2=B.x-ux*k2,y2=B.y-uy*k2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.setLineDash([]);
+    c.fillStyle=c.strokeStyle;c.beginPath();c.moveTo(x2+ux*5,y2+uy*5);c.lineTo(x2-uy*3.5,y2+ux*3.5);c.lineTo(x2+uy*3.5,y2-ux*3.5);c.fill();};
+  for(const a of t.geo){if(a.locked)continue;const ef=COUP[a.k]||{};for(const j in ef){const b=t.geo.find(x=>x.k===j);if(!b||b.locked)continue;draw(a.k,j,coupEase(ef[j]),.38);}}
+  if(t.pulse&&now-t.pulse.t<1100){const al=.9*(1-(now-t.pulse.t)/1100),ef=COUP[t.pulse.k]||{};for(const j in ef){const b=t.geo.find(x=>x.k===j);if(!b||b.locked)continue;draw(t.pulse.k,j,coupEase(ef[j]),al);}}}
 function tfLoop(now){const t=TF;if(!t)return;
   const dt=Math.min(.05,(now-t.last)/1000);t.ft+=now-t.last;t.fc++;t.fm=Math.max(t.fm,now-t.last);t.last=now;t.flash=Math.max(0,t.flash-dt*1.4);
   const slow=t.slow>now?.35:1;
@@ -3581,6 +3613,7 @@ function tfLoop(now){const t=TF;if(!t)return;
     if(vv)vv.textContent=geoFmt(G,clamp(G.c+(o.u-o.cu)/o.bw*G.ih,G.min,G.max));
     if(row)row.classList.toggle('miss',o.miss>0);}
   if(t.fc%2===0)tfPlanet(now);
+  tfLines(now);
   const lb=$('#tfStage');if(lb)lb.textContent=`${t.geo.filter(o=>o.locked).length} of 6 stable`;
   requestAnimationFrame(tfLoop);}
 function geoRow(g,o,t){const bw=o.bw,cu=o.cu,pc=v=>(Math.max(0,Math.min(1,v))*100).toFixed(1)+'%',hz=bw*3.2;
@@ -3593,18 +3626,13 @@ function geoRow(g,o,t){const bw=o.bw,cu=o.cu,pc=v=>(Math.max(0,Math.min(1,v))*10
     <span class="g-v"><b id="gv-${g.k}">${o.locked?geoFmt(g,g.c):'—'}</b><em>${o.locked?(o.q==='perfect'?'PERFECT':'LOCKED'):''}</em></span></div>`;}
 function tfRows(){const t=TF;if(!t)return;const p=t.p;$('#tfT').textContent=`TERRAFORM · ${t.s.name.toUpperCase()}`;
   let body;
-  if(t.done){body=(t.done==='win'?`<p class="tf-res ok">TERRAFORMED. ${t.s.name} is habitable.</p><p class="tf-hint">+${t.cr} CR · +${t.al} alloy${t.sur?` · ${t.sur} stability bonus`:''}${t.relic?' · a ship system is on offer':''}</p>`
-      :`<p class="tf-res bad">THE PLANET DESTABILIZED. Too many hazards. Catalysts you spent are gone; nothing else is lost. Try again.</p>`)+`<pre class="tf-rep">${t.text}</pre><button type="button" class="tf-copy" id="tfCopy">Copy tester report</button>`;}
-  else body=`<div class="tf-top"><b>Live scan</b><span id="tfStage"></span></div>
-    <div class="tf-pips">${Array.from({length:p.limit},(_,i)=>`<i class="${i<t.fails?'on':''}"></i>`).join('')}<span>instability · ${p.limit} collapses the planet</span></div>
-    <div class="geos">${GEO.map((g,i)=>geoRow(g,t.geo[i],t)).join('')}</div>
-    <p class="tf-log">${t.log}</p><p class="tf-hint">Tap a gauge when its marker is in the green. Green = locked. Amber makes that gauge run hotter. Red adds instability. ▲ ▼ show how locking it changes the others.</p>`;
+  if(t.done){body='<div class="tf-done">'+(t.done==='win'?`<p class="tf-res ok">TERRAFORMED. ${t.s.name} is habitable.</p><p class="tf-hint">+${t.cr} CR · +${t.al} alloy${t.sur?` · ${t.sur} stability bonus`:''}${t.relic?' · a ship system is on offer':''}</p>`
+      :`<p class="tf-res bad">THE PLANET DESTABILIZED. Too many hazards. Nothing else is lost. Try again.</p>`)+`<pre class="tf-rep">${t.text}</pre><button type="button" class="tf-copy" id="tfCopy">Copy tester report</button></div>`;}
+  else body=`<div class="tf-pips">${Array.from({length:p.limit},(_,i)=>`<i class="${i<t.fails?'on':''}"></i>`).join('')}<span>instability · ${p.limit} collapses the planet</span></div>
+    <div class="geos">${GEO.map((g,i)=>geoRow(g,t.geo[i],t)).join('')}</div><p class="tf-log">${t.log}</p>`;
   $('#tfBody').innerHTML=body;tfBtns();}
-function tfBtns(){const t=TF;if(!t)return;const ro=$('#tfRoll'),ct=$('#tfBank'),n=t.free+bagTotal();
-  if(t.done){ct.hidden=true;ro.textContent='Continue';ro.disabled=false;ro.classList.remove('ghost');return;}
-  ct.hidden=false;ct.textContent=`Catalyst · ${n}`;ct.disabled=n<1||t.slow>performance.now();ro.textContent='Leave';ro.classList.add('ghost');ro.disabled=false;}
+function tfBtns(){const t=TF;if(!t)return;const ro=$('#tfRoll');ro.textContent=t.done?'Continue':'Leave';ro.classList.toggle('ghost',!t.done);ro.disabled=false;}
 (()=>{$('#tfRoll').onclick=()=>{audio();if(!TF)return;if(TF.done)tfClose();else{const t=TF;TF=null;show('#terra',false);showStarWidget(t.s);updateMapActions();}};
-  $('#tfBank').onclick=()=>{audio();tfCat();};
   $('#tfBody').addEventListener('pointerdown',e=>{const c=e.target.closest('#tfCopy');if(c){const tx=TF&&TF.text;if(tx){try{navigator.clipboard.writeText(tx);}catch(_){}c.textContent='Copied';}return;}
     const r=e.target.closest('[data-g]');if(r&&TF&&!TF.done){e.preventDefault();tfTap(r.dataset.g);}});})();
 (()=>{const pop=document.createElement('div');pop.id='hoverTip';document.body.appendChild(pop);let lp=0,ht=0;
@@ -5055,7 +5083,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v85';
+const BUILD='v86';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
