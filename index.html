@@ -572,7 +572,7 @@ button:disabled{cursor:default}
 .bt-res b{font-family:var(--f-display);font-weight:400;font-size:13px;letter-spacing:.1em}.bt-res.win b{color:#38e09b}.bt-res.lose b{color:#ff4d5e}.bt-res span{font-size:13px;color:#c4d0e6}
 
 /* ---- briefing, campaign report, playbook opening, secure bullets ---- */
-#burst{z-index:16;background:rgba(4,7,16,.96)}#ilCv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}.brstcard{max-width:380px;width:100%;margin:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:12px;position:relative}.brstcard .btn{font-size:13px;padding:13px}
+#burst{z-index:16;background:rgba(4,7,16,.8);backdrop-filter:blur(3px);transition:background .35s}#burst.il{background:transparent;backdrop-filter:none}#ilCv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}.brstcard{max-width:380px;width:100%;margin:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:12px;position:relative}.brstcard .btn{font-size:13px;padding:13px}
 .iconbtn.od{position:relative;border-radius:50%;border:0;background:conic-gradient(#7ff3ff var(--p,0%),#16213a 0);display:grid;place-items:center}.iconbtn.od i{font-style:normal;font-family:var(--f-display);font-size:8px;width:24px;height:24px;border-radius:50%;background:#0a1120;display:grid;place-items:center;color:#7ff3ff}.iconbtn.od.rdy{animation:coPulse 1s ease-in-out infinite;box-shadow:0 0 12px #7ff3ff}.iconbtn.od.rdy i{background:#7ff3ff;color:#06101c}
 #relic{z-index:15}.sw-d{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.sw-d button,.sw-ld button{font:inherit;background:#0e1830;border:1px solid #2b3b5e;color:#aebbd6;border-radius:8px;padding:6px 3px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:11.5px;font-weight:600;cursor:pointer}.sw-d button small{font-size:9px;font-weight:400;color:var(--dim)}.sw-d button.on,.sw-ld button.on{border-color:#7ff3ff;color:#e1f9ff;background:rgba(127,243,255,.12)}.sw-d button.lk,.br-seg button.lk{opacity:.45}.sw-dn{margin:0;font-size:11.5px;line-height:1.35;color:#aebbd6}.sw-ld{display:flex;flex-wrap:wrap;gap:5px;align-items:center}.sw-ld span{font-family:var(--f-display);font-size:8px;letter-spacing:.12em;color:var(--dim);margin-right:2px}.sw-ld button{flex-direction:row;padding:5px 8px}
 .rlcard{max-width:400px;width:100%;margin:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:12px}.rl-b{padding:0 16px;display:flex;flex-direction:column;gap:10px}.rl-h{margin:0;font-size:13px;line-height:1.4;color:#d5dff2}
@@ -1558,7 +1558,7 @@ function spawnEvent(force,opts={}){
   }
   G.sincePlanet=type==='planet'?0:G.sincePlanet+1;if(G.R)G.R.spawn[type]++;
   const add=Math.floor(G.T*.5)+Math.floor(G.prog*2);
-  const reqs=EVENTS[type].reqs.map(([m,c],i)=>({m,c:Math.min(ST.cap[m]-1,Math.max(2,c+add+(Math.random()<.45?1:0)-(opts.light?1:0)-(i?1:0)-easeNeed()))}));
+  const reqs=EVENTS[type].reqs.map(([m,c],i)=>({m,c:Math.min(ST.cap[m]-1,Math.max(2,c+add+(Math.random()<.45?1:0)-(opts.light?1:0)-(i?1:0)-easeNeed()-(!TR&&depthNow()===1&&type==='enemy'?1:0)))}));
   const e={type,reqs,p:0,y:Math.round(V.H*(.28+Math.random()*.44)),ided:false,resolved:false,passing:false,dead:false,seed:Math.random()*10,interceptor:!!opts.interceptor};
   if(type==='asteroid')e.spr=makeAsteroid(5+Math.min(4,reqs[0].c-3));
   if(type==='planet')e.spr=makePlanet(Math.min(Math.floor(V.H*.3),12+(Math.random()*5|0)));
@@ -3373,11 +3373,12 @@ function openBurst(){if(IL||!G.running||G.ending||CINE||perkOpen||scene!=='game'
   IL={pick:true};IL_WAS=paused;paused=true;drag=null;
   $('#brstPick').hidden=false;$('#ilCv').hidden=true;$('#brstRes').hidden=true;$('#bpCounter').disabled=!feat('pursuer');
   show('#burst',true);sfx.tick();}
-function closeBurst(){show('#burst',false);IL=null;paused=IL_WAS;}
-function startBurst(mode){const cv=$('#ilCv');$('#brstPick').hidden=true;cv.hidden=false;
+function closeBurst(){show('#burst',false);$('#burst').classList.remove('il');IL=null;paused=IL_WAS;}
+function startBurst(mode){const cv=$('#ilCv');$('#brstPick').hidden=true;cv.hidden=false;$('#burst').classList.add('il');
   const W=cv.clientWidth,H=cv.clientHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
   const stars=Array.from({length:50},()=>({x:Math.random(),y:Math.random(),z:Math.random()}));
-  IL={mode,t:0,ot:0,over:false,hw:0,ho:0,tg:[],sp:.35,fx:[],end:false,W,H,last:performance.now(),flash:0,stars,msg:0};
+  let bg=null,vr={x:0,y:H*.05,w:W,h:H*.3};try{const vp=$('#vp'),a=vp.getBoundingClientRect(),b=cv.getBoundingClientRect();bg=document.createElement('canvas');bg.width=vp.width;bg.height=vp.height;bg.getContext('2d').drawImage(vp,0,0);vr={x:a.left-b.left,y:a.top-b.top,w:a.width,h:a.height};}catch(e){bg=null;}
+  IL={bg,vr,mode,t:0,ot:0,over:false,hw:0,ho:0,tg:[],sp:.35,fx:[],end:false,W,H,last:performance.now(),flash:0,stars,msg:0};
   if(mode==='counter'){const k=SYS.pursuer;if(k==='empire'||k==='pirates'){const spr=k==='empire'?CRUISER:PIRATE,sc=Math.max(3,Math.floor(W*.8/spr.width));
       IL.fig={spr,sc,w:spr.width*sc,h:spr.height*sc,x:(W-spr.width*sc)/2,y:H*.4-spr.height*sc/2};}
     else{const R=W*.3;IL.fig={disc:true,col:{blackhole:'#b48cff',leviathan:'#2c8f86'}[k]||'#ffb547',w:R*2,h:R*2,x:W/2-R,y:H*.4-R};}}
@@ -3409,7 +3410,15 @@ function ilFrame(now){const s=IL;if(!s||s.pick)return;const cv=$('#ilCv');if(cv.
   s.flash=Math.max(0,s.flash-dt);s.msg=Math.max(0,s.msg-dt);for(const f of s.fx)f.t+=dt;s.fx=s.fx.filter(f=>f.t<.7);
   ilDraw(cv,s,now/1000);requestAnimationFrame(ilFrame);}
 function ilDraw(cv,s,t){const c=cv.getContext('2d'),W=s.W,H=s.H;c.setTransform(dpr,0,0,dpr,0,0);c.imageSmoothingEnabled=false;c.clearRect(0,0,W,H);
-  c.fillStyle='rgba(4,7,16,.96)';c.fillRect(0,0,W,H);
+  {const op=Math.min(1,s.t/.7),e=1-Math.pow(1-op,3);
+   c.fillStyle=`rgba(4,7,16,${.93*e})`;c.fillRect(0,0,W,H);
+   if(s.bg){const v=s.vr,rx=v.x*(1-e),ry=v.y*(1-e),rw=v.w+(W-v.w)*e,rh=v.h+(H-v.h)*e;
+     c.save();c.beginPath();c.rect(rx,ry,rw,rh);c.clip();c.imageSmoothingEnabled=true;
+     const k=Math.max(rw/s.bg.width,rh/s.bg.height)*(1+.015*s.t+.04*(1-e)),dw=s.bg.width*k,dh=s.bg.height*k;
+     c.globalAlpha=1;c.drawImage(s.bg,rx+(rw-dw)/2,ry+(rh-dh)/2,dw,dh);c.globalAlpha=1;
+     const g=c.createLinearGradient(0,ry,0,ry+rh);g.addColorStop(0,`rgba(4,7,16,${.15+.2*e})`);g.addColorStop(.5,`rgba(4,7,16,${.05+.2*e})`);g.addColorStop(1,`rgba(4,7,16,${.3+.3*e})`);c.fillStyle=g;c.fillRect(rx,ry,rw,rh);
+     c.restore();c.imageSmoothingEnabled=false;
+     if(e<1){c.strokeStyle=`rgba(127,243,255,${1-e})`;c.lineWidth=2;c.strokeRect(rx+1,ry+1,rw-2,rh-2);}}}
   for(const st of s.stars){st.x-=.0015*(.3+st.z)*(s.over?3:1);if(st.x<0)st.x+=1;c.fillStyle=`rgba(200,215,255,${.2+st.z*.6})`;c.fillRect(Math.round(st.x*W),Math.round(st.y*H),st.z>.8?2:1,1);}
   if(s.flash>0){c.fillStyle=`rgba(127,243,255,${s.flash*.5})`;c.fillRect(0,0,W,H);}
   if(s.fig){const f=s.fig,jx=Math.sin(t*3)*2,jy=Math.cos(t*2.3)*2;
@@ -3433,7 +3442,7 @@ function ilDraw(cv,s,t){const c=cv.getContext('2d'),W=s.W,H=s.H;c.setTransform(d
   $('#bpNo').onclick=()=>{sfx.tick();closeBurst();};$('#brstGo').onclick=()=>{sfx.tick();closeBurst();};})();
 // early Tachs are gentler: smaller contact requirements and softer hits, easing off as the lessons stack up
 const easeNeed=()=>{const d=TR?0:depthNow();return d===0?2:d===1?1:0;};
-const easeDmg=()=>{const d=TR?0:depthNow();return d===0?.55:d===1?.8:1;};
+const easeDmg=()=>{const d=TR?0:depthNow();return d===0?.55:d===1?.62:1;};
 // a stage's view of a system: later Tachs add its own pursuer, then its twist and bonus
 function sysView(key){const b=SYSTEMS[key];if(!TR&&depthNow()>=2)return b;const o=Object.assign({},b);
   if(!feat('own')){o.pursuer='empire';o.pName='Empire cruiser';}
@@ -4861,7 +4870,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v75';
+const BUILD='v76';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
