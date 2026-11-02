@@ -156,7 +156,7 @@ button:disabled{cursor:default}
 .mk-near div{display:grid;grid-template-columns:1fr auto 52px;gap:8px;align-items:center;font-size:12px;color:var(--dim);padding:0 4px}
 .mk-near b{text-align:right;color:var(--bucks);font-weight:600}
 .srow.dbg span{color:#ff8a95}
-#dbgSeg button,#dbgTf button{white-space:nowrap}
+#dbgSeg button,#dbgTf button,#dbgOd button{white-space:nowrap}
 .htabs[hidden]+.hg-body{margin-top:14px}
 .toast{position:absolute;left:50%;top:calc(76px + env(safe-area-inset-top,0px));z-index:8;transform:translate(-50%,-14px);opacity:0;pointer-events:none;transition:opacity .3s,transform .35s cubic-bezier(.2,.7,.2,1);
   background:rgba(8,14,28,.95);border:1px solid var(--tc);box-shadow:0 0 22px color-mix(in srgb,var(--tc) 35%,transparent);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:220px;text-align:center}
@@ -970,6 +970,7 @@ button:disabled{cursor:default}
       <div class="srow"><span>Overdrive button</span><div class="seg" id="odSideSeg"><button data-v="left">Left</button><button data-v="right">Right</button></div></div>
       <div class="srow"><span>Launch countdown</span><div class="seg" id="cdSeg"><button data-v="0">Off</button><button data-v="3">3s</button><button data-v="5">5s</button></div></div>
       <div class="srow dbg"><span>Debug</span><div class="seg" id="dbgSeg"><button data-k="cr">+500 CR</button><button data-k="al">+10 Alloy</button></div></div>
+      <div class="srow dbg"><span>Test Overdrive</span><div class="seg" id="dbgOd"><button type="button" data-m="counter">Counter</button><button type="button" data-m="gun">Gunnery</button><button type="button" data-m="repair">Repair</button></div></div>
       <div class="srow dbg"><span>Test Terraform</span><div class="seg" id="dbgTf"><button type="button" data-t="0">Easy</button><button type="button" data-t="9">Mid</button><button type="button" data-t="16">Hard</button></div></div>
       <button class="btn ghost" id="optTips">Replay tutorial &amp; tips</button>
       <button class="btn ghost" id="optQA">Tester report</button>
@@ -3451,7 +3452,7 @@ function startBurst(mode){const cv=$('#ilCv');$('#brstPick').hidden=true;cv.hidd
   const stars=Array.from({length:50},()=>({x:Math.random(),y:Math.random(),z:Math.random()}));
   let bg=null,vr={x:0,y:H*.05,w:W,h:H*.3};try{const vp=$('#vp'),a=vp.getBoundingClientRect(),b=cv.getBoundingClientRect();bg=document.createElement('canvas');bg.width=vp.width;bg.height=vp.height;bg.getContext('2d').drawImage(vp,0,0);vr={x:a.left-b.left,y:a.top-b.top,w:a.width,h:a.height};}catch(e){bg=null;}
   IL={bg,vr,mode,t:0,ot:0,over:false,hw:0,ho:0,tg:[],sp:.35,fx:[],end:false,W,H,last:performance.now(),flash:0,stars,msg:0};
-  if(mode==='counter'){const k=SYS.pursuer;if(k==='empire'||k==='pirates'){const spr=k==='empire'?CRUISER:PIRATE,sc=Math.max(3,Math.floor(W*.8/spr.width));
+  if(mode==='counter'){const k=(SYS&&SYS.pursuer)||'empire';if(k==='empire'||k==='pirates'){const spr=k==='empire'?CRUISER:PIRATE,sc=Math.max(3,Math.floor(W*.8/spr.width));
       IL.fig={spr,sc,w:spr.width*sc,h:spr.height*sc,x:(W-spr.width*sc)/2,y:H*.4-spr.height*sc/2};}
     else{const R=W*.3;IL.fig={disc:true,col:{blackhole:'#b48cff',leviathan:'#2c8f86'}[k]||'#ffb547',w:R*2,h:R*2,x:W/2-R,y:H*.4-R};}}
   if(mode==='repair')stkInit();
@@ -3466,11 +3467,11 @@ function ilHit(x,y){const s=IL;if(s.mode==='repair')return stkTap(x,y);let best=
   tone(480+Math.min(14,n)*55,.05,'square',.03);if(s.mode==='counter')sfx.laser();else sfx.boom();
   s.fx.push({x:gx,y:best.y,t:0,txt:s.over?'+2':'+1',boom:true});s.flash=.18;}
 function ilEnd(){if(!IL||IL.end)return;IL.end=true;setTimeout(ilResult,350);}
-function ilResult(){const s=IL;if(!s)return;if(s.mode==='repair')return ilRepairResult();const hw=s.hw,ho=s.ho,lines=[];
-  if(s.mode==='counter'){const gap=Math.round(hw*2+ho*4);G.gap=Math.min(100,G.gap+gap);lines.push(['Pursuer pushed back',`+${gap}`]);}
-  else{const cr=Math.round((hw+ho*2)*(1+G.T*.25)),fu=Math.round(hw*.5+ho*1.5);if(cr)addBucks(cr);if(fu){G.fuel=Math.min(ST.tank,G.fuel+fu);pulseFuel();}lines.push(['Credits',`+${cr}`],['Fuel',`+${fu}`]);}
-  G.od=0;odSync();
-  $('#ilCv').hidden=true;$('#brstRes').hidden=false;$('#brstT').textContent=s.mode==='counter'?'COUNTERFIRE':'GUNNERY';
+function ilResult(){const s=IL;if(!s)return;if(s.mode==='repair')return ilRepairResult();const tst=!!s.test;const hw=s.hw,ho=s.ho,lines=[];
+  if(s.mode==='counter'){const gap=Math.round(hw*2+ho*4);if(!tst)G.gap=Math.min(100,G.gap+gap);lines.push(['Pursuer pushed back',`+${gap}`]);}
+  else{const cr=Math.round((hw+ho*2)*(1+G.T*.25)),fu=Math.round(hw*.5+ho*1.5);if(!tst){if(cr)addBucks(cr);if(fu){G.fuel=Math.min(ST.tank,G.fuel+fu);pulseFuel();}}lines.push(['Credits',`+${cr}`],['Fuel',`+${fu}`]);}
+  if(!tst){G.od=0;odSync();}
+  $('#ilCv').hidden=true;$('#brstRes').hidden=false;$('#brstT').textContent=(s.mode==='counter'?'COUNTERFIRE':'GUNNERY')+(tst?' · TEST':'');
   $('#brstBody').innerHTML=`<p class="rl-h">${hw+ho} hits. ${hw} in the window${ho?`, ${ho} in overtime`:', and we never reached overtime'}.</p><div class="payout">${lines.map(l=>`<div><span>${l[0]}</span><b>${l[1]}</b></div>`).join('')}</div>`;
   sfx.win();}
 function stkInit(){const s=IL,W=s.W,H=s.H,fw=Math.min(W-70,280),fx=(W-fw)/2,bh=Math.min(24,Math.floor(H*.5/14)),by=Math.round(H*.72);
@@ -3495,9 +3496,8 @@ function stkDraw(c,s,t){const k=s.stk;if(!k)return;const W=s.W;
   c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText(k.n?`${k.n} OF ${STK_MAX} LAYERS · A MISS KEEPS ONLY 40%`:'TAP TO DROP THE BLOCK',W/2,72);
   const bw=Math.min(220,W-90),bx=(W-bw)/2,byy=s.H-96;k.bank={x:bx,y:byy,w:bw,h:34};
   if(k.n>0&&!s.end){c.fillStyle='rgba(94,240,208,.18)';c.strokeStyle='#5ef0d0';c.lineWidth=2;c.beginPath();c.roundRect(bx,byy,bw,34,10);c.fill();c.stroke();c.fillStyle='#e1f9ff';c.font='700 11px Silkscreen, monospace';c.fillText(`BANK +${pending}`,W/2,byy+22);}}
-function ilRepairResult(){const s=IL,k=s.stk,full=stkRep(k.n,k.pf),gain=k.fail?Math.floor(full*.4):full,was=G.hull;G.hull=Math.min(ST.hullMax,G.hull+gain);const real=Math.round(G.hull-was);G.od=0;odSync();
-  if(real>0)vpPop(`REPAIR +${real}`,'#5ef0d0');
-  $('#ilCv').hidden=true;$('#brstRes').hidden=false;$('#brstT').textContent='EMERGENCY REPAIR';
+function ilRepairResult(){const s=IL,k=s.stk,full=stkRep(k.n,k.pf),gain=k.fail?Math.floor(full*.4):full,tst=!!s.test;let real=gain;if(!tst){const was=G.hull;G.hull=Math.min(ST.hullMax,G.hull+gain);real=Math.round(G.hull-was);G.od=0;odSync();if(real>0)vpPop(`REPAIR +${real}`,'#5ef0d0');}
+  $('#ilCv').hidden=true;$('#brstRes').hidden=false;$('#brstT').textContent='EMERGENCY REPAIR'+(tst?' · TEST':'');
   $('#brstBody').innerHTML=`<p class="rl-h">${k.n} layer${k.n===1?'':'s'} stacked${k.pf?`, ${k.pf} perfect`:''}${k.fail?'. The stack collapsed.':s.bankd?'. Banked.':'.'}</p><div class="payout"><div><span>Hull restored</span><b>+${real}</b></div>${k.fail&&full>gain?`<div><span>Lost in the collapse</span><b>-${full-gain}</b></div>`:''}</div>`;
   sfx.win();}
 function ilFrame(now){const s=IL;if(!s||s.pick)return;const cv=$('#ilCv');if(cv.hidden)return;
@@ -5126,7 +5126,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v87';
+const BUILD='v88';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5553,6 +5553,9 @@ $('#dbgSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(
   if(scene==='station')renderStation();else if(scene==='hangar')renderHangar();else if(scene==='map')updateMapActions();
   if(scene==='splash')renderSplash();
   const t=b.textContent;b.textContent='Added';setTimeout(()=>b.textContent=t,700);});
+/* Debug: Overdrive test. Plays the mini-game with nothing paid out or changed. */
+$('#dbgOd').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||IL||TF||TR)return;
+  show('#sound',false);IL_WAS=paused;paused=true;show('#burst',true);startBurst(b.dataset.m);IL.test=true;});
 /* Debug: Terraform test with a dummy world. Nothing is saved or paid out. */
 $('#dbgTf').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||TF||TR)return;
   if(!(scene==='map'||scene==='station'||scene==='hangar')){toast('<b>Terraform test</b><span>Open it from the map or the station.</span>','#ff8a95');return;}
