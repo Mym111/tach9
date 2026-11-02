@@ -2694,7 +2694,8 @@ function showStarWidget(s){
   if(!s.seen){MAP.wFull=false;w.classList.remove('full');w.innerHTML=`<div class="sw-h"><span></span><div><b>Unexplored star</b><span>Beyond your scanners</span></div><button class="sw-x" aria-label="Close">✕</button></div>`;}
   else{alloyInit(s);const thr=s.threat+(s.shard&&!s.shardClaimed?1:0),pay=Math.round(gateBonusBase(thr,sys)*salvageOf(s)*(s.sig==='storm'?1.6:1));
     const chips=[s.id===g.gate?(g.cons?['»',g.gateWon?'Exodus Gate · open. Jump on':terraDone(g)<terraNeed(g)?`Exodus Gate · sealed, terraform ${terraNeed(g)-terraDone(g)} more`:`Exodus Gate · clear it to jump on to the next constellation`,'#5ef0d0']:['»',`Tach ${g.num} attempt · ${pctTxt(tachPlan().total)} chance`,'#5ef0d0']):null,s.shard?[glyphTag('crystal',SHARD_COL),s.shardClaimed?'Gate part · recovered':'Gate part · guarded',SHARD_COL]:null,s.lm?[glyphTag(LM_GLYPH[s.lm]||'ring',LANDMARKS[s.lm].col),LANDMARKS[s.lm].name,LANDMARKS[s.lm].col]:null,s.sig?[glyphTag(SIG_GLYPH[s.sig]||'signal',SIGS[s.sig].col),SIGS[s.sig].name,SIGS[s.sig].col]:null,
-      s.res?['⚗',`Researched · ${s.res.name} · ${reelDef(s.res.k).name} +${s.res.amt}`,reelDef(s.res.k).col]:canResearch(s)?['⚗','Research ready · park here','#ffd84a']:s.id!==g.gate&&!s.clears?['⚗','Clear it to unlock research','#7f8fb2']:null,
+      g.cons&&s.terra?['◍','Terraformed · counts toward the Exodus Gate','#5ef0d0']:null,
+      g.cons?null:s.res?['⚗',`Researched · ${s.res.name} · ${reelDef(s.res.k).name} +${s.res.amt}`,reelDef(s.res.k).col]:g.cons?null:canResearch(s)?['⚗','Research ready · park here','#ffd84a']:s.id!==g.gate&&!s.clears?['⚗','Clear it to unlock research','#7f8fb2']:null,
       s.clears?['✓',`Cleared ${s.clears}× · salvage ${Math.round(salvageOf(s)*100)}%`,'#38e09b']:null].filter(Boolean);
     const sub=here?'Station here':i>=0?'One jump':'Out of range';
     const dial=here&&!TR?depthPanel(s):'';
