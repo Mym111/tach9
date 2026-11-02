@@ -603,8 +603,10 @@ button:disabled{cursor:default}
 #tfBody .geo[data-g=temp]{right:8px;top:calc(50% - 74px)}#tfBody .geo[data-g=h2o]{right:8px;top:calc(50% + 6px)}
 #tfBody .tf-done{position:absolute;left:14px;right:14px;top:50%;transform:translateY(-50%);pointer-events:auto;background:rgba(6,10,20,.92);border:1px solid #5ef0d0;border-radius:14px;padding:14px;max-height:80%;overflow:auto}
 #tfBody .tf-rep{font-size:10px;white-space:pre-wrap;color:#aebbd6;margin:8px 0}
-.tf-ft{position:absolute;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom,0px));width:min(260px,70%);z-index:4}
-.tf-ft .btn{width:100%}
+.tf-ft{position:absolute;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom,0px));width:min(340px,92%);z-index:4;display:flex;gap:8px}
+.tf-ft .btn{flex:1}.tf-ft .btn.mod{background:linear-gradient(180deg,#1b4a8a,#0e2a55);border-color:#4da6ff;color:#cfe8ff}.tf-ft .btn.mod:disabled{opacity:.45}
+#terra.slow::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:3;box-shadow:inset 0 0 70px rgba(77,166,255,.5)}
+.xch.mod .mod-t{font-size:12px;color:var(--dim);margin:8px 0 6px;line-height:1.4}.mod-pips{margin:6px 0 10px}
 .odrow{display:flex;align-items:center;gap:8px;margin:5px 0 2px}.odrow.left{flex-direction:row-reverse}
 .odbar{flex:1;display:flex;gap:4px;height:12px;padding:2px;border:1px solid #27406b;border-radius:7px;background:#070c18;position:relative}.odbar i{flex:1;border-radius:3px;background:#16213a;transition:background .2s,box-shadow .2s}.odbar i.on{background:#7ff3ff;box-shadow:0 0 6px #7ff3ff88}.odbar.rdy{border-color:#7ff3ff;animation:odPulse 1.1s ease-in-out infinite}.odbar::after{content:'OVERDRIVE';position:absolute;left:8px;top:-7px;background:#070c18;padding:0 4px;font:7px Silkscreen,monospace;letter-spacing:.12em;color:#7f8fb2}.odbar.rdy::after{color:#7ff3ff}
 .odgo{flex:none;min-width:84px;height:28px;border-radius:9px;border:1px solid #2b3b5e;background:#0e1830;color:#7f8fb2;font:700 9px var(--f-display);letter-spacing:.12em;cursor:pointer}.odgo.rdy{border-color:#7ff3ff;background:rgba(127,243,255,.16);color:#e1f9ff;animation:odPulse 1.1s ease-in-out infinite}
@@ -1017,7 +1019,7 @@ button:disabled{cursor:default}
       <canvas id="tfCv" class="pix"></canvas><canvas id="tfLn"></canvas>
       <div class="tf-hd"><span id="tfT">TERRAFORM</span><span id="tfStage"></span></div>
       <div id="tfBody"></div>
-      <div class="tf-ft"><button class="btn ghost" id="tfRoll">Leave</button></div>
+      <div class="tf-ft"><button class="btn mod" id="tfMod" hidden>Moderator</button><button class="btn ghost" id="tfRoll">Leave</button></div>
     </div>
   </section>
   <section class="screen overlay off" id="relic">
@@ -1286,7 +1288,7 @@ const rl=k=>(S.station&&S.station.rooms[k])||0;
 const CREWED=['comms','shipyard','war','refinery','drone'];
 const CREW_PER=6;   // crew slots per room level
 const crewCap=k=>CREWED.includes(k)?rl(k)*CREW_PER:0;
-const PEAK={comms:'Every market you jump to restocks +1 Alloy',shipyard:'Ship launches with +2 charge on all systems',war:'Top system on the board +2 more charge',refinery:'+1 Alloy per clear',drone:'Drones work 30% faster'};
+const PEAK={comms:'Every market you jump to restocks +1 Alloy',shipyard:'Ship launches with +2 charge on all systems',war:'Top system on the board +2 more charge',refinery:'+0.5 Alloy per clear',drone:'Drones work 30% faster'};
 function crewSync(){
   const stn=S.station;if(!stn)return;if(!stn.crew)autoCrew();
   for(const k of CREWED){stn.crew[k]=clamp(stn.crew[k]||0,0,crewCap(k));}
@@ -2774,7 +2776,7 @@ function moveStation(){
     const prev=g.stars[g.at],seen0=new Set(g.stars.filter(x=>x.seen).map(x=>x.id));
     g.at=st.id;const fresh=!g.visited.includes(st.id);if(fresh){g.visited.push(st.id);rollAnomaly(g,st);}revealAround(g);
     const lmRows=[];if(fresh&&lmActive(st)&&!st.lmDone){
-      if(st.lm==='yard'){st.lmDone=true;if(rl('shipyard')<4){S.station.rooms.shipyard++;lmRows.push(['Ancient Shipyard','Shipyard +1 level','#7ff3ff','lm:yard']);}else{S.station.alloy+=6;lmRows.push(['Ancient Shipyard','+6 Alloy','#cfe0f5','lm:yard']);}}
+      if(st.lm==='yard'){st.lmDone=true;if(rl('shipyard')<4){S.station.rooms.shipyard++;lmRows.push(['Ancient Shipyard','Shipyard +1 level','#7ff3ff','lm:yard']);}else{S.station.alloy+=3;lmRows.push(['Ancient Shipyard','+6 Alloy','#cfe0f5','lm:yard']);}}
       if(st.lm==='relay'){st.lmDone=true;let n=0;for(const x of g.stars)if((x.r===st.r||x.r===st.r+1)&&!x.seen){x.seen=true;n++;}lmRows.push(['Relay Beacon',`${n} stars charted`,'#c792ff','lm:relay']);}}
     const fresh2=g.stars.filter(x=>x.seen&&!seen0.has(x.id)),sigs=fresh2.filter(x=>x.sig).length,rows=[];
     if(st.r!==prev.r)rows.push(['New region',g.regions[st.r].name,g.regions[st.r].col,'region']);
@@ -3018,7 +3020,7 @@ function drawWarp(dt){
 const FRONT_COL='#ff4d5e';
 const LANDMARKS={
   yard:{name:'Ancient Shipyard',short:'SHIPYARD',col:'#7ff3ff',
-        desc:'A derelict dry dock still full of tooling. The first time your station parks here, your Shipyard gains a free level (or 6 Alloy if it is maxed).'},
+        desc:'A derelict dry dock still full of tooling. The first time your station parks here, your Shipyard gains a free level (or 3 Alloy if it is maxed).'},
   ark:{name:'Derelict Ark',short:'DERELICT ARK',col:'#38e09b',
         desc:'A colony ark adrift with sleepers aboard. Clear an expedition here to wake them: 12 people for the Habitat and 10 Legend. Once only.'},
   hub:{name:'Trade Hub',short:'TRADE HUB',col:'#cfe0f5',
@@ -3036,7 +3038,7 @@ function initPhase4(g){
     g.lmInit=true;const keys=Object.keys(LANDMARKS).sort(()=>Math.random()-.5).slice(0,3);
     [0,1,2].forEach((r,i)=>{const pool=g.stars.filter(s=>s.r===r&&s.id!==g.gate&&s.id!==g.at&&!s.lm);if(!pool.length)return;
       const st=pool[Math.floor(Math.random()*pool.length)];st.lm=keys[i];st.sig=null;
-      if(st.lm==='hub'){st.alloy=7;st.bought=0;}});
+      if(st.lm==='hub'){st.alloy=4;st.bought=0;}});
   }
 }
 const lmActive=st=>!!(st&&st.lm);
@@ -3193,7 +3195,7 @@ const SIGS={
   derelict:{name:'Derelict field',short:'DERELICTS',col:'#ff9640',kind:'anomaly',
             desc:'Anomaly. Wrecks everywhere: salvage crate tiles show up four times as often on the board.'},
   vein:    {name:'Rich vein',short:'RICH VEIN',col:'#9fb8d8',kind:'anomaly',
-            desc:'Anomaly. Ore-rich rocks. Clearing the system hauls in 3 Alloy, refinery or not.'},
+            desc:'Anomaly. Ore-rich rocks. Clearing the system hauls in 1 Alloy, refinery or not.'},
 };
 function sigInit(st,g){
   if(st.sig!==undefined)return;
@@ -3234,7 +3236,7 @@ function rollPrize(big){
   const r=Math.random(),m=big?2:1;
   if(r<.42){const n=(7+Math.floor(Math.random()*11))*m;return{k:'cr',n,label:`+${n} CR`,col:'#ff7ad9'};}
   if(r<.6)return{k:'fuel',n:12*m,label:`+${12*m} FUEL`,col:'#ffd84a'};
-  if(r<.76)return{k:'alloy',n:m,label:`+${m} ALLOY`,col:'#cfe0f5'};
+  if(r<.68)return{k:'alloy',n:m,label:`+${m} ALLOY`,col:'#cfe0f5'};
   if(r<.88)return{k:'surv',n:m,label:m>1?`${m} SURVIVORS`:'A SURVIVOR',col:'#38e09b'};
   if(r<.95)return{k:'charge',n:3,label:'+3 ALL SYSTEMS',col:'#7ff3ff'};
   return{k:'cr',n:35*m,label:`JACKPOT +${35*m} CR`,col:'#ffd84a',jack:true};
@@ -3267,7 +3269,7 @@ const gainPpl=n=>{if(n<0){S.station.pop=Math.max(1,S.station.pop+n);crewSync();r
 const gainLeg=n=>{S.legend=legendOf()+n;return`+${n} ★`;};
 const ANOMALIES={
   hulk:{name:'Derelict hulk',col:'#9fb8d8',txt:'A dead warship drifts here, reactor still faintly warm.',
-    opts:[{l:'Strip it for parts',h:'+3 Alloy · 30% reactor flare',run:()=>roll(.3)?`The reactor flared as you cut in. ${gainAl(1)}, ${gainCR(-20)} in repairs.`:`Clean salvage. ${gainAl(3)}.`},
+    opts:[{l:'Strip it for parts',h:'+2 Alloy · 30% reactor flare',run:()=>roll(.3)?`The reactor flared as you cut in. ${gainCR(-20)} in repairs, nothing salvaged.`:`Clean salvage. ${gainAl(2)}.`},
           {l:'Tow it to a scrapyard',h:'+50 CR · 30% it breaks up',run:()=>roll(.3)?`The hull breaks apart on the way. ${gainAl(1)} from the pieces.`:`A scrapyard pays well for a whole warship. ${gainCR(50)}.`}]},
   signal:{name:'Strange signal',col:'#c792ff',txt:'A looping distress call in an old human dialect. Something about it is wrong.',
     opts:[{l:'Answer it',h:'People, or pirates (50/50)',run:()=>roll(.5)?`Survivors of a lost colony ship. ${gainPpl(5)}.`:`A pirate lure. They board and grab what they can. ${gainCR(-30)}.`},
@@ -3277,7 +3279,7 @@ const ANOMALIES={
           {l:'Hand it to the authorities',h:'+8 ★ · +2 people',run:()=>`The local patrol is grateful and sends you volunteers. ${gainLeg(8)}, ${gainPpl(2)}.`}]},
   beacon:{name:'Old war beacon',col:'#ff8a95',txt:'A military beacon from a forgotten war, still broadcasting jamming codes.',
     opts:[{l:'Reactivate it',h:'Charts nearby space',run:()=>{let n=0;const g=S.gal,here=g.stars[g.at];for(const j of here.links)for(const k of [j,...g.stars[j].links])if(!g.stars[k].seen){g.stars[k].seen=true;n++;}return n?`Its old sensor net still works. ${n} stars charted.`:'Its sensor net shows nothing you have not already charted.';}},
-          {l:'Strip its power core',h:'+2 Alloy',run:()=>`A solid core. ${gainAl(2)}.`}]},
+          {l:'Strip its power core',h:'+1 Alloy',run:()=>`A solid core. ${gainAl(1)}.`}]},
   cryo:{name:'Cryo pod cluster',col:'#7ff3ff',txt:'Dozens of cryo pods tethered together, frost still on the glass.',
     opts:[{l:'Thaw them',h:'+6 people · 25% sickness',run:()=>roll(.25)?`A dormant virus wakes with them. ${gainPpl(4)}, then ${gainPpl(-2)} lost to quarantine.`:`They wake disoriented but grateful. ${gainPpl(6)}.`},
           {l:'Send them to a colony',h:'+6 ★',run:()=>`A colony ship will take them home. ${gainLeg(6)}.`}]},
@@ -3285,10 +3287,10 @@ const ANOMALIES={
     opts:[{l:'Send a probe in',h:'Chart the galaxy, or lose the probe',run:()=>{if(roll(.5)){let n=0;for(const s of S.gal.stars)if(!s.seen){s.seen=true;n++;}return`The probe maps the fold before it collapses. ${n} stars charted.`;}return`The probe vanishes. ${gainCR(-20)} in lost equipment.`;}},
           {l:'Steer clear',h:'Nothing happens',run:()=>'You plot a course well around it.'}]},
   trader:{name:'Wandering trader',col:'#cfe0f5',txt:'A lone trader hails you, cargo bay open and prices negotiable.',
-    opts:[{l:'Buy 4 Alloy',h:'−60 CR',ok:()=>S.bucks>=60,run:()=>`${gainCR(-60)}, ${gainAl(4)}.`},
+    opts:[{l:'Buy 2 Alloy',h:'−60 CR',ok:()=>S.bucks>=60,run:()=>`${gainCR(-60)}, ${gainAl(2)}.`},
           {l:'Sell 2 Alloy',h:'+70 CR',ok:()=>ensureStation().alloy>=2,run:()=>`${gainAl(-2)}, ${gainCR(70)}.`}]},
   ghost:{name:'Ghost fleet',col:'#a6b6d0',txt:'Silent hulls in perfect formation, crews long gone. Their weapons still track you.',
-    opts:[{l:'Board the flagship',h:'+4 Alloy, or a hull scare (60/40)',run:()=>roll(.6)?`You strip its armour plating. ${gainAl(4)}.`:`Its point defence wakes up. ${gainCR(-25)} in damage.`},
+    opts:[{l:'Board the flagship',h:'+2 Alloy, or a hull scare (60/40)',run:()=>roll(.6)?`You strip its armour plating. ${gainAl(2)}.`:`Its point defence wakes up. ${gainCR(-25)} in damage.`},
           {l:'Salute and pass',h:'+4 ★',run:()=>`Your crew stands at attention as you pass. ${gainLeg(4)}.`}]},
 };
 let ANOM=null;
@@ -3703,7 +3705,7 @@ function tfPlan(st){const th=clamp(1+Math.floor((st.threat||0)/3),1,6),d=depthNo
 let TF=null;
 const tfT=t=>{const s=Math.max(0,Math.round((performance.now()-t.t0)/1000));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
 function openTerra(st,test){if(!test&&!canTerra(st))return;if(TF||TR)return;const p=tfPlan(st);
-  TF={s:st,p,test:!!test,fails:0,free:0,slow:0,lines:[],pulse:null,order:[],rings:[],cine:null,cg:0,t0:performance.now(),last:performance.now(),flash:0,done:null,fc:0,ft:0,fm:0,
+  TF={s:st,p,test:!!test,fails:0,free:0,slow:0,modLeft:test?3:modHave(),lines:[],pulse:null,order:[],rings:[],cine:null,cg:0,t0:performance.now(),last:performance.now(),flash:0,done:null,fc:0,ft:0,fm:0,
     rep:{taps:0,amber:0,haz:0,cat:0,locks:[]},log:'Tap a gauge while its marker is in the green.',
     geo:GEO.map((g,i)=>({k:g.k,locked:false,q:'',cu:.28+Math.random()*.44,ph:Math.random()*2,bw:p.bw,sp:p.sp*Math.pow(g.vol,.7),sp0:p.sp*Math.pow(g.vol,.7),u:.5,miss:0}))};
   $('#terra').classList.remove('cine');show('#terra',true);sfx.tick();_pimg=null;requestAnimationFrame(()=>{tfSize();tfRows();requestAnimationFrame(tfLoop);});}
@@ -3719,7 +3721,7 @@ function tfTap(k){const t=TF;if(!t||t.done)return;const o=t.geo.find(x=>x.k===k)
     if(t.fails>=t.p.limit)return tfEnd('fail');tfRows();}}
 function tfEnd(kind){const t=TF;t.done=kind;const g=S.gal,st=t.s,pf=t.rep.locks.filter(l=>l.q==='perfect').length;
   if(kind==='win'&&t.test){t.cr=0;t.al=0;t.sur=0;sfx.coin();}
-  else if(kind==='win'){const sur=Math.max(0,t.p.limit-t.fails-1)+Math.floor(pf/2),cr=Math.round((40+25*t.p.th+sur*14)*t.p.mul),al=1+Math.floor(sur/2);
+  else if(kind==='win'){const sur=Math.max(0,t.p.limit-t.fails-1)+Math.floor(pf/2),cr=Math.round((40+25*t.p.th+sur*14)*t.p.mul),al=Math.floor(sur/2);
     S.bucks+=cr;if(S.station)S.station.alloy+=al;st.terra=true;g.terra=terraDone(g)+1;t.cr=cr;t.al=al;t.sur=sur;
     if(sur>=3&&unl('relics')){const rr=rollRelics(2);S.pendRelics=rr.map(x=>x.id);t.relic=rr.length>0;}sfx.coin();}
   else sfx.boom();
@@ -3787,6 +3789,7 @@ function tfLoop(now){const t=TF;if(!t)return;
     if(row)row.classList.toggle('miss',o.miss>0);}
   if(t.fc%2===0)tfPlanet(now);
   tfLines(now);
+  tfModUi(now);
   const lb=$('#tfStage');if(lb)lb.textContent=`${t.geo.filter(o=>o.locked).length} of 6 stable`;
   requestAnimationFrame(tfLoop);}
 function geoRow(g,o,t){const bw=o.bw,cu=o.cu,pc=v=>(Math.max(0,Math.min(1,v))*100).toFixed(1)+'%',hz=bw*3.2;
@@ -3804,8 +3807,10 @@ function tfRows(){const t=TF;if(!t)return;const p=t.p;$('#tfT').textContent=`TER
   else body=`<div class="tf-pips">${Array.from({length:p.limit},(_,i)=>`<i class="${i<t.fails?'on':''}"></i>`).join('')}<span>instability · ${p.limit} collapses the planet</span></div>
     <div class="geos">${GEO.map((g,i)=>geoRow(g,t.geo[i],t)).join('')}</div><p class="tf-log">${t.log}</p>`;
   $('#tfBody').innerHTML=body;tfBtns();}
-function tfBtns(){const t=TF;if(!t)return;const ro=$('#tfRoll');ro.textContent=t.done?'Continue':'Leave';ro.classList.toggle('ghost',!t.done);ro.disabled=false;}
-(()=>{$('#terra').addEventListener('pointerdown',()=>{if(TF&&TF.cine)TF.cine.t0=-1e9;});$('#tfRoll').onclick=()=>{audio();if(!TF)return;if(TF.done)tfClose();else{const t=TF;TF=null;show('#terra',false);showStarWidget(t.s);updateMapActions();}};
+function tfModUi(now){const t=TF,b=$('#tfMod');if(!t||!b)return;b.hidden=!!t.done;const act=t.slow>now,tx=act?`Slowed ${Math.ceil((t.slow-now)/1000)}s`:t.modLeft>0?`Moderator ×${t.modLeft}`:'No rods';if(b.textContent!==tx)b.textContent=tx;b.disabled=act||t.modLeft<=0;$('#terra').classList.toggle('slow',act&&!t.done);}
+function tfMod(){const t=TF,now=performance.now();if(!t||t.done||t.slow>now||t.modLeft<=0)return;t.modLeft--;if(!t.test){S.station.mod=Math.max(0,modHave()-1);persist();}t.slow=now+5500;t.rep.mod=(t.rep.mod||0)+1;t.log='Moderator rod lowered. Every gauge crawls for a few seconds.';tone(220,.5,'sine',.12,-80);tone(330,.4,'triangle',.07,0,.1);tfRows();tfModUi(now);}
+function tfBtns(){const t=TF;if(!t)return;tfModUi(performance.now());const ro=$('#tfRoll');ro.textContent=t.done?'Continue':'Leave';ro.classList.toggle('ghost',!t.done);ro.disabled=false;}
+(()=>{$('#tfMod').onclick=()=>{audio();tfMod();};$('#terra').addEventListener('pointerdown',()=>{if(TF&&TF.cine)TF.cine.t0=-1e9;});$('#tfRoll').onclick=()=>{audio();if(!TF)return;if(TF.done)tfClose();else{const t=TF;TF=null;show('#terra',false);showStarWidget(t.s);updateMapActions();}};
   $('#tfBody').addEventListener('pointerdown',e=>{const c=e.target.closest('#tfCopy');if(c){const tx=TF&&TF.text;if(tx){try{navigator.clipboard.writeText(tx);}catch(_){}c.textContent='Copied';}return;}
     const r=e.target.closest('[data-g]');if(r&&TF&&!TF.done){e.preventDefault();tfTap(r.dataset.g);}});})();
 (()=>{const pop=document.createElement('div');pop.id='hoverTip';document.body.appendChild(pop);let lp=0,ht=0;
@@ -4265,9 +4270,9 @@ function renderInstall(){
 }
 /* ================= STATION (phase 2): rooms, Alloy, cutaway ================= */
 const ROOMS=[
-  {k:'comms',name:'Sensors',col:'#4da6ff',max:3,cost:[null,[3,60],[6,130]],panel:'comms',open:'Planet readouts · markets',
-   desc:'The ship\'s sensor array. It reads a planet\'s geo-forms for Terraform, charts systems further out, and trades Alloy at the star you are parked at.',
-   eff:L=>`Terraform readouts${L>=2?' show hazard zones':' show ideal ranges'}${L>=3?' · +1 lock per stage':''} · scanners see ${L+1} lanes out${L>1?` · trade Alloy ${L-1} jump${L>2?'s':''} away`:''}`},
+  {k:'comms',name:'Sensors',col:'#4da6ff',max:3,cost:[null,[3,60],[6,130]],panel:'comms',open:'Planet scan · Moderators',
+   desc:'The ship\'s sensor array. It reads the planet you are parked at for Terraform, steadies the gauges, and stores Moderator rods that slow a Terraform in progress. It also charts nearby systems and trades Alloy.',
+   eff:L=>`Terraform gauges${L>=2?' 15% slower':' read ideal ranges'}${L>=3?' · bands 20% wider':''} · holds ${L+1} Moderator rods${L>1?` · trade Alloy ${L-1} jump${L>2?'s':''} away`:''}`},
   {k:'shipyard',name:'Shipyard',col:'#7ff3ff',max:4,cost:[null,[2,40],[4,90],[7,160]],panel:'ship',open:'Ship systems & paint',
    desc:'The mechanics bay. Your crew rebuilds the station’s weapons, shields, sensors and engines here and repaints the hull. Its level caps how far each system can be upgraded.',
    eff:L=>`Ship systems up to level ${L}`},
@@ -4276,7 +4281,7 @@ const ROOMS=[
    eff:L=>L>1?`Combo loadout · top system on the board +${(L-1)*2} charge`:'Combo loadout'},
   {k:'refinery',name:'Refinery',col:'#ff9640',max:3,cost:[[2,40],[4,90],[7,160]],
    desc:'Smelts the salvage from every system you clear into Alloy for building and upgrading rooms.',
-   eff:L=>L?`+${L} Alloy per clear`:'Offline'},
+   eff:L=>L?`+${L/2} Alloy per clear`:'Offline'},
   {k:'habitat',name:'Habitat',col:'#ffb547',max:4,cost:[null,[3,50],[6,110],[9,180]],panel:'quarters',open:'Crew quarters',
    desc:'Living decks and the captain’s quarters. Pick your pilot and call sign and review your service record. Survivors and migrants will need the room as the station grows.',
    eff:L=>`Room for ${HAB_CAP[L]} people`},
@@ -4307,7 +4312,7 @@ function ensureStation(){
 function alloyInit(st){
   if(st.alloy!=null)return;
   const h=(((st.id+1)*2654435761)>>>0)%1000/1000;
-  st.alloy=Math.max(1,Math.round((1+Math.floor(h*3)+(st.key==='asteroid'?2:0)+(st.key==='flare'?1:0))*.7));st.bought=0;
+  st.alloy=Math.max(1,Math.round((1+Math.floor(h*3)+(st.key==='asteroid'?2:0)+(st.key==='flare'?1:0))*.4));st.bought=0;
 }
 const alloyPrice=st=>Math.round((20+8*st.r+4*(st.bought||0))*(lmActive(st)&&st.lm==='hub'?.6:1)*1);
 function buyAlloyHere(){return buyAlloyAt(ensureGalaxy().at);}
@@ -4448,13 +4453,19 @@ function renderStation(){
     sl.onchange=()=>{persist();renderStation();};}
   const ca=$('#crewAuto');if(ca)ca.onclick=()=>{autoCrew();persist();sfx.buy();renderStation();};
 }
+const MOD_COST=3,modCap=()=>rle('comms')+1,modHave=()=>S.station&&S.station.mod||0;
+function modBlock(){const stn=ensureStation(),n=modHave(),cap=modCap(),ok=n<cap&&stn.alloy>=MOD_COST;
+  return`<div class="xch mod"><div class="xch-h"><span>MODERATOR RODS</span><b>${n} / ${cap}</b></div>
+    <p class="mod-t">Boron control rods soak up neutrons and slow a reactor down. Lower one into a Terraform and every gauge crawls for a few seconds. Rods are consumed on use.</p>
+    <div class="xch-pips mod-pips">${Array.from({length:cap},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('')}</div>
+    <button class="btn xch-buy" id="modCraft" ${ok?'':'disabled'}>${n>=cap?'Rack full':`Forge a rod · ${alloyTag(MOD_COST)}`}</button></div>`;}
 function renderComms(){
   const g=ensureGalaxy(),here=g.stars[g.at];alloyInit(here);const price=alloyPrice(here),stn=ensureStation();
   const ok=here.alloy>0&&S.bucks>=price,max=Math.max(6,here.alloy);
   const pips=Array.from({length:max},(_,i)=>`<i class="${i<here.alloy?'on':''}"></i>`).join('');
   const status=here.alloy<=0?'SOLD OUT':lmActive(here)&&here.lm==='hub'?'TRADE HUB · 40% OFF':'OPEN';
   const near=here.links.map(i=>g.stars[i]);
-  $('#commsBody').innerHTML=`<div class="xch">
+  $('#commsBody').innerHTML=modBlock()+`<div class="xch" style="margin-top:12px">
       <div class="xch-h"><span>ALLOY EXCHANGE</span><b>${here.name.toUpperCase()}</b></div>
       <div class="xch-m"><div class="xch-stock"><span>STOCK</span><div class="xch-pips">${pips}</div><em>${here.alloy} unit${here.alloy===1?'':'s'}</em></div>
         <div class="xch-price"><span>PRICE</span><b>${price}</b><em>CR · next +4</em></div></div>
@@ -4468,24 +4479,34 @@ function renderComms(){
         <div class="near-m"><span>${alloyTag(st.alloy)}</span>${canTradeAt(st.id)?`<button class="near-buy" data-buy="${st.id}" ${st.alloy>0&&S.bucks>=alloyPrice(st)?'':'disabled'}>+1 · ${alloyPrice(st)}</button>`:`<em>${st.alloy>0?alloyPrice(st)+' CR':'sold out'}</em>`}<u>MAP ›</u></div></button>`;}).join('')}</div>
     <p class="hg-note">You can buy Alloy where you are parked${tradeReach()?` and up to ${tradeReach()} jump${tradeReach()>1?'s':''} away`:'. Upgrade Sensors to trade with systems in reach'}. Prices climb as you buy. Tap a system to see it on the galaxy map.</p>`;
   $('#commsBody').querySelectorAll('canvas[data-key]').forEach(cv=>{const img=SYS_MARK(cv.dataset.key);cv.width=img.width;cv.height=img.height;cv.getContext('2d').drawImage(img,0,0);});
+  {const mc=$('#modCraft');if(mc)mc.onclick=()=>{const stn=ensureStation();if(modHave()>=modCap()||stn.alloy<MOD_COST){sfx.bad();return;}stn.alloy-=MOD_COST;stn.mod=modHave()+1;persist();sfx.buy();renderHangar();H.flash=1;};}
   $('#xchBuy').onclick=()=>{if(buyAlloyHere()){renderHangar();H.flash=1;}};
   $('#commsBody').querySelectorAll('[data-star]').forEach(b=>b.onclick=e=>{if(e.target.closest('[data-buy]'))return;sfx.tick();commsToMap(+b.dataset.star);});
   $('#commsBody').querySelectorAll('[data-buy]').forEach(b=>b.onclick=e=>{e.stopPropagation();if(buyAlloyAt(+b.dataset.buy)){renderHangar();H.flash=1;}});
 }
 function commsToMap(id){goMap();const st=S.gal.stars[id];requestAnimationFrame(()=>requestAnimationFrame(()=>{MAP.wFull=false;showStarWidget(st);}));}
+let _spc=null;
 function drawCommsScope(c,W,Hh,t){
-  const g=S.gal;if(!g)return;const here=g.stars[g.at],cx=W/2,cy=Hh/2,R=Math.min(W,Hh)*.42;
-  c.strokeStyle='rgba(77,166,255,.25)';c.lineWidth=1;for(const k of[1,.66,.33]){c.beginPath();c.arc(cx,cy,R*k,0,6.28);c.stroke();}
-  c.beginPath();c.moveTo(cx-R,cy);c.lineTo(cx+R,cy);c.moveTo(cx,cy-R);c.lineTo(cx,cy+R);c.stroke();
-  const a=t*1.4,gr=c.createConicGradient?c.createConicGradient(a-.9,cx,cy):null;
-  if(gr){gr.addColorStop(0,'rgba(77,166,255,0)');gr.addColorStop(.14,'rgba(77,166,255,.28)');gr.addColorStop(.15,'rgba(77,166,255,0)');c.fillStyle=gr;c.beginPath();c.arc(cx,cy,R,0,6.28);c.fill();}
-  c.strokeStyle='rgba(127,200,255,.8)';c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);c.stroke();
-  const maxd=Math.max(.05,...here.links.map(j=>Math.hypot((g.stars[j].x-here.x)*1.7,g.stars[j].y-here.y)));
-  for(const j of here.links){const st=g.stars[j],dx=(st.x-here.x)*1.7,dy=st.y-here.y,d=Math.hypot(dx,dy)||1,k=Math.min(1,.42/d)*0+1,x=cx+dx/maxd*R*.78,y=cy+dy/maxd*R*.78,
-    ang=Math.atan2(dy,dx),diff=((a-ang)%6.283+6.283)%6.283,lit=Math.max(.35,1-diff/2.5);
-    c.globalAlpha=lit;c.fillStyle=SYSTEMS[st.key].star;c.beginPath();c.arc(x,y,3.5,0,6.28);c.fill();c.globalAlpha=1;
-    c.font='8px Silkscreen, monospace';c.textAlign='center';c.textBaseline='top';c.fillStyle=`rgba(225,233,247,${.4+.5*lit})`;c.fillText((st.seen?st.name:'?').toUpperCase(),x,y+6);}
-  stationSprite(c,cx,cy,t,1);
+  const g=S.gal;if(!g)return;const here=g.stars[g.at],cx=W/2,cy=Hh/2,R=Math.min(W,Hh)*.42,pr=R*.62;
+  c.strokeStyle='rgba(77,166,255,.22)';c.lineWidth=1;for(const k of[1,.8]){c.beginPath();c.arc(cx,cy,R*k,0,6.28);c.stroke();}
+  // planet: tiny pixel render, scaled up
+  const N=52;if(!_spc){_spc=document.createElement('canvas');_spc.width=_spc.height=N;}
+  const pc=_spc.getContext('2d'),im=pc.createImageData(N,N),d=im.data,lush=here.terra?1:0,rot=t*.3,seed=(here.id||0)*3.7;
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=(y*N+x)*4,dx=(x+.5-N/2)/(N/2),dy=(y+.5-N/2)/(N/2),r2=dx*dx+dy*dy;if(r2>1){d[i+3]=0;continue;}
+    const nz=Math.sqrt(1-r2),lon=Math.atan2(dx,nz)+rot,lat=Math.asin(dy),tv=_f(lon*2.4+seed,lat*2.4+7);let r,gg,b;
+    if(lush&&tv<.5){r=30;gg=90+tv*80;b=170+tv*60;}else{const sh=.75+tv*.5;r=(150-70*lush)*sh;gg=(95+60*lush)*sh;b=(62+10*lush)*sh;}
+    const lt=Math.max(.2,dx*-.55+dy*-.4+nz*.75),rim=Math.pow(1-nz,2.2);r=r*lt+30*rim;gg=gg*lt+90*rim;b=b*lt+200*rim;
+    d[i]=r;d[i+1]=gg;d[i+2]=b;d[i+3]=255;}
+  pc.putImageData(im,0,0);c.imageSmoothingEnabled=false;c.drawImage(_spc,cx-pr,cy-pr,pr*2,pr*2);
+  // scan sweep
+  const a=t*1.2,gr=c.createConicGradient?c.createConicGradient(a-.9,cx,cy):null;
+  if(gr){gr.addColorStop(0,'rgba(77,166,255,0)');gr.addColorStop(.14,'rgba(77,166,255,.3)');gr.addColorStop(.15,'rgba(77,166,255,0)');c.fillStyle=gr;c.beginPath();c.arc(cx,cy,R,0,6.28);c.fill();}
+  c.strokeStyle='rgba(127,200,255,.7)';c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);c.stroke();
+  // geo-form probes on the surface
+  const ks=['rad','pres','temp','h2o','oxy','grav'];ks.forEach((k,i)=>{const an=i/6*6.283+t*.3,rx=cx+Math.cos(an)*pr*1.12,ry=cy+Math.sin(an)*pr*1.12*.9;c.fillStyle='rgba(127,243,255,'+(.4+.4*Math.sin(t*3+i))+')';c.fillRect(Math.round(rx)-1,Math.round(ry)-1,3,3);});
+  c.font='8px Silkscreen, monospace';c.textAlign='center';c.textBaseline='top';c.fillStyle='rgba(225,233,247,.75)';c.fillText((here.name||'').toUpperCase()+(here.terra?' · TERRAFORMED':''),cx,cy+R+2);
+  // station orbiting
+  const so=t*.5;stationSprite(c,cx+Math.cos(so)*R*.9,cy+Math.sin(so)*R*.38,t,.45);
 }
 function crewBlock(d){const stn=S.station,cap=crewCap(d.k),v=(stn.crew||{})[d.k]||0;
   return`<div class="crew" id="crewBox" style="--rc:${d.col}"><div class="crew-h">${ICO.person}<b id="crewN">${v} / ${cap}</b><em id="crewSt"></em><span class="freem"><span class="freem-b"><i id="crewFree"></i></span><b id="crewIdle"></b></span></div>
@@ -5285,7 +5306,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v91';
+const BUILD='v92';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5479,11 +5500,11 @@ function buildDebrief(win,reason){
   d.pay=pay;d.total=pay.reduce((a,p)=>a+p[1],0);
   // bank immediately so leaving early never loses anything
   S.bucks+=d.total;if(win)S.cleared++;if(G.tut)S.tutRunDone=true;
-  if(win&&rle('refinery')){d.alloy=rle('refinery')+(CHOICE.key==='asteroid'?1:0)+(peak('refinery')?1:0);S.station.alloy+=d.alloy;}
+  if(win&&rle('refinery')){const hv=(rle('refinery')+(CHOICE.key==='asteroid'?1:0)+(peak('refinery')?1:0))*.5,stn=S.station;stn.alloyFrac=(stn.alloyFrac||0)+hv;d.alloy=Math.floor(stn.alloyFrac);stn.alloyFrac-=d.alloy;stn.alloy+=d.alloy;d.alloyHv=hv;}
   {const st=S.gal&&S.gal.stars[CHOICE.starId];d.extra=[];
    const surv=win?G.rescued:Math.floor(G.rescued/2);
    if(win&&CHOICE.sig==='cache'&&st&&st.sig==='cache'){for(let i=0;i<3;i++){const p=rollPrize(true);applyPrize(p,false);d.extra.push(['Cache',`<em style="color:${p.col}">${p.label}</em>`]);}st.sig=null;}
-   if(win&&CHOICE.sig==='vein'){ensureStation().alloy+=2;d.extra.push(['Rich vein',alloyTag('+2')]);}
+   if(win&&CHOICE.sig==='vein'){ensureStation().alloy+=1;d.extra.push(['Rich vein',alloyTag('+1')]);}
    if(surv||G.rescued){const[took,away]=addPop(surv);d.extra.push(['Survivors aboard',`<em style="color:#38e09b">+${took}</em>${away?` <small>${away} turned away</small>`:''}${!win&&G.rescued?` <small>${G.rescued-surv} lost</small>`:''}`]);}
    if(win&&CHOICE.sig==='sos'&&st&&st.sig==='sos')st.sig=null;
    if(win&&st&&st.lm==='ark'&&!st.lmDone){st.lmDone=true;const[took,away]=addPop(12);S.legend=legendOf()+10;d.extra.push(['Derelict Ark',`<em style="color:#38e09b">+${took} people · +10 ★</em>${away?` <small>${away} turned away</small>`:''}`]);}
@@ -5548,7 +5569,7 @@ async function runDebrief(d,ctrEls,rows){
     await countUp(div.querySelector('b'),v,v?380:60,x=>coin(x),false);if(v&&!DB.skip)sfx.coin();await dwait(110);}
   const tot=document.createElement('div');tot.className='total';tot.innerHTML=`<span>${d.win?'Total banked':'Salvage kept'}</span><b>${coin(0)}</b>`;pay.append(tot);
   await countUp(tot.querySelector('b'),d.total,600,x=>coin(x),true);
-  if(d.alloy){const al=document.createElement('div');al.innerHTML=`<span>Refinery output</span><b>${alloyTag('+'+d.alloy)}</b>`;pay.append(al);if(!DB.skip)sfx.coin();}
+  if(d.alloyHv){const al=document.createElement('div');al.innerHTML=`<span>Refinery output</span><b>${d.alloy?alloyTag('+'+d.alloy):'<small>'+d.alloyHv+' · banked</small>'}</b>`;pay.append(al);if(!DB.skip)sfx.coin();}
   for(const[l,v]of d.extra||[]){const ex=document.createElement('div');ex.className='xrow';ex.innerHTML=`<span>${l}</span><b>${v}</b>`;pay.append(ex);if(!DB.skip){sfx.coin();await dwait(160);}}
   const wal=document.createElement('div');wal.innerHTML=`<span>Wallet</span><b>${wallet(false)}</b>`;pay.append(wal);
   if(!DB.skip&&d.win)sfx.win();
