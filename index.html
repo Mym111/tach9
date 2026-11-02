@@ -3513,7 +3513,7 @@ const COUP={grav:{pres:[1,.85],oxy:[.85,1.1]},pres:{oxy:[1.3,1],temp:[1,1.1]},te
   rad:{grav:[1,.9],pres:[1,.9],temp:[1,.9],oxy:[1,.9],h2o:[1,.9]}};
 const coupEase=e=>(e[0]>1||e[1]<1)&&!(e[0]<1||e[1]>1)?1:(e[0]<1||e[1]>1)&&!(e[0]>1||e[1]<1)?-1:0;
 function tfPlan(st){const th=clamp(1+Math.floor((st.threat||0)/3),1,6),d=depthNow(),sn=S.station?rle('comms'):1;
-  return{th,bw:(.1-.009*th)*(d===0?1.25:d===2?.9:1)*(sn>=3?1.2:1),sp:(.38+.04*th)*(sn>=2?.85:1),limit:Math.max(3,5+(d===0?1:0)-(d===2?1:0)),sn,mul:DEPTH_PAY[d]};}
+  return{th,bw:(.078-.007*th)*(d===0?1.25:d===2?.9:1)*(sn>=3?1.2:1),sp:(.5+.05*th)*(sn>=2?.85:1),limit:Math.max(3,4+(d===0?1:0)-(d===2?1:0)),sn,mul:DEPTH_PAY[d]};}
 let TF=null;
 const tfT=t=>{const s=Math.max(0,Math.round((performance.now()-t.t0)/1000));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
 function openTerra(st){if(!canTerra(st)||TF||TR)return;const p=tfPlan(st);
@@ -5058,7 +5058,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v82';
+const BUILD='v83';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
