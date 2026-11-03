@@ -1187,7 +1187,7 @@ function makeShip(paint,up={}){
 // Living parts of the ship: engine flames and trail (back), shield bubble and sensor pulse (front).
 // bx,by = hull top-left in the target canvas; sc = pixel scale.
 function drawShipFX(c,bx,by,sc,t,o){
-  const up=o.up||{},eng=up.eng||0,shd=up.shd||0,sns=up.sns||0,thrust=o.thrust??1;
+  const up=o.up||{},eng=Math.min(4,up.eng||0),shd=Math.min(4,up.shd||0),sns=Math.min(4,up.sns||0),thrust=o.thrust??1;
   const P=(x,y,w,h,col,a=1)=>{c.globalAlpha=a;c.fillStyle=col;c.fillRect(Math.round(bx+x*sc),Math.round(by+y*sc),Math.max(1,Math.round(w*sc)),Math.max(1,Math.round(h*sc)));};
   if(o.layer==='back'){
     if(thrust<=0)return;
@@ -5449,7 +5449,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v100';
+const BUILD='v101';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
