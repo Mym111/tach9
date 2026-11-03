@@ -3754,7 +3754,7 @@ function ilDraw(cv,s,t){const c=cv.getContext('2d'),W=s.W,H=s.H;c.setTransform(d
   else{c.fillStyle='#ffb547';c.font='9px Silkscreen, monospace';c.fillText('OVERTIME · FIRST MISS ENDS IT',W/2,72);}
   if(s.msg>0){c.globalAlpha=Math.min(1,s.msg);c.fillStyle='#ffb547';c.font='700 26px Oxanium, sans-serif';c.fillText('OVERTIME',W/2,H*.82);c.globalAlpha=1;}
   if(s.end){c.fillStyle='rgba(4,7,16,.5)';c.fillRect(0,0,W,H);}}
-(()=>{const cv=$('#ilCv');cv.addEventListener('pointermove',e=>{if(IL&&IL.mode==='pipe'&&!IL.end){const r=cv.getBoundingClientRect();pipeSwipe(e.clientX-r.left,e.clientY-r.top);e.preventDefault();}});cv.style.touchAction='none';cv.addEventListener('pointerup',pipeUp);cv.addEventListener('pointercancel',pipeUp);cv.addEventListener('pointerdown',e=>{if(IL&&IL.mode==='view'&&!IL.pick){sfx.tick();closeBurst();e.preventDefault();return;}if(!IL||IL.pick||IL.end)return;const r=cv.getBoundingClientRect();ilHit(e.clientX-r.left,e.clientY-r.top);e.preventDefault();});
+(()=>{const cv=$('#ilCv');cv.addEventListener('pointermove',e=>{if(IL&&IL.mode==='pipe'&&!IL.end&&e.buttons){const r=cv.getBoundingClientRect();pipeSwipe(e.clientX-r.left,e.clientY-r.top);e.preventDefault();}});cv.style.touchAction='none';cv.addEventListener('pointerup',pipeUp);window.addEventListener('pointerup',pipeUp);cv.addEventListener('pointerleave',pipeUp);cv.addEventListener('pointercancel',pipeUp);cv.addEventListener('pointerdown',e=>{if(IL&&IL.mode==='view'&&!IL.pick){sfx.tick();closeBurst();e.preventDefault();return;}if(!IL||IL.pick||IL.end)return;const r=cv.getBoundingClientRect();ilHit(e.clientX-r.left,e.clientY-r.top);e.preventDefault();});
   $('#ilTach').onclick=e=>{e.stopPropagation();audio();ilTachUse();};
   $('#bpRepair').onclick=()=>{audio();startBurst('repair');};$('#bpStorm').onclick=()=>{audio();startBurst('storm');};$('#bpBurn').onclick=()=>{audio();startBurst('burn');};$('#bpRail').onclick=()=>{audio();startBurst('rail');};
   $('#bpCounter').onclick=()=>{audio();startBurst('counter');};$('#bpGun').onclick=()=>{audio();startBurst('pipe');};
@@ -5457,7 +5457,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v104';
+const BUILD='v105';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
