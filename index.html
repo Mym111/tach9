@@ -611,6 +611,7 @@ button:disabled{cursor:default}
 .tf-ft{position:absolute;left:50%;transform:translateX(-50%);bottom:max(14px,env(safe-area-inset-bottom,0px));width:min(340px,92%);z-index:4;display:flex;gap:8px}
 .tf-ft .btn{flex:1}.tf-ft .btn.mod{background:linear-gradient(180deg,#1b4a8a,#0e2a55);border-color:#4da6ff;color:#cfe8ff}.tf-ft .btn.mod:disabled{opacity:.45}
 #ilTach{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 40px);transform:translateX(-50%);z-index:6;width:min(220px,60%);background:linear-gradient(180deg,#1b4a8a,#0e2a55);border-color:#4da6ff;color:#cfe8ff}#ilTach:disabled{opacity:.45}
+#terra.flare::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:3;background:radial-gradient(circle at 50% 18%,rgba(255,200,80,.45),rgba(255,120,40,.18) 50%,transparent 75%)}#terra.deaf .g-foc{opacity:.2;filter:grayscale(1)}#terra.deaf::after{content:'DEAFENED';position:absolute;top:8px;right:12px;z-index:3;font:9px Silkscreen,monospace;color:#ff8a95;letter-spacing:.1em}#terra.warn #tfLn{filter:brightness(1.4)}
 #terra.slow::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:3;box-shadow:inset 0 0 70px rgba(77,166,255,.5)}
 .xch.mod .mod-t{font-size:12px;color:var(--dim);margin:8px 0 6px;line-height:1.4}.mod-pips{margin:6px 0 10px}
 .odbar{flex:none;display:flex;gap:4px;height:9px;margin:-2px 14px;padding:2px;border:1px solid #27406b;border-radius:7px;background:#070c18;position:relative}.odbar i{flex:1;border-radius:3px;background:#16213a;transition:background .2s,box-shadow .2s}.odbar i.on{background:#7ff3ff;box-shadow:0 0 6px #7ff3ff88}.odbar.rdy{border-color:#7ff3ff;animation:odPulse 1.1s ease-in-out infinite}.odbar::after{content:'';display:none;position:absolute;left:8px;top:-7px;background:#070c18;padding:0 4px;font:7px Silkscreen,monospace;letter-spacing:.12em;color:#7f8fb2}.odbar.rdy::after{color:#7ff3ff}
@@ -3293,6 +3294,9 @@ const ANOMALIES={
   rift:{name:'Spatial rift',col:'#c792ff',txt:'Space folds here. Your sensors keep reporting stars that should be far away.',
     opts:[{l:'Send a probe in',h:'+10 ★, or lose the probe',run:()=>{if(roll(.5))return`The probe records the fold before it collapses. ${gainLeg(10)}.`;return`The probe vanishes. ${gainCR(-20)} in lost equipment.`;}},
           {l:'Steer clear',h:'Nothing happens',run:()=>'You plot a course well around it.'}]},
+  flux:{name:'Tach flux',col:'#4da6ff',txt:'A pocket of raw field, humming at the engine\u2019s own frequency.',
+    opts:[{l:'Siphon a vial',h:'+1 Tach · 40% overload, lose 2 people',run:()=>{const st=ensureStation();if(roll(.4))return`The siphon overloads. ${gainPpl(-2)} in the blast.`;if(modHave()<modCap()){st.mod=modHave()+1;return'A clean draw. +1 Tach.';}return`The vial is full, so you sell the surplus. ${gainCR(35)}.`;}},
+          {l:'Chart it',h:'+6 ★',run:()=>`The field maps beautifully. ${gainLeg(6)}.`}]},
   trader:{name:'Wandering trader',col:'#cfe0f5',txt:'A lone trader hails you, cargo bay open and prices negotiable.',
     opts:[{l:'Buy 2 Alloy',h:'−60 CR',ok:()=>S.bucks>=60,run:()=>`${gainCR(-60)}, ${gainAl(2)}.`},
           {l:'Sell 2 Alloy',h:'+70 CR',ok:()=>ensureStation().alloy>=2,run:()=>`${gainAl(-2)}, ${gainCR(70)}.`}]},
@@ -3427,7 +3431,12 @@ const RELICS=[
  {id:'chainfuel',name:'Chain scoop',g:'❖',c:'#ff9640',d:'Fuel tiles in a chain give +3 more fuel.'},
  {id:'steady',name:'Steady hands',g:'◈',c:'#7ff3ff',d:'The pursuer closes 15% slower.'},
  {id:'aegis',name:'Aegis',g:'⬡',c:'#4da6ff',d:'The first hit each run is absorbed.'},
- {id:'salvager',name:'Salvager',g:'◆',c:'#ff7ad9',d:'+20% credits from every cleared system.'}];
+ {id:'salvager',name:'Salvager',g:'◆',c:'#ff7ad9',d:'+20% credits from every cleared system.'},
+ {id:'ballast',name:'Tidal ballast',g:'≋',c:'#4da6ff',d:'Terraform: the first hazard tap each world is forgiven.'},
+ {id:'seismic',name:'Seismic ear',g:'◉',c:'#7ff3ff',d:'Terraform: every Terra-reel reads one calibration rank clearer, and louder.'},
+ {id:'dampener',name:'Instability dampener',g:'⌬',c:'#38e09b',d:'Terraform: the planet tolerates 1 more instability.'},
+ {id:'capacitor',name:'Core capacitor',g:'▥',c:'#5ef0d0',d:'Overdrive: every mini-game acts as if its Core rank were 1 higher (max 3).'},
+ {id:'reserve',name:'Reserve cell',g:'◐',c:'#ff9640',d:'Holds 1 more Tach in the vial.'}];
 const RELIC_SLOTS=3;
 const relicOf=id=>RELICS.find(r=>r.id===id);
 function relicHas(id){return !TR&&!!S&&(S.relics||[]).includes(id);}
@@ -3450,7 +3459,7 @@ function takeRelic(id,replace){S.relics=S.relics||[];if(replace){const i=S.relic
   $('#rlSkip').onclick=()=>{sfx.tick();S.pendRelics=[];persist();show('#relic',false);const b=$('#dbRelicBtn');if(b)b.remove();};})();
 
 /* ================= v72: OVERDRIVE. Perfect clears charge a burst: tap targets, short window then overtime ================= */
-function core(k){return S&&S.station&&S.station.core&&S.station.core[k]||0;}
+function core(k){const r=S&&S.station&&S.station.core&&S.station.core[k]||0;return Math.min(3,r+(relicHas('capacitor')?1:0));}
 const IL_WIN=9,ilWin=()=>IL_WIN+1.5*core('counter');const odNeed=()=>{const L=S.station?rl('tach'):1;return L>=3?3:L===2?4:5;};
 let IL=null,IL_WAS=false;
 function odSync(){const on=!TR&&scene==='game'&&G.running,has=feat('burst'),need=odNeed(),n=Math.min(need,G.od||0),bar=$('#odBar');
@@ -3774,6 +3783,7 @@ function tfPlan(st){const th=clamp(1+Math.floor((st.threat||0)/3),1,6),d=depthNo
 let TF=null;
 const tfT=t=>{const s=Math.max(0,Math.round((performance.now()-t.t0)/1000));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
 function openTerra(st,test){if(!test&&!canTerra(st))return;if(TF||TR)return;if(!test&&!popOk(st)){toast(`<b>Not enough colonists</b><span>${st.name} needs ${terraPop(st)} people to settle it, and we must keep at least 1 aboard. We have ${S.station.pop}. Rescue more survivors first.</span>`,'#ffb547');return;}const p=tfPlan(st);
+  if(relicHas('dampener'))p.limit++;
   TF={s:st,p,need:terraPop(st),coup:worldCoup(),test:!!test,fails:0,free:0,slow:0,modLeft:test?3:modHave(),lines:[],focus:null,pulse:null,order:[],rings:[],cine:null,cg:0,t0:performance.now(),last:performance.now(),flash:0,done:null,fc:0,ft:0,fm:0,
     rep:{taps:0,amber:0,haz:0,cat:0,locks:[]},log:'Tap a gauge while its marker is in the green. Tap ♪ on a reel to listen for its sweet spot.',
     geo:GEO.map((g,i)=>({k:g.k,locked:false,q:'',cu:.28+Math.random()*.44,ph:Math.random()*2,bw:p.bw,sp:p.sp*Math.pow(g.vol,.7),sp0:p.sp*Math.pow(g.vol,.7),u:.5,miss:0}))};
@@ -3786,6 +3796,7 @@ function tfTap(k){const t=TF;if(!t||t.done)return;const o=t.geo.find(x=>x.k===k)
     t.log=`${GEO.find(g=>g.k===k).n} locked${o.q==='perfect'?' dead centre':''}.${ch.length?' '+ch.join(', ')+'.':''}`;
     if(t.geo.every(x=>x.locked))return tfEnd('win');tfRows();}
   else if(d<=o.bw*3.2){r.amber++;o.miss=1;o.sp=Math.min(o.sp0*1.9,o.sp*1.1);t.log='Too early or late. That gauge runs hotter.';tone(150,.24,'triangle',.13);tone(110,.28,'sine',.1,0,.04);}
+  else if(relicHas('ballast')&&!t.ballast){t.ballast=1;r.haz++;o.miss=1;t.log='Tidal ballast absorbed the hazard. It will not do that twice.';tone(330,.3,'sine',.1);tfRows();}
   else{r.haz++;t.fails++;o.miss=1;o.sp=Math.min(o.sp0*1.9,o.sp*1.18);t.flash=1;t.log=`Hazard zone. Instability ${t.fails} of ${t.p.limit}.`;tone(92,.4,'sawtooth',.13);tone(66,.5,'square',.08,0,.05);
     if(t.fails>=t.p.limit)return tfEnd('fail');tfRows();}}
 function tfEnd(kind){const t=TF;t.done=kind;t.focus=null;tfAudStop();const g=S.gal,st=t.s,pf=t.rep.locks.filter(l=>l.q==='perfect').length;
@@ -3801,7 +3812,7 @@ function tfReport(){const t=TF,r=t.rep,pf=r.locks.filter(l=>l.q==='perfect').len
   return [`TERRAFORM REPORT · ${t.s.name.toUpperCase()} · ${BUILD}`,
    `${t.done==='win'?'WIN':'LOST (instability)'} · ${tfT(t)} · threat tier ${t.p.th} · ${DEPTH_NAME[depthNow()]} · sensors L${t.p.sn}`,
    `instability ${t.fails}/${t.p.limit} · perfect locks ${pf}/${r.locks.length}`,
-   `taps ${r.taps}: ${r.locks.length} locked, ${r.amber} early/late, ${r.haz} hazard`,
+   `taps ${r.taps}: ${r.locks.length} locked, ${r.amber} early/late, ${r.haz} hazard · planet events ${r.ev||0}${t.ballast?' · ballast used':''}`,
    `lock order: ${r.locks.map(l=>`${l.k} ${l.t} ${l.q}`).join(' · ')||'none'}`,
    `perf: ${fps} fps avg, worst frame ${t.fm.toFixed(0)} ms`].join('\n');}
 function tfClose(){const t=TF;if(!t)return;tfAudStop();show('#terra',false);TF=null;const g=S.gal;if(t.test)return;
@@ -3852,9 +3863,16 @@ function tfLines(now){const t=TF,cv=$('#tfLn');if(!t||!cv)return;const c=cv.getC
     c.fillStyle=c.strokeStyle;c.beginPath();c.moveTo(x2+ux*5,y2+uy*5);c.lineTo(x2-uy*3.5,y2+ux*3.5);c.lineTo(x2+uy*3.5,y2-ux*3.5);c.fill();};
   for(const a of t.geo){if(a.locked)continue;const ef=cp()[a.k]||{};for(const j in ef){const b=t.geo.find(x=>x.k===j);if(!b||b.locked)continue;draw(a.k,j,coupEase(ef[j]),.38);}}
   if(t.pulse&&now-t.pulse.t<1100){const al=.9*(1-(now-t.pulse.t)/1100),ef=cp()[t.pulse.k]||{};for(const j in ef){const b=t.geo.find(x=>x.k===j);if(!b||b.locked)continue;draw(t.pulse.k,j,coupEase(ef[j]),al);}}}
+function tfEvents(now){const t=TF;if(!t||t.done||t.cine)return;
+  if(t.evNext==null)t.evNext=now+8000+Math.random()*4000;
+  if(t.evWarn&&now>=t.evWarn.at){const k=t.evWarn.k;t.evWarn=null;t.evNext=now+(11000+Math.random()*6000)*Math.max(.6,1-.03*t.p.th);t.rep.ev=(t.rep.ev||0)+1;
+    if(k==='flare'){t.flare=now+3200;t.flash=.7;t.log='SOLAR FLARE. Every reel surges for a moment.';tone(520,.6,'sawtooth',.09,200);noise(.4,.05);}
+    else{t.deaf=now+4500;t.flash=1;t.focus=null;tfAudStop();t.log='PLANETARY BLAST. The audio cue is deafened for a few seconds.';tone(70,.8,'sawtooth',.16,-30);noise(.7,.09);tfRows();}}
+  else if(!t.evWarn&&now>=t.evNext&&!(t.flare>now)&&!(t.deaf>now)){const k=Math.random()<.5?'flare':'blast';t.evWarn={k,at:now+1300};t.log=k==='flare'?'The star flickers... a flare is coming.':'The crust groans... a blast is coming.';tone(180,.5,'triangle',.07);}
+  const z=$('#terra');z.classList.toggle('flare',t.flare>now);z.classList.toggle('deaf',t.deaf>now);z.classList.toggle('warn',!!t.evWarn);}
 function tfLoop(now){const t=TF;if(!t)return;
   const dt=Math.min(.05,(now-t.last)/1000);t.ft+=now-t.last;t.fc++;t.fm=Math.max(t.fm,now-t.last);t.last=now;t.flash=Math.max(0,t.flash-dt*1.4);
-  const slow=t.slow>now?.35:1;t.cg=Math.max(0,(t.cg||0)-dt*1.8);
+  tfEvents(now);const slow=(t.slow>now?.35:1)*(t.flare>now?1.6:1);t.cg=Math.max(0,(t.cg||0)-dt*1.8);
   if(t.cine&&t.cine.fail){if(now-t.cine.t0>=t.cine.dur){t.cine=null;$('#terra').classList.remove('cine');}else if(Math.random()<.12)tone(80+Math.random()*60,.15,'square',.05);}
   else if(t.cine){const ck=Math.min(1,(now-t.cine.t0)/t.cine.dur),sg=Math.min(6,Math.floor(ck*7.2));if(sg!==t.cineStage){t.cineStage=sg;if(sg>0){t.cg=.8;t.rings.push(now);tone(440+sg*95,.22,'sine',.09);}}
     if(ck>=1){t.cine=null;$('#terra').classList.remove('cine');sfx.win();}}
@@ -3889,8 +3907,9 @@ let TFA=null;
 function tfAudStop(){if(TFA){try{TFA.g.gain.setTargetAtTime(0,AC.currentTime,.04);TFA.o.stop(AC.currentTime+.25);}catch(e){}TFA=null;}}
 function tfFocus(k){const t=TF;if(!t)return;if(!k||t.focus===k){t.focus=null;tfAudStop();tfRows();return;}t.focus=k;tfAudStop();
   if(AC&&!muted){try{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=300;g.gain.value=0;o.connect(g).connect(SFX_BUS);o.start();TFA={o,g};}catch(e){TFA=null;}}tfRows();}
-const calOf=k=>S.station&&S.station.cal&&S.station.cal[k]||0,reelTier=k=>1+Math.min(calOf(k),Math.max(0,rle('comms')-1)),CAL_COST=[2,4];
+const calOf=k=>S.station&&S.station.cal&&S.station.cal[k]||0,reelTier=k=>Math.min(3,1+Math.min(calOf(k),Math.max(0,rle('comms')-1))+(relicHas('seismic')?1:0)),CAL_COST=[2,4];
 function tfAudUpdate(now){const t=TF;if(!TFA||!AC)return;const o=t&&!t.done&&t.focus&&t.geo.find(x=>x.k===t.focus);
+  if(t&&t.deaf>now){tfAudStop();return;}
   if(!o||o.locked||muted){if(t&&o&&o.locked)t.focus=null;tfAudStop();return;}
   const base=[0,.012,.035,.075][reelTier(t.focus)],r=Math.abs(o.u-o.cu)/o.bw;let f,v;
   if(r<=1){f=880+(1-r)*520;v=base*(Math.sin(now/1000*6.283*9)>0?1:.3);TFA.o.type='sine';}
@@ -4544,7 +4563,7 @@ function renderStation(){
   const ca=$('#crewAuto');if(ca)ca.onclick=()=>{autoCrew();persist();sfx.buy();renderStation();};
 }
 const crewCost=(d,L)=>d.k==='habitat'?0:Math.ceil((L+1)/2);
-const MOD_COST=4,modCap=()=>Math.max(1,rle('refinery')),modHave=()=>S.station&&S.station.mod||0;
+const MOD_COST=4,modCap=()=>Math.max(1,rle('refinery'))+(relicHas('reserve')?1:0),modHave=()=>S.station&&S.station.mod||0;
 function modBlock(){const stn=ensureStation(),n=modHave(),cap=modCap(),ok=n<cap&&stn.alloy>=MOD_COST;
   return`<div class="xch mod"><div class="xch-h"><span>TACH RESERVE</span><b>${n} / ${cap}</b></div>
     <p class="mod-t">Distilled Tach: a vial of the engine's own field. Use it in Terraform or in any Overdrive mini-game and everything slows to a crawl for a few seconds, even in the hardest moments. It is scarce, and it is used up when you burn it.</p>
@@ -4577,7 +4596,6 @@ function renderComms(){
   const ok=here.alloy>0&&S.bucks>=price,max=Math.max(6,here.alloy);
   const pips=Array.from({length:max},(_,i)=>`<i class="${i<here.alloy?'on':''}"></i>`).join('');
   const status=here.alloy<=0?'SOLD OUT':lmActive(here)&&here.lm==='hub'?'TRADE HUB · 40% OFF':'OPEN';
-  const near=here.links.map(i=>g.stars[i]);
   $('#commsBody').innerHTML=reelBlock()+`<div class="xch" style="margin-top:12px">
       <div class="xch-h"><span>ALLOY EXCHANGE</span><b>${here.name.toUpperCase()}</b></div>
       <div class="xch-m"><div class="xch-stock"><span>STOCK</span><div class="xch-pips">${pips}</div><em>${here.alloy} unit${here.alloy===1?'':'s'}</em></div>
@@ -4585,11 +4603,6 @@ function renderComms(){
       <div class="xch-s">${status} · YOU HOLD ${alloyTag(stn.alloy)}</div>
       <button class="btn xch-buy" id="xchBuy" ${ok?'':'disabled'}>Buy 1 Alloy · ${coin(price)}</button>
     </div>
-    <div class="hg-label">One jump away</div>
-    <div class="nearlist">${near.map((st,i)=>{alloyInit(st);const sy=SYSTEMS[st.key],tags=[st.shard?[st.shardClaimed?'PART · YOURS':'GATE PART',SHARD_COL]:null,st.lm?[LANDMARKS[st.lm].short,LANDMARKS[st.lm].col]:null,st.sig&&st.seen?[SIGS[st.sig].short,SIGS[st.sig].col]:null].filter(Boolean);
-      return`<button class="near" data-star="${st.id}" style="--nc:${sy.star}"><canvas class="pix" data-key="${st.key}"></canvas>
-        <div class="near-t"><b>${st.seen?st.name:'Unknown star'}</b><span>${st.seen?sy.type:'Beyond scanners'} · threat ${st.threat}</span>${tags.length?`<div class="near-tags">${tags.map(([l,c])=>`<i style="--tc:${c}">${l}</i>`).join('')}</div>`:''}</div>
-        <div class="near-m"><span>${alloyTag(st.alloy)}</span>${canTradeAt(st.id)?`<button class="near-buy" data-buy="${st.id}" ${st.alloy>0&&S.bucks>=alloyPrice(st)?'':'disabled'}>+1 · ${alloyPrice(st)}</button>`:`<em>${st.alloy>0?alloyPrice(st)+' CR':'sold out'}</em>`}<u>MAP ›</u></div></button>`;}).join('')}</div>
     <p class="hg-note">You can buy Alloy where you are parked${tradeReach()?` and up to ${tradeReach()} jump${tradeReach()>1?'s':''} away`:'. Upgrade Sensors to trade with systems in reach'}. Prices climb as you buy. Tap a system to see it on the galaxy map.</p>`;
   $('#commsBody').querySelectorAll('canvas[data-key]').forEach(cv=>{const img=SYS_MARK(cv.dataset.key);cv.width=img.width;cv.height=img.height;cv.getContext('2d').drawImage(img,0,0);});
   $('#commsBody').querySelectorAll('[data-cal]').forEach(b=>b.onclick=()=>{const k=b.dataset.cal,r=calOf(k),stn=ensureStation();if(r>=Math.min(2,rle('comms')-1)||stn.alloy<CAL_COST[r]){sfx.bad();return;}stn.alloy-=CAL_COST[r];stn.cal=stn.cal||{};stn.cal[k]=r+1;persist();sfx.buy();renderHangar();H.flash=1;});
@@ -4837,7 +4850,7 @@ function renderHangar(){
   // --- ship ---
   const up=$('#upgrades');up.innerHTML='';
   UP_KEYS.forEach((k,i)=>{
-    const lvl=S.up[k],ty=TYPES[i],max=false,cost=lvl<4?Math.round(UP_COST[lvl]):Math.round(UP_COST[3]*Math.pow(1.32,lvl-3)),yard=lvl<4&&lvl>=rle('shipyard'),ocTxt=k==='fuel'?'Overclock: +15 fuel tank, every level':'Overclock: +6% capacity, compounding. Faster timing too.';
+    const lvl=S.up[k],ty=TYPES[i],max=false,cost=lvl<4?Math.round(UP_COST[lvl]):Math.round(UP_COST[3]*Math.pow(1.32,lvl-3)),yard=lvl<4&&lvl>=rle('shipyard'),ocTxt=k==='fuel'?'Overclock: +15 fuel tank, every level':'Overclock: about +1 capacity every level, and it keeps growing.';
     const row=document.createElement('div');row.className='up';row.style.setProperty('--c',ty.color);
     row.append(iconCanvas(i));
     row.insertAdjacentHTML('beforeend',`<div class="up-name" style="color:${ty.color}">${ty.name.toUpperCase()}<span class="pips">${[0,1,2,3].map(j=>`<i class="${j<lvl?'on':''}"></i>`).join('')}${lvl>4?`<b class="ovc">+${lvl-4}</b>`:''}</span></div>
@@ -4847,6 +4860,10 @@ function renderHangar(){
     btn.onclick=()=>{if(S.bucks<cost||max||yard)return;S.bucks-=cost;S.up[k]++;SHIP=makeShip(S.paint,S.up);H.flash=1;persist();sfx.buy();renderHangar();};
     row.append(btn);up.append(row);
   });
+  {const lv=chainLv(),cc=chainCost(),row=document.createElement('div');row.className='up';row.style.setProperty('--c','#ffd84a');
+    row.insertAdjacentHTML('beforeend',`<div class="up-name" style="color:#ffd84a;margin-left:2px">CHAIN DRIVE<span class="pips">${lv?`<b class="ovc" style="margin:0">RANK ${lv}</b>`:''}</span></div><div class="up-next">Chain perks hit ${lv*10}% harder now. Next: ${(lv+1)*10}% harder, and perks recharge ${Math.min(50,Math.round((1-Math.pow(.96,lv+1))*100))}% sooner. No limit.</div>`);
+    const btn=document.createElement('button');btn.className='up-buy';btn.innerHTML=coin(cc);btn.disabled=S.bucks<cc;
+    btn.onclick=()=>{if(S.bucks<cc)return;S.bucks-=cc;S.chainLv=lv+1;H.flash=1;persist();sfx.buy();renderHangar();};row.append(btn);up.append(row);}
   const sw=$('#swatches');sw.innerHTML='';
   PAINTS.forEach((p,i)=>{const b=document.createElement('button');b.className='swatch';b.style.setProperty('--c',p.c);b.title=p.n;b.setAttribute('aria-label',p.n+' paint');b.setAttribute('aria-pressed',S.paint===i?'true':'false');
     b.onclick=()=>{S.paint=i;SHIP=makeShip(i,S.up);persist();sfx.tick();renderHangar();};sw.append(b);});
@@ -4865,7 +4882,7 @@ function renderHangar(){
     const where=S.slots.map((k,i)=>k===p.k?`×${i+3}`:null).filter(Boolean);
     const row=document.createElement('div');row.className='up perkrow'+(owned?'':' locked')+(inSel?' equipped':'');
     row.append(smallCanvas(perkIcon(p)));
-    row.insertAdjacentHTML('beforeend',`<div class="up-name">${p.name.toUpperCase()}${where.length?`<span class="chips">${where.map(w=>`<i>${w}</i>`).join('')}</span>`:''}</div><div class="up-next">${p.desc(p,tier)}</div>`);
+    row.insertAdjacentHTML('beforeend',`<div class="up-name">${p.name.toUpperCase()}${where.length?`<span class="chips">${where.map(w=>`<i>${w}</i>`).join('')}</span>`:''}</div><div class="up-next">${p.desc(chainScale(p),tier)}</div>`);
     const btn=document.createElement('button');btn.className='up-buy';
     if(!owned){btn.innerHTML=coin(p.cost);btn.disabled=S.bucks<p.cost;btn.onclick=()=>{if(S.bucks<p.cost)return;S.bucks-=p.cost;S.perks[p.k]=true;persist();sfx.buy();renderHangar();};}
     else if(inSel){btn.textContent='EQUIPPED';btn.disabled=true;}
@@ -5336,10 +5353,12 @@ PERKS.forEach(p=>{p.short=(q,t)=>PERK_SHORT[q.k](q,t);});
 const DEFAULT_SLOTS=['surge','burn','repair'];
 function fixSlots(){if(!S.slots)S.slots=DEFAULT_SLOTS.slice();S.slots=S.slots.map(k=>PERKS.some(p=>p.k===k)?k:'repair');
   const seen=new Set();S.slots=S.slots.map(k=>{if(!seen.has(k)){seen.add(k);return k;}const alt=['surge','burn','repair','control','decoy','lock','mega','barrage'].find(x=>!seen.has(x)&&(PERKS.find(p=>p.k===x).cost===0||S.perks[x]));seen.add(alt);return alt;});}
+const chainLv=()=>(S&&S.chainLv)||0,chainCost=()=>Math.round(120*Math.pow(1.35,chainLv()));
+function chainScale(p){const m=1+.1*chainLv();if(m===1)return p;const sc=a=>a?a.map(x=>x%1?Math.round(x*m*10)/10:Math.round(x*m)):a;return Object.assign({},p,{v:sc(p.v),g:sc(p.g),f:sc(p.f)});}
 function maybeOfferPerk(chain){
   if(chain<3||G.ending||!G.running||G.perkCD>0||CINE||!feat('perks'))return;
-  const tier=Math.min(3,chain-2),p=PERKS.find(x=>x.k===(S.slots||DEFAULT_SLOTS)[tier-1]);if(!p)return;
-  if(G.tut)setTimeout(()=>coach('run_chain'),1400);G.perkCD=10;G.log.perks=(G.log.perks||0)+1;rEvent(`perk ${p.k} (x${chain})`);const np=G.pops.length;p.apply(p,tier);G.pops.length=np;startCine('perk',{p,tier,chain},1.15);
+  const tier=Math.min(3,chain-2),p0=PERKS.find(x=>x.k===(S.slots||DEFAULT_SLOTS)[tier-1]);if(!p0)return;const p=chainScale(p0);
+  if(G.tut)setTimeout(()=>coach('run_chain'),1400);G.perkCD=Math.max(5,10*Math.pow(.96,chainLv()));G.log.perks=(G.log.perks||0)+1;rEvent(`perk ${p.k} (x${chain})`);const np=G.pops.length;p.apply(p,tier);G.pops.length=np;startCine('perk',{p,tier,chain},1.15);
 }
 
 /* ================= PURSUER ATTACKS ================= */
@@ -5430,7 +5449,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v99';
+const BUILD='v100';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
