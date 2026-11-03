@@ -3585,16 +3585,18 @@ function pipeStep(dt){const s=IL,p=s.pp;if(!p||s.end)return;p.t+=dt;if(p.bonus){
   while(p.acc>=1&&!s.end){p.acc-=1;const h=p.body[0],nx=h[0]+PDX[p.dir],ny=h[1]+PDY[p.dir],tail=p.body[p.body.length-1];
     const hitBody=p.body.some(b=>b[0]===nx&&b[1]===ny&&!(b===tail)),hitRock=p.rocks.some(b=>b[0]===nx&&b[1]===ny);
     if(nx<0||ny<0||nx>=p.C||ny>=p.R||hitBody||hitRock){p.dead=true;p.leak={x:p.gx+(h[0]+.5)*p.cs,y:p.gy+(h[1]+.5)*p.cs,t:0};sfx.bad();s.flash=.25;return ilEnd();}
-    p.body.unshift([nx,ny]);let ate=false;
+    p.mv=p.dir;p.body.unshift([nx,ny]);let ate=false;
     if(p.food&&p.food[0]===nx&&p.food[1]===ny){ate=true;p.n++;p.step++;tone(520+Math.min(20,p.n)*30,.08,'sine',.07);p.food=pipeSpot(p,true);
       if(p.step%3===0){const r=pipeSpot(p,true);if(r)p.rocks.push(r);}
       if(!p.bonus&&Math.random()<.35){const r=pipeSpot(p,true);if(r)p.bonus={x:r[0],y:r[1],t:5};}}
     else if(p.bonus&&p.bonus.x===nx&&p.bonus.y===ny){ate=true;p.n+=3;p.cross++;p.bonus=null;sfx.coin();}
     if(!ate)p.body.pop();}
   if(p.leak)p.leak.t+=dt;}
-function pipeTap(x,y){const s=IL,p=s.pp;if(!p||s.end)return;p.sw={x,y};}
-function pipeSwipe(x,y){const s=IL,p=s&&s.pp;if(!p||s.end||!p.sw)return;const dx=x-p.sw.x,dy=y-p.sw.y;if(Math.hypot(dx,dy)<16)return;
-  const d=Math.abs(dx)>Math.abs(dy)?(dx>0?1:3):(dy>0?2:0);p.sw={x,y};if(d!==p.dir&&d!==(p.dir+2)%4){p.dir=d;sfx.tick();}}
+function pipeTap(x,y){const s=IL,p=s.pp;if(!p||s.end)return;p.sw={x,y,n:0};}
+function pipeSwipe(x,y){const s=IL,p=s&&s.pp;if(!p||s.end||!p.sw)return;const dx=x-p.sw.x,dy=y-p.sw.y,ax=Math.abs(dx),ay=Math.abs(dy),need=p.sw.n?42:20;
+  if(Math.max(ax,ay)<need||Math.max(ax,ay)<1.5*Math.min(ax,ay))return;
+  const d=ax>ay?(dx>0?1:3):(dy>0?2:0);p.sw={x,y,n:p.sw.n+1};const mv=p.mv==null?p.dir:p.mv;if(d!==mv&&d!==(mv+2)%4){p.dir=d;sfx.tick();}}
+function pipeUp(){const p=IL&&IL.pp;if(p)p.sw=null;}
 function pipeDraw(c,s,t){const p=s.pp;if(!p)return;const cs=p.cs,gx=p.gx,gy=p.gy;
   c.fillStyle='#070d1e';c.fillRect(gx,gy,p.C*cs,p.R*cs);c.strokeStyle='rgba(127,243,255,.08)';c.lineWidth=1;
   for(let i=0;i<=p.C;i++){c.beginPath();c.moveTo(gx+i*cs+.5,gy);c.lineTo(gx+i*cs+.5,gy+p.R*cs);c.stroke();}for(let i=0;i<=p.R;i++){c.beginPath();c.moveTo(gx,gy+i*cs+.5);c.lineTo(gx+p.C*cs,gy+i*cs+.5);c.stroke();}
@@ -3603,6 +3605,7 @@ function pipeDraw(c,s,t){const p=s.pp;if(!p)return;const cs=p.cs,gx=p.gx,gy=p.gy
   if(p.food){const x=gx+(p.food[0]+.5)*cs,y=gy+(p.food[1]+.5)*cs,pl=1+.12*Math.sin(t*8);c.fillStyle='#ffb547';c.beginPath();c.arc(x,y,cs*.3*pl,0,6.28);c.fill();c.fillStyle='#fff3bf';c.beginPath();c.arc(x-1,y-1,cs*.13,0,6.28);c.fill();}
   if(p.bonus){const x=gx+(p.bonus.x+.5)*cs,y=gy+(p.bonus.y+.5)*cs;c.fillStyle='#7ff3ff';c.shadowColor='#7ff3ff';c.shadowBlur=10;c.beginPath();c.moveTo(x,y-cs*.38);c.lineTo(x+cs*.3,y);c.lineTo(x,y+cs*.38);c.lineTo(x-cs*.3,y);c.closePath();c.fill();c.shadowBlur=0;c.strokeStyle='rgba(127,243,255,.5)';c.lineWidth=2;c.beginPath();c.arc(x,y,cs*.46,-1.57,-1.57+6.28*Math.max(0,p.bonus.t/5));c.stroke();}
   p.body.forEach((b,i)=>{const x=gx+b[0]*cs,y=gy+b[1]*cs,u=1-i/Math.max(8,p.body.length);c.fillStyle=i===0?'#fff3bf':`rgb(255,${Math.round(150+80*u)},${Math.round(40+30*u)})`;c.fillRect(x+2,y+2,cs-4,cs-4);});
+  {const h=p.body[0],hx=gx+(h[0]+.5)*cs,hy=gy+(h[1]+.5)*cs,d=p.dir,ax=PDX[d],ay=PDY[d],px=-ay,py=ax,L=cs*.95;c.fillStyle='#7ff3ff';c.beginPath();c.moveTo(hx+ax*(L+cs*.35),hy+ay*(L+cs*.35));c.lineTo(hx+ax*L+px*cs*.28,hy+ay*L+py*cs*.28);c.lineTo(hx+ax*L-px*cs*.28,hy+ay*L-py*cs*.28);c.closePath();c.fill();}
   if(p.leak){const L=p.leak,a=Math.max(0,1-L.t/1.2);c.fillStyle=`rgba(255,92,108,${a})`;for(let i=0;i<10;i++){const an=i*.63,d=6+L.t*60;c.beginPath();c.arc(L.x+Math.cos(an)*d,L.y+Math.sin(an)*d*.8+L.t*L.t*30,3,0,6.28);c.fill();}}
   const fu=pipeFuel(p);c.textAlign='center';c.fillStyle='#ffd84a';c.font='700 22px Oxanium, sans-serif';c.fillText(`+${fu} fuel`,s.W/2,56);c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';
   if(p.t<p.lead)c.fillText(`STARTS IN ${Math.max(1,Math.ceil(p.lead-p.t))} · SWIPE OR DRAG TO STEER`,s.W/2,72);
@@ -3751,7 +3754,7 @@ function ilDraw(cv,s,t){const c=cv.getContext('2d'),W=s.W,H=s.H;c.setTransform(d
   else{c.fillStyle='#ffb547';c.font='9px Silkscreen, monospace';c.fillText('OVERTIME · FIRST MISS ENDS IT',W/2,72);}
   if(s.msg>0){c.globalAlpha=Math.min(1,s.msg);c.fillStyle='#ffb547';c.font='700 26px Oxanium, sans-serif';c.fillText('OVERTIME',W/2,H*.82);c.globalAlpha=1;}
   if(s.end){c.fillStyle='rgba(4,7,16,.5)';c.fillRect(0,0,W,H);}}
-(()=>{const cv=$('#ilCv');cv.addEventListener('pointermove',e=>{if(IL&&IL.mode==='pipe'&&!IL.end){const r=cv.getBoundingClientRect();pipeSwipe(e.clientX-r.left,e.clientY-r.top);e.preventDefault();}});cv.style.touchAction='none';cv.addEventListener('pointerdown',e=>{if(IL&&IL.mode==='view'&&!IL.pick){sfx.tick();closeBurst();e.preventDefault();return;}if(!IL||IL.pick||IL.end)return;const r=cv.getBoundingClientRect();ilHit(e.clientX-r.left,e.clientY-r.top);e.preventDefault();});
+(()=>{const cv=$('#ilCv');cv.addEventListener('pointermove',e=>{if(IL&&IL.mode==='pipe'&&!IL.end){const r=cv.getBoundingClientRect();pipeSwipe(e.clientX-r.left,e.clientY-r.top);e.preventDefault();}});cv.style.touchAction='none';cv.addEventListener('pointerup',pipeUp);cv.addEventListener('pointercancel',pipeUp);cv.addEventListener('pointerdown',e=>{if(IL&&IL.mode==='view'&&!IL.pick){sfx.tick();closeBurst();e.preventDefault();return;}if(!IL||IL.pick||IL.end)return;const r=cv.getBoundingClientRect();ilHit(e.clientX-r.left,e.clientY-r.top);e.preventDefault();});
   $('#ilTach').onclick=e=>{e.stopPropagation();audio();ilTachUse();};
   $('#bpRepair').onclick=()=>{audio();startBurst('repair');};$('#bpStorm').onclick=()=>{audio();startBurst('storm');};$('#bpBurn').onclick=()=>{audio();startBurst('burn');};$('#bpRail').onclick=()=>{audio();startBurst('rail');};
   $('#bpCounter').onclick=()=>{audio();startBurst('counter');};$('#bpGun').onclick=()=>{audio();startBurst('pipe');};
@@ -5454,7 +5457,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v103';
+const BUILD='v104';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
