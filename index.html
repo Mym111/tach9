@@ -348,7 +348,7 @@ button:disabled{cursor:default}
 .banner.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .banner .b1{font-size:19px;color:var(--ink);text-shadow:0 0 12px rgba(77,166,255,.6),2px 2px 0 #000}
 .banner .b2{font-size:10px;letter-spacing:.2em;color:var(--amber);margin-top:4px;text-shadow:1px 1px 0 #000}
-.engineering{flex:var(--eng,2) 1 0;min-height:0;display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:8px 6px 9px;border-radius:14px;border:1px solid var(--bezel);
+.engineering{flex:none;min-height:0;display:flex;flex-direction:column;gap:6px;margin-top:8px;padding:6px 3px 7px;border-radius:14px;border:1px solid var(--bezel);
   background:
     radial-gradient(circle at 7px 7px,var(--rivet) 1.6px,transparent 2.2px),
     radial-gradient(circle at calc(100% - 7px) 7px,var(--rivet) 1.6px,transparent 2.2px),
@@ -376,7 +376,7 @@ button:disabled{cursor:default}
 .gauge.urgent .g-note{color:var(--alert)}
 .gauge.pulse .g-fill{filter:brightness(1.7)}
 @keyframes urg{50%{border-color:var(--bezel)}}
-.boardwrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.boardwrap{flex:none;min-height:0;display:flex;align-items:center;justify-content:center}
 #board{display:block;border-radius:10px;background:#0a1224;box-shadow:inset 0 0 0 1px var(--bezel),inset 0 2px 8px rgba(0,0,0,.5);touch-action:none}
 
 /* ---------- overlays ---------- */
@@ -492,8 +492,8 @@ button:disabled{cursor:default}
 .vbar.warn b{color:var(--amber)}.vbar.crit b{color:var(--alert)}
 .vbar.warn .track{border-color:var(--amber);box-shadow:0 0 10px rgba(255,181,71,.7)}
 .vbar.crit .track{border-color:var(--alert);box-shadow:0 0 14px rgba(255,77,94,.9),inset 0 0 6px rgba(255,77,94,.5)}
-.vbar{width:24px}
-.vbar .track{width:14px;background:#060a14}
+.vbar{width:20px}
+.vbar .track{width:12px;background:#060a14}
 .vbar .track::after{display:none}
 #fuelBar .track{border-radius:8px;background:rgba(160,190,255,.05);border-color:rgba(180,200,255,.35)}
 .gcv{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -2220,7 +2220,7 @@ function drawBoard(){
   }
   for(let r=0;r<ROWS;r++)for(let cc=0;cc<COLS;cc++){const t=B.grid[r]&&B.grid[r][cc];if(t)drawTile(c,t,T);}
   for(const t of B.dying)drawTile(c,t,T);
-  drawDrone(c,T);drawBombs(c,T);
+  drawDrone(c,T);drawBombs(c,T);drawShock(c,T);
   const ring=(r,cc,col,w)=>{c.strokeStyle=col;c.lineWidth=w;rr(c,cc*T+2,r*T+2,T-4,T-4,T*.22);c.stroke();};
   if(B.sel)ring(B.sel[0],B.sel[1],'#ffb547',2.5);
   if(drag&&drag.hover){ring(drag.start[0],drag.start[1],'#ffb547',2.5);ring(drag.hover[0],drag.hover[1],'rgba(255,181,71,.7)',2);
@@ -2235,10 +2235,11 @@ function drawBoard(){
   c.globalAlpha=1;c.restore();
 }
 function sizeBoard(){
-  const r=$('#boardwrap').getBoundingClientRect();if(!r.width||!r.height)return;
-  B.tile=Math.max(24,Math.min(tileMode()?78:64,Math.floor(Math.min((r.width-64)/COLS,r.height/ROWS))));
+  const wrap=$('#boardwrap'),eng=$('.engineering'),par=eng.parentElement,r=wrap.getBoundingClientRect();if(!r.width)return;
+  const chrome=eng.getBoundingClientRect().height-r.height+8,topMin=Math.max(240,par.clientHeight*.3),availH=par.clientHeight-topMin-chrome;
+  B.tile=Math.max(24,Math.min(tileMode()?78:64,Math.floor(Math.min((r.width-52)/COLS,availH/ROWS))));
   B.w=B.tile*COLS;B.h=B.tile*ROWS;
-  B.cv.style.width=B.w+'px';B.cv.style.height=B.h+'px';$('#hullBar').style.height=B.h+'px';$('#fuelBar').style.height=B.h+'px';B.cv.width=Math.round(B.w*dpr);B.cv.height=Math.round(B.h*dpr);
+  B.cv.style.width=B.w+'px';B.cv.style.height=B.h+'px';$('#hullBar').style.height=B.h+'px';$('#fuelBar').style.height=B.h+'px';B.cv.width=Math.round(B.w*dpr);B.cv.height=Math.round(B.h*dpr);wrap.style.height=B.h+'px';
   if(!B.traces.length)makeTraces();
 }
 let drag=null;
@@ -3450,7 +3451,16 @@ function odSync(){const on=!TR&&scene==='game'&&G.running,has=feat('burst'),need
 function odMark(){if(!B||!B.grid)return;const on=!TR&&scene==='game'&&G.running&&feat('burst'),rdy=on&&(G.od||0)>=odNeed();let have=null;
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const t=B.grid[r][c];if(t&&t.od){if(!rdy||t.t>=5)t.od=false;else have=t;}}
   if(rdy&&!have){const list=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const t=B.grid[r][c];if(t&&t.t<5&&!t.lock&&t.fire==null&&t.y>=0&&Math.abs(t.y-r)<.3)list.push(t);}
-    if(list.length){const t=list[Math.floor(Math.random()*list.length)];t.od=true;t.hit=.6;sfx.good();}}}
+    if(list.length&&!B.busy){const t=list[Math.floor(Math.random()*list.length)];t.od=true;t.hit=.6;zapStart(t);}}}
+function zapStart(t){B.shock={t0:performance.now(),tile:t};B.busy=true;vpPop('OVERDRIVE READY','#7ff3ff');tone(70,.6,'sawtooth',.13);tone(1500,.07,'square',.07);tone(900,.09,'square',.06,0,.07);tone(1800,.06,'square',.05,0,.15);setTimeout(()=>{B.shock=null;B.busy=false;},850);}
+function drawShock(c,T){const s=B.shock;if(!s)return;const k=(performance.now()-s.t0)/850;if(k>1)return;const t=s.tile,cx=(t.x+.5)*T,cy=(t.y+.5)*T;
+  c.save();c.fillStyle=`rgba(0,8,22,${.5*(1-k)})`;c.fillRect(0,0,B.w,B.h);c.lineJoin='round';c.shadowColor='#7ff3ff';c.shadowBlur=14;
+  for(let i=0;i<4;i++){const sx=cx+(Math.random()-.5)*T*3.4,sy=i<2?0:cy+(Math.random()<.5?-1:1)*T*(1+Math.random()*2),dx=cx-sx,dy=cy-sy,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;
+    c.strokeStyle=i%2?'rgba(127,243,255,.95)':'#fff';c.lineWidth=i%2?2:3.5;c.globalAlpha=Math.min(1,(1-k)*1.6);c.beginPath();c.moveTo(sx,sy);
+    for(let j=1;j<8;j++){const f=j/8,o=(Math.random()-.5)*T*.7*(1-f*.5);c.lineTo(sx+dx*f+nx*o,sy+dy*f+ny*o);}c.lineTo(cx,cy);c.stroke();}
+  c.globalAlpha=1-k;c.strokeStyle='#7ff3ff';c.lineWidth=3;c.beginPath();c.arc(cx,cy,T*(.3+k*1.1),0,6.283);c.stroke();
+  if(k<.4){c.fillStyle=`rgba(230,255,255,${(1-k/.4)*.85})`;c.fillRect(cx-T*.43,cy-T*.43,T*.86,T*.86);}
+  c.restore();}
 function odGain(n){if(TR||!feat('burst'))return;const was=G.od||0,need=odNeed();G.od=Math.min(need,was+n);odSync();
   if(was<need&&G.od>=need){vpPop('OVERDRIVE READY','#7ff3ff');sfx.good();setTimeout(()=>coach('burst'),500);}}
 function openBurst(){if(IL||!G.running||G.ending||CINE||perkOpen||scene!=='game'||(G.od||0)<odNeed())return;
@@ -5306,7 +5316,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v94';
+const BUILD='v95';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
