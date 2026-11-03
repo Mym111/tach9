@@ -3466,7 +3466,7 @@ function odGain(n){if(TR||!feat('burst'))return;const was=G.od||0,need=odNeed();
 function openBurst(){if(IL||!G.running||G.ending||CINE||perkOpen||scene!=='game'||(G.od||0)<odNeed())return;
   IL={pick:true};IL_WAS=paused;paused=true;drag=null;
   $('#brstPick').hidden=false;$('#ilCv').hidden=true;$('#brstRes').hidden=true;$('#bpCounter').disabled=!feat('pursuer');$('#bpRepair').disabled=G.hull>=ST.hullMax-1;
-  show('#burst',true);sfx.tick();}
+  show('#burst',true);sfx.tick();{const bu=$('#burst');bu.style.pointerEvents='none';setTimeout(()=>{bu.style.pointerEvents='';},600);}}
 function openView(){if(IL||!G.running||G.ending||CINE||perkOpen||scene!=='game')return;
   IL={pick:true};IL_WAS=paused;paused=true;drag=null;show('#burst',true);startBurst('view');sfx.tick();}
 function closeBurst(){show('#burst',false);$('#burst').classList.remove('il');IL=null;paused=IL_WAS;}
@@ -5316,7 +5316,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v95';
+const BUILD='v96';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
