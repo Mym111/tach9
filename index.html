@@ -3592,7 +3592,9 @@ function pipeStep(dt){const s=IL,p=s.pp;if(!p||s.end)return;p.t+=dt;if(p.bonus){
     else if(p.bonus&&p.bonus.x===nx&&p.bonus.y===ny){ate=true;p.n+=3;p.cross++;p.bonus=null;sfx.coin();}
     if(!ate)p.body.pop();}
   if(p.leak)p.leak.t+=dt;}
-function pipeTap(x,y){const s=IL,p=s.pp;if(!p||s.end)return;const left=x<s.W/2;p.dir=(p.dir+(left?3:1))%4;sfx.tick();}
+function pipeTap(x,y){const s=IL,p=s.pp;if(!p||s.end)return;p.sw={x,y};}
+function pipeSwipe(x,y){const s=IL,p=s&&s.pp;if(!p||s.end||!p.sw)return;const dx=x-p.sw.x,dy=y-p.sw.y;if(Math.hypot(dx,dy)<16)return;
+  const d=Math.abs(dx)>Math.abs(dy)?(dx>0?1:3):(dy>0?2:0);p.sw={x,y};if(d!==p.dir&&d!==(p.dir+2)%4){p.dir=d;sfx.tick();}}
 function pipeDraw(c,s,t){const p=s.pp;if(!p)return;const cs=p.cs,gx=p.gx,gy=p.gy;
   c.fillStyle='#070d1e';c.fillRect(gx,gy,p.C*cs,p.R*cs);c.strokeStyle='rgba(127,243,255,.08)';c.lineWidth=1;
   for(let i=0;i<=p.C;i++){c.beginPath();c.moveTo(gx+i*cs+.5,gy);c.lineTo(gx+i*cs+.5,gy+p.R*cs);c.stroke();}for(let i=0;i<=p.R;i++){c.beginPath();c.moveTo(gx,gy+i*cs+.5);c.lineTo(gx+p.C*cs,gy+i*cs+.5);c.stroke();}
@@ -3603,9 +3605,9 @@ function pipeDraw(c,s,t){const p=s.pp;if(!p)return;const cs=p.cs,gx=p.gx,gy=p.gy
   p.body.forEach((b,i)=>{const x=gx+b[0]*cs,y=gy+b[1]*cs,u=1-i/Math.max(8,p.body.length);c.fillStyle=i===0?'#fff3bf':`rgb(255,${Math.round(150+80*u)},${Math.round(40+30*u)})`;c.fillRect(x+2,y+2,cs-4,cs-4);});
   if(p.leak){const L=p.leak,a=Math.max(0,1-L.t/1.2);c.fillStyle=`rgba(255,92,108,${a})`;for(let i=0;i<10;i++){const an=i*.63,d=6+L.t*60;c.beginPath();c.arc(L.x+Math.cos(an)*d,L.y+Math.sin(an)*d*.8+L.t*L.t*30,3,0,6.28);c.fill();}}
   const fu=pipeFuel(p);c.textAlign='center';c.fillStyle='#ffd84a';c.font='700 22px Oxanium, sans-serif';c.fillText(`+${fu} fuel`,s.W/2,56);c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';
-  if(p.t<p.lead)c.fillText(`STARTS IN ${Math.max(1,Math.ceil(p.lead-p.t))} · TAP LEFT OR RIGHT TO TURN`,s.W/2,72);
+  if(p.t<p.lead)c.fillText(`STARTS IN ${Math.max(1,Math.ceil(p.lead-p.t))} · SWIPE OR DRAG TO STEER`,s.W/2,72);
   else if(!s.end){const u=Math.max(0,1-(p.t-p.lead)/p.TL);c.fillStyle='#1a2440';c.fillRect(s.W*.2,66,s.W*.6,6);c.fillStyle='#ffd84a';c.fillRect(s.W*.2,66,s.W*.6*u,6);}
-  const ay=gy+p.R*cs+26;c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText('TAP LEFT HALF = TURN LEFT · RIGHT HALF = TURN RIGHT',s.W/2,ay);c.fillText('WALLS, ROCKS AND YOUR OWN TAIL BREAK THE LINE',s.W/2,ay+16);
+  const ay=gy+p.R*cs+26;c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText('SWIPE OR DRAG ANYWHERE TO TURN THE SNAKE',s.W/2,ay);c.fillText('WALLS, ROCKS AND YOUR OWN TAIL BREAK THE LINE',s.W/2,ay+16);
   if(s.end){c.fillStyle='rgba(4,7,16,.45)';c.fillRect(0,0,s.W,s.H);}}
 /* ---- Storm stopper: bank power into the four systems before lightning wipes it */
 const STORM_NAMES=['WEAPONS','SHIELDS','SENSORS','ENGINES'],STORM_MAX=10,stormAmt=v=>Math.floor(v*v*.16*(1+.12*core('storm')));
@@ -3749,7 +3751,7 @@ function ilDraw(cv,s,t){const c=cv.getContext('2d'),W=s.W,H=s.H;c.setTransform(d
   else{c.fillStyle='#ffb547';c.font='9px Silkscreen, monospace';c.fillText('OVERTIME · FIRST MISS ENDS IT',W/2,72);}
   if(s.msg>0){c.globalAlpha=Math.min(1,s.msg);c.fillStyle='#ffb547';c.font='700 26px Oxanium, sans-serif';c.fillText('OVERTIME',W/2,H*.82);c.globalAlpha=1;}
   if(s.end){c.fillStyle='rgba(4,7,16,.5)';c.fillRect(0,0,W,H);}}
-(()=>{const cv=$('#ilCv');cv.addEventListener('pointerdown',e=>{if(IL&&IL.mode==='view'&&!IL.pick){sfx.tick();closeBurst();e.preventDefault();return;}if(!IL||IL.pick||IL.end)return;const r=cv.getBoundingClientRect();ilHit(e.clientX-r.left,e.clientY-r.top);e.preventDefault();});
+(()=>{const cv=$('#ilCv');cv.addEventListener('pointermove',e=>{if(IL&&IL.mode==='pipe'&&!IL.end){const r=cv.getBoundingClientRect();pipeSwipe(e.clientX-r.left,e.clientY-r.top);e.preventDefault();}});cv.style.touchAction='none';cv.addEventListener('pointerdown',e=>{if(IL&&IL.mode==='view'&&!IL.pick){sfx.tick();closeBurst();e.preventDefault();return;}if(!IL||IL.pick||IL.end)return;const r=cv.getBoundingClientRect();ilHit(e.clientX-r.left,e.clientY-r.top);e.preventDefault();});
   $('#ilTach').onclick=e=>{e.stopPropagation();audio();ilTachUse();};
   $('#bpRepair').onclick=()=>{audio();startBurst('repair');};$('#bpStorm').onclick=()=>{audio();startBurst('storm');};$('#bpBurn').onclick=()=>{audio();startBurst('burn');};$('#bpRail').onclick=()=>{audio();startBurst('rail');};
   $('#bpCounter').onclick=()=>{audio();startBurst('counter');};$('#bpGun').onclick=()=>{audio();startBurst('pipe');};
@@ -5452,7 +5454,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v102';
+const BUILD='v103';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
