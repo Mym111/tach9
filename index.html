@@ -881,6 +881,7 @@ button:disabled{cursor:default}
       <div class="hpane" data-p="comms" hidden><div id="commsBody"></div></div>
       <div class="hpane" data-p="refinery" hidden><div id="refBody"></div></div>
       <div class="hpane" data-p="core" hidden><div id="coreBody"></div></div>
+      <div class="hpane" data-p="crew" hidden><div id="crewBody"></div></div>
       <div class="hpane" data-p="drones" hidden><div id="dronesBody" class="sec-b"></div></div>
       <div class="hpane" data-p="combos" hidden>
         <p class="hg-note">Each slot fires its perk automatically when you land a chain that size. Tap a slot above, then equip a perk for it below.</p>
@@ -2702,7 +2703,12 @@ function drawChart(t){
     c.save();c.imageSmoothingEnabled=false;c.drawImage(MAP.pc,bx,by,bs,bs);c.restore();c.fillStyle='#7ff3ff';c.beginPath();c.moveTo(bx+bs-2,by+bs+2);c.lineTo(bx+bs+5,by+bs+6);c.lineTo(bx+bs+2,by+bs-1);c.closePath();c.fill();}
   c.font='8px Silkscreen, monospace';c.textAlign='left';c.textBaseline='top';
   c.fillStyle='rgba(4,6,13,.4)';c.fillRect(4,3,96,36);c.fillStyle='rgba(225,233,247,.75)';c.fillText(g.cons?`CONSTELLATION ${g.num}`:`TACH ${tachNow()} / ${TACH_GOAL}`,10,8);
-  {const y0=26,mine=shardsMine(g),gx=18;
+  if(g.cons){const y0=26,gx=18,dn=terraDone(g),nd=terraNeed(g),done=dn>=nd;
+    c.fillStyle='#14304a';c.beginPath();c.arc(gx,y0+1,7,0,6.28);c.fill();
+    if(nd){c.strokeStyle=done?'#38e09b':'#5ef0d0';c.lineWidth=2;c.beginPath();c.arc(gx,y0+1,7,-1.57,-1.57+6.28*Math.min(1,dn/nd));c.stroke();}
+    c.fillStyle=done?'#38e09b':'#7ff3ff';c.beginPath();c.arc(gx-2,y0-1,2.2,0,6.28);c.fill();c.fillStyle='rgba(56,224,155,.8)';c.fillRect(gx+1,y0+2,3,2);
+    c.font='9px Silkscreen, monospace';c.textBaseline='middle';c.fillStyle=done?'#38e09b':'#5ef0d0';c.fillText(`${dn}/${nd} WORLDS`,30,y0+1);c.textBaseline='top';}
+  else{const y0=26,mine=shardsMine(g),gx=18;
     // the gate: a ring with a slot for each part, lit as you collect them
     c.strokeStyle=SHARD_COL;c.lineWidth=1.5;c.beginPath();c.ellipse(gx,y0+1,3.5,6,0,0,6.28);c.stroke();
     for(let i=0;i<SHARD_NEED;i++){const a=-Math.PI/2+i*Math.PI*2/SHARD_NEED,x=gx+Math.cos(a)*7.5,y=y0+1+Math.sin(a)*8.5;c.fillStyle=i<mine?SHARD_COL:'rgba(94,240,208,.22)';c.beginPath();c.moveTo(x,y-2.5);c.lineTo(x+2,y);c.lineTo(x,y+2.5);c.lineTo(x-2,y);c.closePath();c.fill();}
@@ -3805,7 +3811,7 @@ function tfTap(k){const t=TF;if(!t||t.done)return;const o=t.geo.find(x=>x.k===k)
     if(t.fails>=t.p.limit)return tfEnd('fail');tfRows();}}
 function tfEnd(kind){const t=TF;t.done=kind;t.focus=null;tfAudStop();const g=S.gal,st=t.s,pf=t.rep.locks.filter(l=>l.q==='perfect').length;
   if(kind==='win'&&t.test){t.cr=0;t.al=0;t.sur=0;sfx.coin();}
-  else if(kind==='win'){const sur=Math.max(0,t.p.limit-t.fails-1)+Math.floor(pf/2),cr=Math.round((40+25*t.p.th+sur*14)*t.p.mul),al=Math.floor(sur/2);
+  else if(kind==='win'){const sur=Math.max(0,t.p.limit-t.fails-1)+Math.floor(pf/2),cr=Math.round((40+25*t.p.th+sur*14)*t.p.mul*.6),al=Math.floor(sur/2);
     S.bucks+=cr;if(S.station){S.station.alloy+=al;S.station.pop=Math.max(1,S.station.pop-t.need);crewSync();}st.terra=true;g.terra=terraDone(g)+1;t.cr=cr;t.al=al;t.sur=sur;
     if(sur>=3&&unl('relics')){const rr=rollRelics(2);S.pendRelics=rr.map(x=>x.id);t.relic=rr.length>0;}sfx.coin();}
   else{sfx.boom();t.cine={t0:performance.now(),dur:3400,fail:true};t.rings=[];$('#terra').classList.add('cine');tone(60,1.2,'sawtooth',.14,-30);}
@@ -4395,7 +4401,7 @@ const ROOMS=[
   {k:'refinery',name:'Refinery',col:'#ff9640',max:3,cost:[[2,40],[4,90],[7,160]],panel:'refinery',open:'Tach & ship systems',
    desc:'Smelts the salvage from every system you clear into Alloy for building and upgrading rooms. The foundry also distils Tach, a scarce vial that slows Terraform and the Overdrive mini-games when you need it most, and keeps the ledger of your installed ship systems.',
    eff:L=>L?`+${L/2} Alloy per clear · holds ${L} Tach`:'Offline'},
-  {k:'habitat',name:'Habitat',col:'#ffb547',max:4,cost:[null,[3,50],[6,110],[9,180]],panel:'quarters',open:'Crew quarters',
+  {k:'habitat',name:'Habitat',col:'#ffb547',max:4,cost:[null,[3,50],[6,110],[9,180]],panel:'crew',open:'Crew deck',
    desc:'Living decks and the captain’s quarters. Pick your pilot and call sign and review your service record. Survivors and migrants will need the room as the station grows.',
    eff:L=>`Room for ${HAB_CAP[L]} people`},
   {k:'drone',name:'Drone bay',col:'#c792ff',max:3,cost:[[3,60],[5,120],[8,200]],panel:'drones',open:'Drone payloads',
@@ -4520,7 +4526,7 @@ const RM={sel:'comms',badges:{},pc:null,t:0,flash:{},rects:[],people:Array.from(
   stars:Array.from({length:60},()=>({x:Math.random(),y:Math.random(),z:Math.random()})),ore:Array.from({length:5},(_,i)=>i/5)};
 function goStation(){ensureStation();ensureGalaxy();scene='station';renderStation();only('#station');}
 const ROOM_ICO={comms:'signal',shipyard:'wrench',war:'cross',habitat:'person',refinery:'hexa',drone:'drone',tach:'tach'};
-const ROOM_NAV={comms:['radar','Terra-reels · markets'],shipyard:['launch','Ship systems & paint'],war:['bolt','Combo loadout'],habitat:['person','Crew quarters'],drone:['drone','Drone payloads'],tach:['tach','Core tuning'],refinery:['hexa','Tach & ship systems']};
+const ROOM_NAV={comms:['radar','Terra-reels · markets'],shipyard:['launch','Ship systems & paint'],war:['bolt','Combo loadout'],habitat:['person','Crew deck · staffing'],drone:['drone','Drone payloads'],tach:['tach','Core tuning'],refinery:['hexa','Tach & ship systems']};
 function habArrivals(L){
   const g=S.gal,stn=S.station,room=Math.max(0,HAB_CAP[L]-stn.pop),here=g.stars[g.at];
   const rows=here.links.map(i=>g.stars[i]).map(st=>{const fresh=!g.visited.includes(st.id);
@@ -4546,12 +4552,11 @@ function renderStation(){
   else if(max)act=`<div class="up-max">★ MAX LEVEL</div>`;
   else{const[a,cr]=cost,cw=crewCost(d,L),okA=stn.alloy>=a,okC=S.bucks>=cr,okW=stn.pop-cw>=1;
     act=`<button class="btn up-btn" id="rcBuild" ${okA&&okC&&okW?'':'disabled'}><i class="up-i">${ICO.up}</i>${L?'Upgrade':'Build'} <span class="rc-cost${okA?'':' short'}">${alloyTag(a)}</span><span class="rc-cost${okC?'':' short'}">${coin(cr)}</span>${cw?`<span class="rc-cost${okW?'':' short'}">${ICO.person} ${cw}</span>`:''}</button>`;}
-  const nowTxt=L?(rle(d.k)<L?`${rle(d.k)?d.eff(rle(d.k)):'Offline'}<em class="up-warn">${ICO.person} Needs crew · working as ${rle(d.k)?'L'+rle(d.k):'offline'}</em>`:d.eff(L)):'Not built',nav=ROOM_NAV[d.k];
+  const nowTxt=L?(rle(d.k)<L?`${rle(d.k)?d.eff(rle(d.k)):'Offline'}<em class="up-warn">${ICO.person} Needs crew · assign in the Habitat · working as ${rle(d.k)?'L'+rle(d.k):'offline'}</em>`:d.eff(L)):'Not built',nav=ROOM_NAV[d.k];
 
   $('#roomCard').style.setProperty('--rc',d.col);
   $('#roomCard').innerHTML=`<div class="rc-head"><span class="rc-name">${d.name.toUpperCase()}${d.k==='drone'?'<canvas class="rc-tile" id="rcTile" width="72" height="72" title="The drone tile you tap on the board"></canvas>':''}</span><span class="pips">${pips}</span></div>
     <p class="rc-desc">${d.desc}</p>
-    ${CREWED.includes(d.k)&&L?crewBlock(d):''}
     ${d.k==='habitat'?`<div class="crew-idle">${ICO.person}<b>${crewIdle()}</b> unassigned · <button class="linkbtn" id="crewAuto">auto-assign crew</button></div>`:''}
     ${d.k==='habitat'?`<div class="rc-eff one"><div><span>Aboard</span><b>${stn.pop} / ${HAB_CAP[L]} people</b></div></div>${habArrivals(L)}`:''}
     <div class="rc-up">
@@ -4563,7 +4568,6 @@ function renderStation(){
     ${nav?`<button class="btn rc-open" id="rcOpen"><i class="nav-i">${ICO[nav[0]]}</i><b>${nav[1]}</b><span>›</span></button>`:''}`;
   const bb=$('#rcBuild');if(bb)bb.onclick=()=>{const[a,cr]=d.cost[rl(d.k)],cw=crewCost(d,rl(d.k));if(stn.alloy<a||S.bucks<cr||stn.pop-cw<1)return;
     stn.alloy-=a;S.bucks-=cr;stn.pop-=cw;crewSync();stn.rooms[d.k]++;crewSync();if(CREWED.includes(d.k)){stn.crew[d.k]=Math.min(crewCap(d.k),(stn.crew[d.k]||0)+crewIdle());crewSync();}RM.flash[d.k]=1;if(d.k==='comms')revealAround(S.gal);persist();sfx.buy();renderStation();};
-  if(CREWED.includes(d.k)&&L)paintCrew(d);
   {const tc=$('#rcTile');if(tc)drawDroneTile(tc);}
   const ob=$('#rcOpen');if(ob)ob.onclick=()=>openRoom(d.k);
   const sl=$('#crewSl');if(sl){sl.oninput=()=>{const k=d.k,cur=stn.crew[k]||0,max=cur+crewIdle();let v=Math.min(+sl.value,max);sl.value=v;if(v!==cur){stn.crew[k]=v;if(v>cur)tone(600+v*25,.03,'triangle',.02);}paintCrew(d);};
@@ -4589,6 +4593,21 @@ function renderCore(){const stn=ensureStation(),cap=rl('tach');
   $('#coreBody').innerHTML=`<p class="hg-note" style="margin-top:0">Tune the core for each Overdrive mini-game. Your core level (${cap}) sets the highest rank.</p><div class="rl-list">`+CORE_UP.map(u=>{const r=core(u.k),nx=r<cap&&r<3,c=CORE_COST[r]||[0,0],ok=nx&&stn.alloy>=c[0]&&S.bucks>=c[1];
     return`<div class="rl-row" style="--rc:#5ef0d0"><i>${r}</i><div style="flex:1"><b>${u.n} · rank ${r}/3</b><span>${r?'Now: '+u.d(r):'Untuned'}${nx?` · Next: ${u.d(r+1)}`:''}</span></div>${nx?`<button class="up-buy" data-core="${u.k}" ${ok?'':'disabled'}>${alloyTag(c[0])} ${coin(c[1])}</button>`:`<span class="up-max" style="min-width:56px">${r>=3?'MAX':'CORE L'+(r+1)}</span>`}</div>`;}).join('')+'</div>';
   $('#coreBody').querySelectorAll('[data-core]').forEach(b=>b.onclick=()=>{const k=b.dataset.core,r=core(k),c=CORE_COST[r];if(!c||r>=rl('tach')||stn.alloy<c[0]||S.bucks<c[1])return;stn.alloy-=c[0];S.bucks-=c[1];stn.core=stn.core||{};stn.core[k]=r+1;persist();sfx.buy();renderHangar();H.flash=1;});}
+function renderCrew(){const stn=ensureStation();crewSync();const rooms=CREWED.filter(k=>rl(k));
+  $('#crewBody').innerHTML=`<div class="crew-idle" style="margin-top:0">${ICO.person}<b id="cdIdle"></b> unassigned · <button class="linkbtn" id="cdAuto">auto-assign crew</button> · <button class="linkbtn" id="cdQ">captain's quarters ›</button></div>
+   <p class="hg-note">Every room needs people. Under half crew and it works one level lower. Full crew gives a bonus. Drag to move people between rooms. Upgrading a room (other than the Habitat) also costs crew.</p>`+
+   (rooms.length?rooms.map(k=>{const d=roomDef(k),cap=crewCap(k);return`<div class="crew" data-k="${k}" style="--rc:${d.col};margin-bottom:10px"><div class="crew-h">${ICO.person}<b>${d.name} L${rl(k)} · <span data-n></span> / ${cap}</b><em data-st></em></div>
+    <input type="range" class="crew-sl" min="0" max="${cap}" step="1" value="${stn.crew[k]||0}" aria-label="Crew assigned to ${d.name}">
+    <div class="crew-scale"><i style="left:50%"></i><i style="left:99%"></i><span style="left:25%">UNDERSTAFFED</span><span style="left:72%">STAFFED</span><span style="left:96%">FULL</span></div>
+    <p class="crew-note" data-note></p></div>`;}).join(''):'<p class="hg-note">No crewed rooms yet. Build rooms from the station view.</p>');
+  const paint=()=>{const f=crewIdle();$('#cdIdle').textContent=f;
+    $('#crewBody').querySelectorAll('.crew[data-k]').forEach(el=>{const k=el.dataset.k,cap=crewCap(k),v=stn.crew[k]||0,st=crewState(k),L=rl(k);el.querySelector('[data-n]').textContent=v;
+      const e=el.querySelector('[data-st]');e.textContent=st==='low'?'UNDERSTAFFED':st==='peak'?'FULL CREW':'STAFFED';e.style.color=CREW_COL[st];
+      const sl=el.querySelector('input');sl.style.setProperty('--pct',(cap?v/cap*100:0)+'%');sl.style.setProperty('--fc',CREW_COL[st]);
+      el.querySelector('[data-note]').innerHTML=st==='low'?`Below half crew: works one level lower${L===1?' (offline)':''}.`:st==='peak'?`Full-crew bonus: <b>${PEAK[k]}</b>.`:`At full crew: <b>${PEAK[k]}</b>.`;});};
+  $('#crewBody').querySelectorAll('.crew[data-k]').forEach(el=>{const k=el.dataset.k,sl=el.querySelector('input');
+    sl.oninput=()=>{const cur=stn.crew[k]||0,max=cur+crewIdle();let v=Math.min(+sl.value,max);sl.value=v;if(v!==cur){stn.crew[k]=v;if(v>cur)tone(600+v*25,.03,'triangle',.02);}paint();};sl.onchange=()=>{persist();};});
+  $('#cdAuto').onclick=()=>{autoCrew();persist();sfx.buy();renderCrew();};$('#cdQ').onclick=()=>{H.tab='quarters';sfx.tick();renderHangar();};paint();}
 function renderRefinery(){const stn=ensureStation(),own=S.relics||[];
   $('#refBody').innerHTML=modBlock()+`<div class="hg-label">Installed ship systems · ${own.length} / ${RELIC_SLOTS}</div>`+
    (own.length?`<div class="rl-list">${own.map(id=>{const r=relicOf(id);return`<div class="rl-row" style="--rc:${r.c}"><i>${r.g}</i><div><b>${r.name}</b><span>${r.d}</span></div></div>`;}).join('')}</div>`:'<p class="hg-note">None yet. Terraform worlds well and the crew finds ship systems to install.</p>')+
@@ -4619,6 +4638,22 @@ function renderComms(){
   $('#commsBody').querySelectorAll('[data-buy]').forEach(b=>b.onclick=e=>{e.stopPropagation();if(buyAlloyAt(+b.dataset.buy)){renderHangar();H.flash=1;}});
 }
 function commsToMap(id){goMap();const st=S.gal.stars[id];requestAnimationFrame(()=>requestAnimationFrame(()=>{MAP.wFull=false;showStarWidget(st);}));}
+function drawCoreScope(c,W,Hh,t){const L=Math.max(1,rl('tach')),cx=W/2,cy=Hh*.52,n=S.gal?Math.min(shardsMine(S.gal),SHARD_NEED):0,pl=.5+.5*Math.sin(t*2.4);
+  const g=c.createRadialGradient(cx,cy,2,cx,cy,Hh*.6);g.addColorStop(0,`rgba(94,240,208,${.28+.18*pl})`);g.addColorStop(1,'rgba(94,240,208,0)');c.fillStyle=g;c.fillRect(0,0,W,Hh);
+  for(let k=0;k<3;k++){c.strokeStyle=`rgba(94,240,208,${.25+k*.15+(k<L?.2:0)})`;c.lineWidth=1.5;c.beginPath();c.ellipse(cx,cy,Hh*(.2+k*.1)*1.5,Hh*(.34+k*.04)*.8,t*(k%2?-.6:.6),0,6.28);c.stroke();}
+  for(let i=0;i<SHARD_NEED;i++){const a=t*1.1+i*Math.PI/2,rad=Hh*.38,x=cx+Math.cos(a)*rad*1.3,y=cy+Math.sin(a)*rad*.8;c.fillStyle=(S.gal&&S.gal.cons)||i<n?'#5ef0d0':'rgba(94,240,208,.18)';c.beginPath();c.moveTo(x,y-6);c.lineTo(x+4,y);c.lineTo(x,y+6);c.lineTo(x-4,y);c.closePath();c.fill();}
+  c.fillStyle=`rgba(255,216,74,${.7+.3*pl})`;c.shadowColor='#ffd84a';c.shadowBlur=14;c.beginPath();c.arc(cx,cy,3+pl*2+L,0,6.28);c.fill();c.shadowBlur=0;
+  for(let i=0;i<L*2;i++){const a=t*3+i*1.7,r=10+((t*.8+i*.31)%1)*Hh*.4;c.fillStyle=`rgba(127,243,255,${.6-((t*.8+i*.31)%1)*.6})`;c.fillRect(Math.round(cx+Math.cos(a)*r),Math.round(cy+Math.sin(a)*r*.6),2,2);}
+  c.font='8px Silkscreen, monospace';c.textAlign='left';c.fillStyle='rgba(225,233,247,.6)';c.fillText('OVERDRIVE CORE · L'+rl('tach'),12,16);c.textAlign='right';c.fillStyle='#5ef0d0';c.fillText(`TACH ${tachNow()}`,W-12,Hh-12);}
+function drawHabDeck(c,W,Hh,t,dt){const L=Math.max(1,rl('habitat')),decks=4,top=22,dh=(Hh-top-10)/decks,cabW=Math.max(46,W*.16),dw=W-cabW-30,pop=S.station?S.station.pop:0;
+  c.fillStyle='#0a1022';c.fillRect(0,0,W,Hh);c.fillStyle='#101a30';c.fillRect(8,top-4,W-16,Hh-top-2);
+  H.ppl=H.ppl||[];const want=Math.min(42,pop);while(H.ppl.length<want)H.ppl.push({d:Math.floor(Math.random()*decks),x:Math.random(),v:(.03+Math.random()*.06)*(Math.random()<.5?-1:1)});H.ppl.length=want;
+  for(let i=0;i<decks;i++){const y=Math.round(top+i*dh),on=(decks-1-i)<L;c.fillStyle=on?'#152448':'#0a1022';c.fillRect(14,y,dw,Math.round(dh)-4);
+    for(let x=20;x<dw;x+=14){c.fillStyle=on?(Math.sin(x*7+i*3+t*.4)>.85?'#ffe3a6':'#7a6a3e'):'#141c30';c.fillRect(x,y+4,6,3);}
+    if(on)for(const p of H.ppl){if(p.d!==i)continue;p.x+=p.v*dt;if(p.x<0||p.x>1)p.v*=-1;p.x=Math.max(0,Math.min(1,p.x));const px=Math.round(16+p.x*(dw-6)),bob=Math.sin(t*8+p.x*30)>0?0:1;c.fillStyle='#ffd27a';c.fillRect(px,y+Math.round(dh)-14+bob,3,3);c.fillStyle='#e8a050';c.fillRect(px,y+Math.round(dh)-11+bob,3,5);}}
+  const kx=W-cabW-12,ky=top,kh=Hh-top-6;c.fillStyle='#1d1830';c.fillRect(kx,ky,cabW,kh);c.strokeStyle='#ffb54766';c.lineWidth=1;c.strokeRect(kx+.5,ky+.5,cabW-1,kh-1);
+  c.fillStyle='rgba(255,210,122,.15)';c.fillRect(kx+4,ky+kh*.2,cabW-8,kh*.35);
+  c.font='8px Silkscreen, monospace';c.textAlign='left';c.fillStyle='rgba(225,233,247,.7)';c.fillText(`ABOARD ${pop}/${HAB_CAP[rl('habitat')]}`,12,14);}
 function drawForge(c,W,Hh,t){const cx=W/2,cy=Hh*.64,k=H.forgeT0!=null?t-H.forgeT0:99,act=k<2.4,gl=.45+.12*Math.sin(t*2.1)+(act?.45:0);
   const g=c.createRadialGradient(cx,cy,4,cx,cy,Hh*.7);g.addColorStop(0,`rgba(255,150,64,${.45*gl})`);g.addColorStop(1,'rgba(255,150,64,0)');c.fillStyle=g;c.fillRect(0,0,W,Hh);
   for(let i=0;i<22;i++){const u=((t*.16+i*.137)%1),x=cx+Math.sin(i*7.3+t*.8)*W*.16*(1-u*.4),y=cy-u*Hh*.62;c.fillStyle=`rgba(255,${150+i*3},64,${(1-u)*.7})`;c.fillRect(Math.round(x),Math.round(y),2,2);}
@@ -4839,8 +4874,8 @@ function renderHangar(){
   const ti=document.querySelectorAll('.htab canvas');
   const pc=blankCanvas(10,10);drawPortrait(pc,S.pilot);
   [pc,SHIP,ICONS[NOVA]].forEach((img,i)=>{ti[i].width=img.width;ti[i].height=img.height;const x=ti[i].getContext('2d');x.clearRect(0,0,img.width,img.height);x.drawImage(img,0,0);});
-  $('#bayLabel').textContent={quarters:"Captain's quarters",ship:'Ship bay',combos:'Combo loadout',comms:'Long-range scan',refinery:'Foundry',core:'Core tuning',drones:'Drone payloads'}[H.tab].toUpperCase();
-  if(H.tab==='comms')renderComms();if(H.tab==='refinery')renderRefinery();if(H.tab==='core')renderCore();if(H.tab==='drones')renderDrones();
+  $('#bayLabel').textContent={crew:'Habitat',quarters:"Captain's quarters",ship:'Ship bay',combos:'Combo loadout',comms:'Long-range scan',refinery:'Foundry',core:'Core tuning',crew:'Crew deck',drones:'Drone payloads'}[H.tab].toUpperCase();
+  if(H.tab==='comms')renderComms();if(H.tab==='refinery')renderRefinery();if(H.tab==='core')renderCore();if(H.tab==='crew')renderCrew();if(H.tab==='drones')renderDrones();
   // --- quarters ---
   if(document.activeElement!==$('#cmdIn'))$('#cmdIn').value=S.cmd||'';
   $('#cmdChips').innerHTML=CMD_PRESETS.map(p=>`<button type="button" aria-pressed="${cmdText()===p}">${p}</button>`).join('');
@@ -4869,7 +4904,7 @@ function renderHangar(){
     row.append(btn);up.append(row);
   });
   {const lv=chainLv(),cc=chainCost(),row=document.createElement('div');row.className='up';row.style.setProperty('--c','#ffd84a');
-    row.insertAdjacentHTML('beforeend',`<div class="up-name" style="color:#ffd84a;margin-left:2px">CHAIN DRIVE<span class="pips">${lv?`<b class="ovc" style="margin:0">RANK ${lv}</b>`:''}</span></div><div class="up-next">Chain perks hit ${lv*10}% harder now. Next: ${(lv+1)*10}% harder, and perks recharge ${Math.min(50,Math.round((1-Math.pow(.96,lv+1))*100))}% sooner. No limit.</div>`);
+    row.append(smallCanvas(perkIcon(PERKS[0])));row.insertAdjacentHTML('beforeend',`<div class="up-name" style="color:#ffd84a">CHAIN DRIVE<span class="pips">${lv?`<b class="ovc" style="margin:0">RANK ${lv}</b>`:''}</span></div><div class="up-next">Chain perks hit ${lv*10}% harder now. Next: ${(lv+1)*10}% harder, and perks recharge ${Math.min(50,Math.round((1-Math.pow(.96,lv+1))*100))}% sooner. No limit.</div>`);
     const btn=document.createElement('button');btn.className='up-buy';btn.innerHTML=coin(cc);btn.disabled=S.bucks<cc;
     btn.onclick=()=>{if(S.bucks<cc)return;S.bucks-=cc;S.chainLv=lv+1;H.flash=1;persist();sfx.buy();renderHangar();};row.append(btn);up.append(row);}
   const sw=$('#swatches');sw.innerHTML='';
@@ -4906,6 +4941,8 @@ function drawBay(dt){
   for(const s of H.stars){s.x-=dt*spd*(.3+s.z);if(s.x<0)s.x+=1;c.fillStyle=`rgba(200,215,255,${.2+s.z*.6})`;c.fillRect(Math.round(s.x*W),Math.round(s.y*Hh),tab==='ship'&&s.z>.6?3:1,1);}
   if(tab==='comms')drawCommsScope(c,W,Hh,t);
   if(tab==='refinery')drawForge(c,W,Hh,t);
+  if(tab==='core')drawCoreScope(c,W,Hh,t);
+  if(tab==='crew')drawHabDeck(c,W,Hh,t,dt);
   if(tab==='drones')drawDroneScope(c,W,Hh,t);
   if(tab==='ship'){
     const sc=Math.max(3,Math.floor(Math.min(W*.52/SHIP.width,Hh*.62/SHIP.height))),sw=SHIP.width*sc,sh=SHIP.height*sc;
@@ -5457,7 +5494,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v105';
+const BUILD='v106';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5648,6 +5685,7 @@ function buildDebrief(win,reason){
    if(win&&dp!==1&&base>0)pay.push([`${DEPTH_NAME[dp]} · pay ${dp<1?'−40%':'+60%'}`,Math.round(base*(DEPTH_PAY[dp]-1))]);
    if(win&&base>0&&relicHas('salvager'))pay.push(['Salvager · +20%',Math.round(base*.2)]);
    }
+  {const sub=pay.reduce((a,p)=>a+p[1],0);if(sub>0)pay.push(['Station upkeep · −40%',-Math.round(sub*.4)]);}
   d.pay=pay;d.total=pay.reduce((a,p)=>a+p[1],0);
   // bank immediately so leaving early never loses anything
   S.bucks+=d.total;if(win)S.cleared++;if(G.tut)S.tutRunDone=true;
