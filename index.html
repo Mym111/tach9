@@ -5555,7 +5555,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v124';
+const BUILD='v125';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -6077,13 +6077,16 @@ const TRAIN_CH=[
   {say:'Every contact you miss closes the gap. Every perfect clear, where you are fully charged for a contact, pushes it back. At zero we are caught and the system is lost.',next:'tap'},
   {say:'Deep surveys add attacks. The action freezes while the pursuer winds up, then a red alert names a system and starts a timer. Have that system charged before it runs out, or take hull damage, lose gap and take board damage.',next:'tap'},
   {say:'Chain combo perks, Afterburn and Counterfire all push the gap back. Harder tiers close it faster, so keep your systems topped up and do not stock one at the expense of the others.',next:'end'}]},
- {k:'overdrive',t:'Overdrive and fuel',d:'The Overdrive bar, what it offers and what it costs.',feats:[],steps:[
-  {say:'Perfect clears charge the Overdrive bar, the glowing strip above the system gauges. When it fills, a bolt tile appears on the board. Tap that tile to open the Overdrive menu.',next:'tap',board:trLay([]),ring:'#odBar',enter(){trOdBar(true);}},
-  {say:'Six options: Counterfire pushes the pursuer back, Fuel snake tops up the tank, Repair mends the hull, Power slots spins your systems, Afterburn gains distance and Rail loader blasts tiles. Let’s try three. Nothing is spent in the drill.',next:'tap'},
-  {say:'Counterfire. Hit every target and miss nothing. Play it, then close the result.',next:'cond',cond:()=>!IL,enter(){trTest('counter');},delay:600},
-  {say:'Fuel snake. Steer the line to collect fuel cells. It is free to use, so it is the safe pick when the tank is low.',next:'cond',cond:()=>!IL,enter(){trTest('pipe');},delay:600},
-  {say:'Power slots. You choose how many lines to play, and every line costs fuel. Matching reels pay charge, and all reels matching is a jackpot. Not now backs out without spending.',next:'cond',cond:()=>!IL,enter(){trTest('storm');},delay:600},
-  {say:'Most Overdrives burn about a tenth of your tank, and Power slots charge per line. Watch the fuel gauge before you commit. Clearing the bolt tile in a match wastes the charge, so tap it deliberately.',next:'end',ring:'#fuelBar',leave(){trOdBar(false);}}]},
+ {k:'overdrive',t:'Overdrive and fuel',d:'Six power-up games, and what they cost.',feats:[],steps:[
+  {say:'Perfect clears fill the Overdrive bar, the glowing strip just above your system gauges. When it is full, one tile on the board gets a bolt. Tap that tile to open the Overdrive menu.',next:'tap',board:trLay([]),ring:'#odBar',enter(){trOdBar(true);}},
+  {say:'You pick one of six games. Each costs about a tenth of your tank, except the Fuel snake, which is free, and Power slots, which charge per line. Let’s play each one. This is practice, so nothing is spent.',next:'tap'},
+  {say:'COUNTERFIRE. Tap the targets that appear on the enemy cruiser before they fade. Keep going into overtime, but the first miss there ends it. Every hit pushes the pursuer back.',next:'cond',cond:()=>!IL,enter(){trTest('counter');},delay:600},
+  {say:'REPAIR. A plate slides back and forth over the stack. Tap to drop it. Overhang is trimmed off, so line it up. A perfect weld keeps the full width. Tap the bank button any time to take the hull repair so far.',next:'cond',cond:()=>!IL,enter(){trTest('repair');},delay:600},
+  {say:'FUEL SNAKE. Swipe anywhere to steer. Eat fuel cells and avoid walls, rocks and your own tail. It costs nothing, so it is the safe pick when the tank is low.',next:'cond',cond:()=>!IL,enter(){trTest('pipe');},delay:600},
+  {say:'POWER SLOTS. Choose how many lines to play. Every line costs fuel. Matching reels pay system charge, and all reels matching is a jackpot. Not now backs out without spending.',next:'cond',cond:()=>!IL,enter(){trTest('storm');},delay:600},
+  {say:'AFTERBURN. Tap to climb and let go to fall. Fly through the gates. Every gate carries you toward the jump gate and opens the gap on the pursuer.',next:'cond',cond:()=>!IL,enter(){trTest('burn');},delay:600},
+  {say:'RAIL LOADER. A marker spins around the dial. Tap when it crosses the bright zone to load a round. A bullseye loads two. Each miss jams the rail and costs a life. Loaded rounds fire as a strafing run that blasts tiles off the board.',next:'cond',cond:()=>!IL,enter(){trTest('rail');},delay:600},
+  {say:'Keep an eye on the fuel gauge on the right before you commit, and tap the bolt tile on purpose: clearing it in a match wastes the charge. Core tuning in the Tach drive room ranks up each game.',next:'end',ring:'#fuelBar',leave(){trOdBar(false);}}]},
  {k:'chains',t:'Chains and combos',d:'Cascades fire the perks you equip.',feats:[],steps:[
   {say:'When a match drops tiles that make another match, that is a chain. Chains count up: ×2, ×3 and beyond.',next:'tap',board:trLay([])},
   {say:'You have four combo slots, for chains of ×3, ×4, ×5 and ×6+. Each fires the perk you equip, automatically, when you land a chain that size. You set them in the War room.',next:'tap'},
