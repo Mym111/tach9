@@ -1295,7 +1295,8 @@ const rl=k=>(S.station&&S.station.rooms[k])||0;
 /* ---- crew: rooms need people to run ---- */
 const CREWED=['comms','shipyard','war','refinery','drone'];
 const CREW_PER=6;   // crew slots per room level
-const crewCap=k=>CREWED.includes(k)?rl(k)*CREW_PER:0;
+const crewPer=()=>CREW_PER+Math.max(0,((S.gal&&S.gal.num)||1)-1);
+const crewCap=k=>CREWED.includes(k)?rl(k)*crewPer():0;
 const PEAK={comms:'Every market you jump to restocks +1 Alloy',shipyard:'Ship launches with +2 charge on all systems',war:'Top system on the board +2 more charge',refinery:'+0.5 Alloy per clear',drone:'Drones work 30% faster'};
 function crewSync(){
   const stn=S.station;if(!stn)return;if(!stn.crew)autoCrew();
@@ -2707,7 +2708,7 @@ function drawChart(t){
     c.fillStyle='#14304a';c.beginPath();c.arc(gx,y0+1,7,0,6.28);c.fill();
     if(nd){c.strokeStyle=done?'#38e09b':'#5ef0d0';c.lineWidth=2;c.beginPath();c.arc(gx,y0+1,7,-1.57,-1.57+6.28*Math.min(1,dn/nd));c.stroke();}
     c.fillStyle=done?'#38e09b':'#7ff3ff';c.beginPath();c.arc(gx-2,y0-1,2.2,0,6.28);c.fill();c.fillStyle='rgba(56,224,155,.8)';c.fillRect(gx+1,y0+2,3,2);
-    c.font='9px Silkscreen, monospace';c.textBaseline='middle';c.fillStyle=done?'#38e09b':'#5ef0d0';c.fillText(`${dn}/${nd} WORLDS`,30,y0+1);c.textBaseline='top';}
+    c.font='9px Silkscreen, monospace';c.textBaseline='middle';c.fillStyle=terraDoomed(g)?'#ff5c6c':done?'#38e09b':'#5ef0d0';c.fillText(terraDoomed(g)?'GATE LOST':`${dn}/${nd} WORLDS`,30,y0+1);c.textBaseline='top';}
   else{const y0=26,mine=shardsMine(g),gx=18;
     // the gate: a ring with a slot for each part, lit as you collect them
     c.strokeStyle=SHARD_COL;c.lineWidth=1.5;c.beginPath();c.ellipse(gx,y0+1,3.5,6,0,0,6.28);c.stroke();
@@ -3770,7 +3771,8 @@ const terraNeed=g=>g&&g.cons?Math.min(4,1+Math.ceil(g.num/3)):0;
 const terraDone=g=>(g&&g.terra)||0;
 const bagNow=()=>{const b=S.bag=S.bag||[0,0,0,0];return b;};
 const bagTotal=()=>bagNow().reduce((a,b)=>a+b,0);
-const canTerra=st=>!!(S.gal&&S.gal.cons&&st&&st.id!==S.gal.gate&&st.clears>0&&!st.terra);
+const canTerra=st=>!!(S.gal&&S.gal.cons&&st&&st.id!==S.gal.gate&&st.clears>0&&!st.terra&&!st.terraLost);
+const terraDoomed=g=>!!(g&&g.cons&&!g.gateWon&&terraDone(g)+g.stars.filter(x=>x.id!==g.gate&&!x.terra&&!x.terraLost).length<terraNeed(g));
 const terraPop=st=>Math.max(2,Math.round(1.5+tfPlan(st).th*.9)),popOk=st=>(S.station?S.station.pop:0)-terraPop(st)>=1;
 // a geo-form is one variable of the planet. c = ideal centre, ih = ideal half-width, vol = how wild it is
 const GEO=[
@@ -3814,7 +3816,7 @@ function tfEnd(kind){const t=TF;t.done=kind;t.focus=null;tfAudStop();const g=S.g
   else if(kind==='win'){const sur=Math.max(0,t.p.limit-t.fails-1)+Math.floor(pf/2),cr=Math.round((40+25*t.p.th+sur*14)*t.p.mul*.6),al=Math.floor(sur/2);
     S.bucks+=cr;if(S.station){S.station.alloy+=al;S.station.pop=Math.max(1,S.station.pop-t.need);crewSync();}st.terra=true;g.terra=terraDone(g)+1;t.cr=cr;t.al=al;t.sur=sur;
     if(sur>=3&&unl('relics')){const rr=rollRelics(2);S.pendRelics=rr.map(x=>x.id);t.relic=rr.length>0;}sfx.coin();}
-  else{sfx.boom();t.cine={t0:performance.now(),dur:3400,fail:true};t.rings=[];$('#terra').classList.add('cine');tone(60,1.2,'sawtooth',.14,-30);}
+  else{if(!t.test)st.terraLost=true;sfx.boom();t.cine={t0:performance.now(),dur:3400,fail:true};t.rings=[];$('#terra').classList.add('cine');tone(60,1.2,'sawtooth',.14,-30);}
   t.text=tfReport();if(!t.test){S.tfLog=(S.tfLog||[]).concat([t.text]).slice(-12);persist();}
   if(kind==='win'){t.cine={t0:performance.now(),dur:4800};t.cineStage=-1;t.rings=[];$('#terra').classList.add('cine');}
   tfRows();}
@@ -3907,7 +3909,7 @@ function geoRow(g,o,t){const bw=o.bw,cu=o.cu,pc=v=>(Math.max(0,Math.min(1,v))*10
 function tfRows(){const t=TF;if(!t)return;const p=t.p;$('#tfT').textContent=`TERRAFORM · ${t.s.name.toUpperCase()} · ${t.need} COLONISTS`;
   let body;
   if(t.done){body='<div class="tf-done">'+(t.done==='win'?`<p class="tf-res ok">TERRAFORMED. ${t.s.name} is habitable.</p><p class="tf-hint">+${t.cr} CR · +${t.al} alloy${t.sur?` · ${t.sur} stability bonus`:''} · ${t.need} colonists settled${t.relic?' · a ship system is on offer':''}</p>`
-      :`<p class="tf-res bad">THE PLANET DESTABILIZED. Too many hazards. Nothing else is lost. Try again.</p>`)+`<pre class="tf-rep">${t.text}</pre><button type="button" class="tf-copy" id="tfCopy">Copy tester report</button></div>`;}
+      :`<p class="tf-res bad">THE PLANET DESTABILIZED. ${t.test?'(Test world, nothing lost.)':terraDoomed(S.gal)?'This world is gone for good, and there are not enough worlds left to open the Exodus Gate.':'This world is gone for good. It cannot be attempted again.'}</p>`)+`<pre class="tf-rep">${t.text}</pre><button type="button" class="tf-copy" id="tfCopy">Copy tester report</button></div>`;}
   else body=`<div class="tf-pips">${Array.from({length:p.limit},(_,i)=>`<i class="${i<t.fails?'on':''}"></i>`).join('')}<span>instability · ${p.limit} collapses the planet</span></div>
     <div class="geos">${GEO.map((g,i)=>geoRow(g,t.geo[i],t)).join('')}</div><p class="tf-log">${t.log}</p>`;
   $('#tfBody').innerHTML=body;tfBtns();}
@@ -4595,7 +4597,7 @@ function renderCore(){const stn=ensureStation(),cap=rl('tach');
   $('#coreBody').querySelectorAll('[data-core]').forEach(b=>b.onclick=()=>{const k=b.dataset.core,r=core(k),c=CORE_COST[r];if(!c||r>=rl('tach')||stn.alloy<c[0]||S.bucks<c[1])return;stn.alloy-=c[0];S.bucks-=c[1];stn.core=stn.core||{};stn.core[k]=r+1;persist();sfx.buy();renderHangar();H.flash=1;});}
 function renderCrew(){const stn=ensureStation();crewSync();const rooms=CREWED.filter(k=>rl(k));
   $('#crewBody').innerHTML=`<div class="crew-idle" style="margin-top:0">${ICO.person}<b id="cdIdle"></b> unassigned · <button class="linkbtn" id="cdAuto">auto-assign crew</button> · <button class="linkbtn" id="cdQ">captain's quarters ›</button></div>
-   <p class="hg-note">Every room needs people. Under half crew and it works one level lower. Full crew gives a bonus. Drag to move people between rooms. Upgrading a room (other than the Habitat) also costs crew.</p>`+
+   <p class="hg-note">Every room needs people, and each constellation asks for more: right now ${crewPer()} per room level. Under half crew and it works one level lower. Full crew gives a bonus. Drag to move people between rooms. Upgrading a room (other than the Habitat) also costs crew.</p>`+
    (rooms.length?rooms.map(k=>{const d=roomDef(k),cap=crewCap(k);return`<div class="crew" data-k="${k}" style="--rc:${d.col};margin-bottom:10px"><div class="crew-h">${ICO.person}<b>${d.name} L${rl(k)} · <span data-n></span> / ${cap}</b><em data-st></em></div>
     <input type="range" class="crew-sl" min="0" max="${cap}" step="1" value="${stn.crew[k]||0}" aria-label="Crew assigned to ${d.name}">
     <div class="crew-scale"><i style="left:50%"></i><i style="left:99%"></i><span style="left:25%">UNDERSTAFFED</span><span style="left:72%">STAFFED</span><span style="left:96%">FULL</span></div>
@@ -4904,7 +4906,7 @@ function renderHangar(){
     row.append(btn);up.append(row);
   });
   {const lv=chainLv(),cc=chainCost(),row=document.createElement('div');row.className='up';row.style.setProperty('--c','#ffd84a');
-    row.append(smallCanvas(perkIcon(PERKS[0])));row.insertAdjacentHTML('beforeend',`<div class="up-name" style="color:#ffd84a">CHAIN DRIVE<span class="pips">${lv?`<b class="ovc" style="margin:0">RANK ${lv}</b>`:''}</span></div><div class="up-next">Chain perks hit ${lv*10}% harder now. Next: ${(lv+1)*10}% harder, and perks recharge ${Math.min(50,Math.round((1-Math.pow(.96,lv+1))*100))}% sooner. No limit.</div>`);
+    row.append(smallCanvas(CHAIN_X));row.insertAdjacentHTML('beforeend',`<div class="up-name" style="color:#ffd84a">CHAIN DRIVE<span class="pips">${lv?`<b class="ovc" style="margin:0">RANK ${lv}</b>`:''}</span></div><div class="up-next">Chain perks hit ${lv*10}% harder now. Next: ${(lv+1)*10}% harder, and perks recharge ${Math.min(50,Math.round((1-Math.pow(.96,lv+1))*100))}% sooner. No limit.</div>`);
     const btn=document.createElement('button');btn.className='up-buy';btn.innerHTML=coin(cc);btn.disabled=S.bucks<cc;
     btn.onclick=()=>{if(S.bucks<cc)return;S.bucks-=cc;S.chainLv=lv+1;H.flash=1;persist();sfx.buy();renderHangar();};row.append(btn);up.append(row);}
   const sw=$('#swatches');sw.innerHTML='';
@@ -5398,6 +5400,7 @@ PERKS.forEach(p=>{p.short=(q,t)=>PERK_SHORT[q.k](q,t);});
 const DEFAULT_SLOTS=['surge','burn','repair'];
 function fixSlots(){if(!S.slots)S.slots=DEFAULT_SLOTS.slice();S.slots=S.slots.map(k=>PERKS.some(p=>p.k===k)?k:'repair');
   const seen=new Set();S.slots=S.slots.map(k=>{if(!seen.has(k)){seen.add(k);return k;}const alt=['surge','burn','repair','control','decoy','lock','mega','barrage'].find(x=>!seen.has(x)&&(PERKS.find(p=>p.k===x).cost===0||S.perks[x]));seen.add(alt);return alt;});}
+const CHAIN_X=(()=>{const c=document.createElement('canvas');c.width=c.height=16;const x=c.getContext('2d');x.strokeStyle='#7a5a00';x.lineWidth=5;x.lineCap='square';x.beginPath();x.moveTo(3,3);x.lineTo(13,13);x.moveTo(13,3);x.lineTo(3,13);x.stroke();x.strokeStyle='#ffd84a';x.lineWidth=3;x.beginPath();x.moveTo(3,3);x.lineTo(13,13);x.moveTo(13,3);x.lineTo(3,13);x.stroke();return c;})();
 const chainLv=()=>(S&&S.chainLv)||0,chainCost=()=>Math.round(120*Math.pow(1.35,chainLv()));
 function chainScale(p){const m=1+.1*chainLv();if(m===1)return p;const sc=a=>a?a.map(x=>x%1?Math.round(x*m*10)/10:Math.round(x*m)):a;return Object.assign({},p,{v:sc(p.v),g:sc(p.g),f:sc(p.f)});}
 function maybeOfferPerk(chain){
@@ -5494,7 +5497,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v106';
+const BUILD='v107';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5577,7 +5580,7 @@ function updateCountdown(dt){
   for(const fx of G.fx){fx.t+=dt;}G.fx=G.fx.filter(fx=>fx.t<fx.d);
   if(!G.cdArrived&&u>=.75){G.cdArrived=true;sfx.arrive();G.shake=.3;}
   if(now!==before&&now>0&&G.cdArrived)sfx.cdTick(now);
-  if(G.countdown<=0){G.countdown=0;if(G.tut)setTimeout(()=>coach('run_start'),500);G.warpX=0;G.cdBoost=0;sfx.engage();G.fx.push({k:'burst',t:0,d:1.2});G.shake=.25;
+  if(G.countdown<=0){G.countdown=0;applyWarBoost();if(G.tut)setTimeout(()=>coach('run_start'),500);G.warpX=0;G.cdBoost=0;sfx.engage();G.fx.push({k:'burst',t:0,d:1.2});G.shake=.25;
     showBanner('Engage',`${SYS.pName.toUpperCase()} ON SCOPE`);}
 }
 function drawCountdownBuf(b,W,H,t){
@@ -5625,20 +5628,21 @@ function goMap(){if($('#chartBox'))$('#chartBox').classList.remove('big'),$('#zB
 function goHangar(){scene='hangar';renderHangar();only('#hangar');}
 function openPilotIntro(){H.tab='quarters';H.room='habitat';H.intro=true;goHangar();}
 function pilotDone(){H.intro=false;sfx.tick();goMap();}
+function applyWarBoost(){if(!G.warPend)return;G.warPend=false;const w=Math.max(0,rle('war')-1)*2+(peak('war')?2:0);if(!w)return;const n=[0,0,0,0];for(const row of B.grid)for(const x of row)if(x&&x.t<4)n[x.t]++;const m=n.indexOf(Math.max(...n));
+  G.meters[m]=Math.min(ST.cap[m],G.meters[m]+w);G.warBoost={m,w};const el=gEls[m].g;el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),600);vpPop(`WAR ROOM · ${TYPES[m].name.toUpperCase()} CHARGED +${w}`,TYPES[m].color);}
 function startRun(){
   CINE=null;RUNX=TR?null:{depth:depthNow(),load:loadNow()};
   SYS=sysView(CHOICE.key);resetGame();G.hold=false;G.depth=RUNX?RUNX.depth:1;G.aegis=0;G.od=0;IL=null;setTimeout(odSync,60);if(peak('shipyard'))for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2);sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
   for(let m=0;m<4;m++)gEls[m].bar.style.setProperty('--n',ST.cap[m]);
   B.waiters.length=0;B.dying=[];B.beams=[];B.bomb=null;B.barr=null;B.pops=[];B.hazards=[];B.sel=null;B.hint=null;B.idle=0;B.glow=null;
   fillBoard();B.busy=true;settle().then(()=>{B.busy=false;});
-  {const w=Math.max(0,rle('war')-1)*2+(peak('war')?2:0);if(w){const n=[0,0,0,0];for(const row of B.grid)for(const x of row)if(x&&x.t<4)n[x.t]++;const m=n.indexOf(Math.max(...n));G.meters[m]=Math.min(ST.cap[m],G.meters[m]+w);G.warBoost={m,w};}}
+  G.warPend=true;
   scene='game';paused=false;only('#game');
   G.patched=false;G.droneT=ST.droneT*.5;G.drone=null;B.droneAim=null;B.droneDrag=false;G.rescued=0;G.podsSpawned=0;G.strayPod=CHOICE.sig!=='sos'&&Math.random()<.2;
   if(S.tutRunDone==null)S.tutRunDone=career().runs>0;G.tut=!S.tutRunDone;
-  G.cdTotal=G.countdown=AUD.cd??3;G.cdArrived=false;G.cdBoost=0;
+  G.cdTotal=G.countdown=AUD.cd??3;G.cdArrived=false;G.cdBoost=0;if(!G.countdown)applyWarBoost();
   if(G.tut&&!G.countdown)setTimeout(()=>coach('run_start'),700);
   if(!G.countdown)showBanner(`${CHOICE.name} · ${SYS.type}`,`${SYS.pName.toUpperCase()} ON SCOPE`);
-  if(G.warBoost)setTimeout(()=>{if(scene==='game'&&G.running)vpPop(`WAR ROOM · ${TYPES[G.warBoost.m].name.toUpperCase()} +${G.warBoost.w}`,TYPES[G.warBoost.m].color);},900);
 }
 async function launch(choice){
   audio();if(AUD.brief!==false&&choice&&!choice.hold&&choice.key){if(!(await showBrief(choice)))return;}
@@ -5893,6 +5897,7 @@ function askConfirm(title,html,yes='Launch'){return new Promise(res=>{$('#cfTitl
   const done=v=>{show('#confirm',false);sfx.tick();res(v);};$('#cfYes').onclick=()=>done(true);$('#cfNo').onclick=$('#cfX').onclick=()=>done(false);show('#confirm',true);sfx.tick();});}
 async function launchChoice(ch){if(TR){toast('<b>Launching is turned off in training</b>','#7f8fb2');return;}if(ch&&ch.gate&&!(S.gal&&S.gal.cons)){openTach();return;}
   if(ch&&ch.gate&&S.gal.gateWon){if(await askConfirm('JUMP ON',`<p>The Exodus Gate is open. Jump on to the next constellation? Credits and upgrades come with us.</p>`,'Jump'))gateJump();return;}
+  if(ch&&ch.gate&&terraDoomed(S.gal)){if(await askConfirm('CONSTELLATION LOST',`<p>Too many worlds are lost. The Exodus Gate can never open here.</p><p class="cf-dim">Re-chart this constellation from the start. The crew and Alloy are halved, but credits and upgrades come with us.</p>`,'Re-chart')){const g=S.gal,stn=ensureStation();stn.pop=Math.max(2,Math.floor(stn.pop/2));stn.alloy=Math.floor(stn.alloy/2);S.gal=genGalaxy((Math.random()*2**31)|0,g.num);ensureGalaxy();crewSync();S.choices=genChoices();persist();goMap();toast(`<b>Re-charted · Constellation ${S.gal.num}</b><span>Half the crew did not make it. Choose your worlds with care.</span>`,'#ff8a95');}return;}
   if(ch&&ch.gate&&S.gal.cons&&!S.gal.gateWon&&terraDone(S.gal)<terraNeed(S.gal)){const n=terraNeed(S.gal)-terraDone(S.gal);toast(`<b>The Exodus Gate is sealed</b><span>Terraform ${n} more world${n>1?'s':''} first. Clear a star, then terraform it from its launch window.</span>`,'#5ef0d0');return;}
   const st=ch&&S.gal&&S.gal.stars[ch.starId];
   if(st&&st.res&&!(await askConfirm('ALREADY RESEARCHED',`<p><b>${st.name}</b> has already given its research (${st.res.name}). Another run here still pays credits and salvage at <b>${Math.round(salvageOf(st)*100)}%</b>, but no new research.</p><p class="cf-dim">Uncleared planets nearby can still raise your Tach odds.</p>`,'Launch anyway')))return;
