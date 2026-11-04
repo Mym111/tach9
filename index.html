@@ -798,8 +798,9 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
     <div class="legend" id="legend"><h2>Power routing</h2></div>
     <div class="tut-step"><i>2</i><div><b>Watch the viewport</b><p>Contacts fly toward you. Each badge shows the system and charge it needs. Have that charge ready <em>before it reaches you</em>.</p></div></div>
     <div class="tut-step"><i>3</i><div><b>Stay alive</b><p>Hull is the gauge <em>left of the board</em>, fuel is <em>on the right</em>. The pursuer's gap is top-left of the viewport. Misses close it.</p></div></div>
-    <div class="tut-step"><i>4</i><div><b>Chain for perks</b><p>Cascades of ×3, ×4 and ×5+ fire the perks you equip in the War room's combo loadout.</p></div></div>
-    <div class="tut-step"><i>5</i><div><b>Cross the constellation</b><p>Clear each star for credits, then <em>terraform</em> worlds along the way. When enough are terraformed the <em>Exodus Gate</em> unseals and carries you on to the next constellation. A loss keeps what you collected.</p></div></div>
+    <div class="tut-step"><i>4</i><div><b>Chain for perks</b><p>Cascades of ×3, ×4, ×5 and ×6+ fire the perks you equip in the War room's chain combos. Match 4 or 5 to forge Tile systems, and cross two runs for a solar flare.</p></div></div>
+    <div class="tut-step"><i>5</i><div><b>Overdrive costs fuel</b><p>Perfect clears fill the ring beside Pause. Tap the bolt tile for a power-up. Most burn about a tenth of your tank.</p></div></div>
+    <div class="tut-step"><i>6</i><div><b>Cross the constellation</b><p>Clear each star for credits, then <em>terraform</em> worlds along the way. When enough are terraformed the <em>Exodus Gate</em> unseals and carries you on to the next constellation. A loss keeps what you collected.</p></div></div>
     <button class="btn ghost" id="tutGuide">Open field guide</button>
   </section>
 
@@ -2030,7 +2031,7 @@ async function cascade(pivots){
     await flareBurn();
     const runs=findRuns();if(!runs.length)break;if(chain===0&&G.echo){chain=G.echo;G.echo=0;boardPop('CHAIN ECHO',COLS/2,ROWS/2,'#c792ff');sfx.special();}chain++;if(chain>=2)chainShow(chain);
     const set=new Set(),makes=[],wild=new Map();
-    if(feat('flare'))for(let i=0;i<runs.length;i++)for(let j=i+1;j<runs.length;j++){const a=runs[i],b=runs[j];if(a.t!==b.t||a.dir===b.dir)continue;const x=a.cells.find(([r,c])=>b.cells.some(([r2,c2])=>r2===r&&c2===c));if(x&&Math.random()<.5){const k=x[0]*COLS+x[1];if(!makes.some(m=>m.k===k))makes.push({k,r:x[0],c:x[1],t:a.t,sp:4,fm:(G.fmN=(G.fmN||0)+1)%3});}}
+    if(feat('flare'))for(let i=0;i<runs.length;i++)for(let j=i+1;j<runs.length;j++){const a=runs[i],b=runs[j];if(a.t!==b.t||a.dir===b.dir)continue;const x=a.cells.find(([r,c])=>b.cells.some(([r2,c2])=>r2===r&&c2===c));if(x&&(TR||Math.random()<.5)){const k=x[0]*COLS+x[1];if(!makes.some(m=>m.k===k))makes.push({k,r:x[0],c:x[1],t:a.t,sp:4,fm:(G.fmN=(G.fmN||0)+1)%3});}}
     for(const run of runs){
       run.cells.forEach(([r,c])=>{const k=r*COLS+c;set.add(k);if(isWild(B.grid[r][c]?.t)&&!wild.has(k))wild.set(k,run.t);});
       if(run.cells.length>=4){boardShake(run.cells.length);
@@ -4010,7 +4011,7 @@ const STAGES=[null,
  {short:'A pursuer, and its attacks',obj:'Something has picked up our trail.',
   news:['An Empire cruiser now chases us. Watch the GAP bar, top-left of the viewport','Missed contacts close the gap. Perfect clears push it back. At zero we are caught','It launches attacks too. Have enough charge banked in the system it names before the timer ends','SURVEY DEPTH is yours to set in the briefing. Fly-by is quiet and pays less. Deep survey brings every threat and pays more']},
  {short:'Ship rooms unlock',obj:'Time to build out the ship.',
-  news:['Credits and Alloy can now build and upgrade rooms: Sensors, Shipyard, War room, Refinery, Habitat, Drone bay and Tach drive','Open the Ship from the map to spend','OVERDRIVE: perfect clears charge the ring beside Pause. Tap it for a burst of Counterfire or Gunnery. Hit every target, and miss nothing in overtime']},
+  news:['Credits and Alloy can now build and upgrade rooms: Sensors, Shipyard, War room, Refinery, Habitat, Drone bay and Tach drive','Open the Ship from the map to spend','OVERDRIVE: perfect clears charge the ring beside Pause. Tap it for Counterfire, Gunnery, a repair, a fuel snake or Power slots. Most burn fuel, so watch the tank']},
  {short:'Combo perks',obj:'Big chains pay off now.',
   news:['Chains of 3+ let your crew fire a combo perk','Set the loadout in the War room. Longer chains unlock stronger perks']},
  {short:'Every pursuer is different',obj:'Each system now has its own pursuer.',
@@ -4308,8 +4309,8 @@ const COACH_TIPS={
   tach:{el:'.tc-tot',t:()=>'Five reels, one per system, and all five must hold. The chances multiply, so one weak reel drags the whole jump down. Shore up the weakest first.'},
   tach_fail:{el:'.tc-res',t:()=>'We lost a level on every system that failed. Hard lesson. Rebuild at the planets, research what broke, and we go again.'},
   depth:{el:'#brDepth',t:()=>'Your call on how deep we dive. Fly-by is quiet and pays less. Deep survey brings every threat, pays more, and offers better subsystems. The depth sets the stakes, so choose it before you give the order.'},
-  load:{el:'#brLoad',t:()=>'We only have room for so many special tiles. Tap one to swap it in. Upgrading the Refinery adds a slot.'},
-  burst:{el:'#board',t:()=>'Overdrive is charged. Tap the glowing bolt tile on the board. Clear it in a match and you lose charge. Counterfire pushes the pursuer back, Fuel line is a pipe puzzle that tops up the tank, Repair is a plate-welding game that mends the hull, and Power slots spends fuel to spin your systems for charge: pick how many lines to play.'},
+  load:{el:'#brLoad',t:()=>'We only have room for so many Tile systems. Tap one to swap it in. Upgrading the Refinery adds a slot.'},
+  burst:{el:'#board',t:()=>'Overdrive is charged. Tap the glowing bolt tile on the board. Clear it in a match and you lose charge. Counterfire pushes the pursuer back, the Fuel snake tops up the tank, Repair is a plate-welding game that mends the hull, and Power slots spends fuel to spin your systems for charge: pick how many lines to play. Most Overdrives burn about a tenth of your tank.'},
   relic:{el:'#relicCards',t:()=>'A subsystem. It stays installed for the whole campaign, so choose what we will lean on. We only have three slots.'},
   trade:{el:'#commsBody',t:()=>'The sensor array reaches further now. We can buy Alloy from systems in range, straight from their cards.'},
 };
@@ -4458,7 +4459,7 @@ const ROOMS=[
    desc:'Drones ride along on every expedition. Every so often one drops onto the board carrying the payload you picked: a line clearer, a bomb or a hazard seeker. Higher levels mean more frequent drops and bigger payloads, and from level 2 drones also seal one hull breach when the hull runs low.',
    eff:L=>L?`A drone every ${DRONE_T[L]}s · ${PAYLOADS[payload()].name.toLowerCase()} ${PAYLOADS[payload()].eff(L)}${PATCH[L]?` · seals ${PATCH[L]} hull once`:''}`:'Offline'},
   {k:'tach',name:'Overdrive core',col:'#5ef0d0',max:3,cost:[null,[6,150],[10,300]],panel:'core',open:'Core tuning',
-   desc:'The reactor behind Overdrive. Perfect clears charge it, and a bigger core needs fewer of them. Engage it from under the systems for Counterfire, Gunnery or Emergency Repair. The same drive carries the ship through the Exodus Gate.',
+   desc:'The reactor behind Overdrive. Perfect clears charge it, and a bigger core needs fewer of them. Engage it from under the systems for Counterfire, Gunnery, Emergency Repair, the Fuel snake or Power slots. The same drive carries the ship through the Exodus Gate.',
    eff:L=>`Overdrive charges in ${[0,5,4,3][L]} perfect clears · tuning up to rank ${L}`},
 ];
 {const ord=['comms','shipyard','war','habitat','refinery','drone','tach'];ROOMS.sort((a,b)=>ord.indexOf(a.k)-ord.indexOf(b.k));}
@@ -5107,6 +5108,7 @@ const GUIDE=[
   {g:'TILES',title:'Credits',tile:{t:BUCKS},text:'Wild. Joins any color, but only in a match of 4 or more. Banks money and charges that color.'},
   {g:'TILES',title:'Salvage crate',tile:{t:CRATE},text:'Rare wild, like Credits: joins any color in a match of 4 or more. Cracks open for a random prize: Credits, fuel, Alloy, a survivor, charge, or a jackpot.'},
   {g:'TILES',title:'Line blast',tile:{t:0,sp:1},text:'Made by matching 4. When it clears, it clears its whole row or column.'},
+  {g:'TILES',title:'Solar flare',tile:{t:0,sp:4},text:'Forged where two runs of the same colour cross in an L, T or +. Match it and a fire burns a row, column or 3×3 square for a couple of seconds, rotating each time. Burned tiles pay a flat bonus and do not cascade.'},
   {g:'TILES',title:'Nova core',tile:{t:NOVA},text:'Made by matching 5. Swap it with any tile to clear every tile of that type.'},
   {g:'TILES',title:'Mega chain',toks:[['icon',NOVA],['plus'],['icon',NOVA],['arrow'],['gate']],text:'Clear 56 tiles in a single move, counting every cascade it sets off. Swapping two nova cores together always does it. Reward: a 1.5 AU leap toward the gate, +15 gap and 17 Credits.'},
   {g:'HAZARDS',title:'Debris',tile:{t:DEBRIS},text:'From a missed asteroid. Can’t be moved. Match next to it to break it, or work it down to the bottom row to eject it.'},
@@ -5127,7 +5129,7 @@ const GUIDE=[
   {g:'CONSOLE',title:'Pursuer gap',custom:'gap',text:'Top-left of the viewport. Misses close the gap, perfect clears open it. At zero you’re caught and the system is lost.'},
   {g:'CONSOLE',title:'Route to gate',custom:'route',text:'Bottom of the viewport. Your progress to the jump gate. Reach the ring to clear the system.'},
   {g:'HAZARDS',title:'Pursuer attack',custom:'strike',text:'The action holds while the pursuer winds up, then a red alert counts down. Charge the system shown before it hits zero, or take heavy hull damage, lose gap and take board damage.'},
-  {g:'TILES',title:'Combo perks',custom:'perk',text:'Equip one perk in each hangar slot: ×3, ×4 and ×5+. Land a chain that size and its perk fires automatically, with a short cinematic beat. Bigger chains, stronger effects.'},
+  {g:'TILES',title:'Combo perks',custom:'perk',text:'Equip one perk in each War room slot: ×3, ×4, ×5 and ×6+ (supernova). Land a chain that size and its perk fires automatically. Viewport perks scale with your tier.'},
   {g:'CONSOLE',title:'Fuel and hull',custom:'fuelhull',text:'Hull is the gauge left of the board, fuel the gauge on the right. Fuel drains every second; empty means you drift to a stop. Hull drops when contacts hit you; empty means a breach.'},
 ];
 const GTABS=['TILES','HAZARDS','CONTACTS','CONSOLE'];
@@ -5553,7 +5555,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v122';
+const BUILD='v123';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -6058,7 +6060,7 @@ const TRAIN_CH=[
   {say:'Fuel drains as you fly. The tank is low now. Match yellow fuel cells to refill it. If it empties, the run ends.',next:'swap',allow:[[[3,3],[3,4]]],ring:'pairs',board:trLay(TR_YEL),
     enter(){G.fuel=ST.tank*.35;},leave(){G.fuel=ST.tank;}},
   {say:'Back to a full tank. In the campaign you win a system by reaching its gate with hull and fuel to spare. A deeper survey adds a pursuer, but the drill ends here.',next:'end'}]},
- {k:'special',t:'Tile systems',d:'Line tiles, nova cores, credits, crates and flares.',feats:['line','nova','loot'],steps:[
+ {k:'special',t:'Tile systems',d:'Line tiles, nova cores, credits, crates and solar flares.',feats:['line','nova','loot','flare'],steps:[
   {say:'Some matches forge special tiles. Make a match of four to forge a line tile.',next:'swap',allow:[[[2,2],[3,2]]],ring:'pairs',board:trLay(trLayLineMake)},
   {say:'That arrow tile is a line tile. The next time it is part of a match, it fires along its whole row or column.',next:'tap'},
   {say:'Try it. Match the line tile with the two reds above it.',next:'swap',allow:[[[3,3],[3,4]]],ring:'pairs',board:trLay([[1,3,0],[2,3,0],[3,3,1],[3,4,'a']])},
@@ -6066,7 +6068,22 @@ const TRAIN_CH=[
   {say:'A nova core swaps with any tile and wipes every tile of that colour from the board. Swap it with the blue tile.',next:'swap',allow:[[[3,2],[3,3]]],ring:'pairs',board:trLay([[3,2,'N'],[3,3,1]])},
   {say:'Credits tiles (pink) are wild. They join any match of four or more, and bank money. Make this match.',next:'swap',allow:[[[2,3],[3,3]]],ring:'pairs',board:trLay([[2,0,0],[2,1,'C'],[2,2,0],[2,3,1],[2,4,3],[3,3,0]])},
   {say:'Salvage crates work the same way: join a match of four or more and the crate cracks open for a random prize.',next:'swap',allow:[[[2,3],[3,3]]],ring:'pairs',board:trLay([[2,0,0],[2,1,'X'],[2,2,0],[2,3,1],[2,4,3],[3,3,0]])},
-  {say:'That is every special tile. In the campaign they unlock as you clear systems.',next:'end'}]},
+  {say:'Solar flares are the wild one. Cross two runs of the same colour in an L, T or + shape and the crossing tile becomes a flare. Make this L.',next:'swap',allow:[[[2,2],[3,2]]],ring:'pairs',board:trLay([[2,0,0],[2,1,0],[2,2,1],[3,2,0],[1,2,0],[0,2,0]])},
+  {say:'That glowing tile is a solar flare. It is armed to burn a row, a column or a 3×3 square, and the mode changes with every flare you forge. Match it with the two reds above it.',next:'swap',allow:[[[3,3],[3,4]]],ring:'pairs',board:trLay([[1,3,0],[2,3,0],[3,3,1],[3,4,'k']])},
+  {say:'The flare keeps burning for a couple of seconds. Tiles that fall into the fire are burned for a flat payout, but burned tiles never cascade. Good for cleaning up damage.',next:'tap'},
+  {say:'That is every tile system. In the campaign they unlock as you clear systems. Which ones ride on your board is set under Tile systems in the briefing: tap to swap, and the Refinery adds slots.',next:'end'}]},
+ {k:'overdrive',t:'Overdrive and fuel',d:'The ring beside Pause, and what it costs.',feats:[],steps:[
+  {say:'Perfect clears charge the Overdrive ring beside the Pause button. When it fills, a bolt tile appears on the board. Tap it to open the Overdrive menu.',next:'tap',board:trLay([]),ring:'#odBar'},
+  {say:'Counterfire pushes the pursuer back. Gunnery is a shooting range. Repair is a plate-welding game that mends the hull. The Fuel snake tops up the tank for free.',next:'tap'},
+  {say:'Power slots spin your systems for charge. You choose how many lines to play and every line costs fuel. More lines, more chances, and all matching reels pay a jackpot. NOT NOW backs out without spending.',next:'tap'},
+  {say:'Most Overdrives burn about a tenth of your tank. Watch the fuel gauge on the right before you commit. Fuel is the throttle on how often you can use them.',next:'tap',ring:'#fuelBar'},
+  {say:'If the bolt tile gets cleared in a match, the charge is lost. Tap it deliberately. Core tuning in the Tach drive room makes Overdrive charge faster.',next:'end'}]},
+ {k:'chains',t:'Chains and combos',d:'Cascades fire the perks you equip.',feats:[],steps:[
+  {say:'When a match drops tiles that make another match, that is a chain. Chains count up: ×2, ×3 and beyond.',next:'tap',board:trLay([])},
+  {say:'You have four combo slots, for chains of ×3, ×4, ×5 and ×6+. Each fires the perk you equip, automatically, when you land a chain that size. You set them in the War room.',next:'tap'},
+  {say:'Some perks help the viewport: Afterburner pushes the pursuer back, Patch and refuel mends the hull, Decoy flare draws fire. Their strength grows with your tier, so they keep up with the threats.',next:'tap'},
+  {say:'Others change the board: Strafing run and Mega clear wipe tiles, Damage control sweeps over every damaged tile and some more and turns them into your Tile systems, and Target lock fires a laser at the next contact.',next:'tap'},
+  {say:'Chain echo starts your next chain higher, so chains feed each other. The ×6+ slot is SUPERNOVA, and an empty slot falls back to the one below it.',next:'end'}]},
 ];
 TRAIN_CH.push(
  {k:'map',t:'Galaxy map',d:'Moving between stars, gate parts and the action buttons.',sandbox:true,feats:['pursuer','strike','rooms','line','nova','loot','perks'],steps:[
@@ -6078,13 +6095,13 @@ TRAIN_CH.push(
   {say:'Terraform enough worlds and the Exodus Gate unseals. Then Launch becomes the jump to the next constellation. That is the goal of every campaign.',next:'end'}]},
  {k:'station',t:'Ship upgrades',d:'Rooms, ship systems and crew.',sandbox:true,feats:['pursuer','strike','rooms','line','nova','loot','perks'],steps:[
   {say:'This is your ship. Rooms give it abilities, and you pay for them with Alloy and credits. This lesson runs on a practice save with some resources.',next:'tap',ring:'#stCv',enter(){goStation();}},
-  {say:'Each tab is a room: Sensors, Yard, War room, Refinery, Hab, Drone bay and Tach drive. Tap a couple of tabs to read what they do.',next:'cond',cond:()=>RM.sel!==TR.sel0,ring:'#rtabs',delay:900,enter(){TR.sel0=RM.sel;}},
-  {say:'Build the Refinery. It costs Alloy and credits (shown top right) and smelts salvage into more Alloy.',next:'cond',cond:()=>S.station.rooms.refinery>=1,ring:['#rcBuild'],delay:1200,enter(){RM.sel='refinery';renderStation();}},
+  {say:'Each tab is a room: Sensors, Yard, War room, Refinery, Hab, Drone bay and Tach drive. Tap a couple of tabs to read what they do. Tap your portrait, top left, to name yourself and your ship.',next:'cond',cond:()=>RM.sel!==TR.sel0,ring:'#rtabs',delay:900,enter(){TR.sel0=RM.sel;}},
+  {say:'Build the Refinery. It costs Alloy and credits (shown top right), adds a Tile systems slot and hosts the Alloy exchange.',next:'cond',cond:()=>S.station.rooms.refinery>=1,ring:['#rcBuild'],delay:1200,enter(){RM.sel='refinery';renderStation();}},
   {say:'Built. Rooms have levels, and they need crew to run at full strength. The card tells you when one is short. The Habitat holds your people.',next:'tap',ring:'#roomCard'},
   {say:'Now the Shipyard. Press Open to go to the ship bay.',next:'cond',cond:()=>scene==='hangar',ring:'#rcOpen',delay:700,enter(){RM.sel='shipyard';renderStation();}},
   {say:'Here you upgrade ship systems: weapons, shields, sensors, engines and fuel. Upgrades cost credits. Upgrade any one of them.',next:'cond',cond:()=>JSON.stringify(S.up)!==TR.up0,ring:'#upgrades',delay:1000,enter(){TR.up0=JSON.stringify(S.up);}},
   {say:'Upgraded. The Shipyard’s level caps how far each system can go, so building rooms keeps you growing. Tap the back arrow to return to the ship.',next:'cond',cond:()=>scene==='station',ring:'#hangarBack',delay:500},
-  {say:'One more room worth knowing: the War room sets your combo perks, so bigger chains fire stronger effects. That is the whole ship loop: earn, build, upgrade, launch.',next:'end',enter(){RM.sel='war';renderStation();}}]});
+  {say:'Sensors calibrates Terra-reels for credits, Alloy and crew. The War room sets your chain combos. Three kinds of upgrade: Ship systems (weapons to fuel, in the Shipyard), SubSystems (picked up during a run, last the campaign) and Tile systems (what rides on your board). That is the whole loop: earn, build, upgrade, launch.',next:'end',enter(){RM.sel='war';renderStation();}}]});
 let TRSOON=[];
 
 function trRects(st){
@@ -6112,8 +6129,8 @@ function trBoard(rows){
   B.waiters.length=0;B.dying=[];B.beams=[];B.bomb=null;B.barr=null;B.pops=[];B.hazards=[];B.sel=null;B.hint=null;B.idle=0;B.glow=null;
   if(!rows)fillBoard();
   else B.grid=rows.map((row,r)=>[...row].map((ch,c)=>{const k='abcdefghij'.indexOf(ch);let t,sp=0;
-    if(k>=0){t=k%5;sp=k<5?1:2;}else if(ch==='N'){t=NOVA;sp=3;}else if(ch==='C')t=BUCKS;else if(ch==='X')t=CRATE;else t=+ch;
-    const tl=newTile(t,r,c,r-ROWS-1-c*.35);tl.sp=sp;return tl;}));
+    if(k>=0){t=k%5;sp=k<5?1:2;}else if(ch==='N'){t=NOVA;sp=3;}else if(ch==='C')t=BUCKS;else if(ch==='X')t=CRATE;else if('klm'.includes(ch)){t=0;sp=4;}else t=+ch;
+    const tl=newTile(t,r,c,r-ROWS-1-c*.35);tl.sp=sp;if(sp===4)tl.fm='klm'.indexOf(ch);return tl;}));
   B.busy=true;settle().then(()=>{B.busy=false;});}
 async function trGo(i){
   const ch=TRAIN_CH[TR.ci];TR.advancing=true;TR.step=null;
