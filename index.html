@@ -3631,12 +3631,12 @@ const STORM_NAMES=['WEAPONS','SHIELDS','SENSORS','ENGINES'],STORM_MAX=10,stormAm
 function stormInit(){const s=IL,W=s.W,H=s.H,lw=Math.floor((W-80)/4)-8,gx=Math.round((W-(lw*4+24))/2),y0=Math.round(H*.74),lh=Math.round(H*.4);
   s.sm={lw,lh,y0,gx,t:0,TL:18,next:2.2,banks:Math.min(4,1+core('storm')),used:0,lanes:[0,1,2,3].map(m=>({m,v:0,spd:.95+Math.random()*.5,fq:.5+Math.random()*1.1,ph:Math.random()*6.3,banked:false,bv:0,warn:0,hit:0})),bolt:null,flash:0,fin:0};}
 function stormStep(dt){const s=IL,k=s.sm;if(!k)return;if(s.end)return;k.t+=dt;k.flash=Math.max(0,k.flash-dt*3);
-  for(const l of k.lanes){l.hit=Math.max(0,l.hit-dt*2);if(l.banked)continue;l.v=Math.min(STORM_MAX,l.v+l.spd*(.5+.95*(.5+.5*Math.sin(k.t*l.fq+l.ph)))*dt);if(l.warn>0){l.warn-=dt;if(l.warn<=0){l.v=0;l.hit=1;k.bolt={m:l.m,t:0};k.flash=1;s.flash=.25;sfx.boom&&sfx.boom();}}}
+  for(const l of k.lanes){l.hit=Math.max(0,l.hit-dt*2);if(l.banked)continue;if(l.v>=8.2&&!l.warn){l.hold=(l.hold||0)+dt;if(l.hold>.55){l.hold=0;l.warn=Math.random()<.5?.3:.8;tone(180,.4,'sawtooth',.05,0,0);}}else if(l.v<8.2)l.hold=0;l.v=Math.min(STORM_MAX,l.v+l.spd*(.5+.95*(.5+.5*Math.sin(k.t*l.fq+l.ph)))*dt);if(l.warn>0){l.warn-=dt;if(l.warn<=0){l.v=0;l.hit=1;k.bolt={m:l.m,t:0};k.flash=1;s.flash=.25;sfx.boom&&sfx.boom();}}}
   if(k.bolt){k.bolt.t+=dt;if(k.bolt.t>.3)k.bolt=null;}
   k.next-=dt;if(k.next<=0){const n=1+(k.t>4?1:0)+(Math.random()<.22?1:0)+(k.t>10&&Math.random()<.3?1:0);
     for(let q=0;q<n;q++){const open=k.lanes.filter(l=>!l.banked&&!l.warn&&l.v>=.7);if(!open.length)break;let tot=open.reduce((a,l)=>a+l.v*l.v+.6,0),r=Math.random()*tot,l=open[0];for(const o of open){r-=o.v*o.v+.6;if(r<=0){l=o;break;}}
       const x=Math.random();l.warn=x<.3?.3:x<.65?.8:1.4;tone(180,.4,'sawtooth',.05,0,0);}
-    k.next=Math.max(.22,.8-k.t*.03)*(.55+Math.random()*.9);}
+    k.next=Math.max(.2,.6-k.t*.025)*(.5+Math.random()*.9);}
   if(k.lanes.every(l=>l.banked)){k.fin+=dt;if(k.fin>.7){return ilEnd();}}
   if(k.t>=k.TL){for(const l of k.lanes)if(!l.banked){l.banked=true;l.bv=Math.floor(stormAmt(l.v)*.5);l.auto=true;}return ilEnd();}}
 function stormTap(x,y){const s=IL,k=s.sm;if(!k||s.end)return;
@@ -3693,23 +3693,26 @@ function ilBurnResult(){const s=IL,b=s.bn,tst=!!s.test,au=+(Math.min(40,b.passed
   if(!tst){G.dist=Math.min(G.len-.2,G.dist+au);G.gap=Math.min(100,G.gap+gp);G.fx.push({k:'burst',t:0,d:1});G.od=0;odSync();if(au)vpPop(`AFTERBURN +${au} AU`,'#ff9640');}
   $('#ilCv').hidden=true;$('#brstRes').hidden=false;$('#brstT').textContent='AFTERBURN'+(tst?' · TEST':'');
   $('#brstBody').innerHTML=`<p class="rl-h">${b.passed} gate${b.passed===1?'':'s'} cleared${b.won?'. A perfect run.':b.passed?'. The burn ended in a crash.':'. We never got going.'}</p><div class="payout"><div><span>Distance</span><b>+${au} AU</b></div><div><span>Pursuer pushed back</span><b>+${gp}</b></div></div>`;sfx.win();}
-function railInit(){const s=IL;s.rl={a:0,spd:2.3,zc:Math.random()*6.283,zw:.95,rounds:core('rail'),t:0,TL:12,jam:0,perf:0,flash:0};}
+function railInit(){const s=IL;s.rl={a:0,spd:2.3,zc:Math.random()*6.283,zw:.95,rounds:0,lives:1+core('rail'),idle:0,t:0,TL:12,jam:0,perf:0,flash:0};}
 function railTap(){const s=IL,k=s.rl;if(!k||s.end||k.jam>0)return;const d=Math.abs(((k.a-k.zc+Math.PI)%6.283+6.283)%6.283-Math.PI);
-  if(d<=k.zw/2){const pf=d<=k.zw*.14;k.rounds=Math.min(20,k.rounds+(pf?2:1));k.TL=Math.min(40,k.TL+(pf?1.5:1));if(pf)k.perf++;k.flash=1;sfx.coin();tone(900+k.rounds*40,.1,'square',.06);k.spd=Math.min(5.2,k.spd*1.1);k.zw=Math.max(.34,k.zw-.06);k.zc=k.a+1.6+Math.random()*3;s.fx.push({x:s.W/2,y:s.H*.42,t:0,txt:pf?'+2':'+1'});}
-  else{k.jam=.7;k.rounds=Math.max(0,k.rounds-1);s.flash=.3;sfx.bad();}}
-function railStep(dt){const s=IL,k=s.rl;if(!k||s.end)return;k.t+=dt;k.a=(k.a+k.spd*dt)%6.283;k.jam=Math.max(0,k.jam-dt);k.flash=Math.max(0,k.flash-dt*3);if(k.t>=k.TL)ilEnd();}
+  if(d<=k.zw/2){const pf=d<=k.zw*.14;k.rounds=Math.min(99,k.rounds+(pf?2:1));k.idle=0;k.TL=Math.min(90,k.TL+(pf?1.5:1));if(pf)k.perf++;k.flash=1;sfx.coin();tone(900+k.rounds*40,.1,'square',.06);k.spd=Math.min(5.2,k.spd*1.1);k.zw=Math.max(.34,k.zw-.06);k.zc=k.a+1.6+Math.random()*3;s.fx.push({x:s.W/2,y:s.H*.42,t:0,txt:pf?'+2':'+1'});}
+  else{railMiss(s,k);}}
+function railMiss(s,k){k.jam=.7;k.lives--;k.idle=0;s.flash=.3;sfx.bad();if(k.lives<=0){k.out=true;ilEnd();}}
+function railStep(dt){const s=IL,k=s.rl;if(!k||s.end)return;k.t+=dt;k.a=(k.a+k.spd*dt)%6.283;k.jam=Math.max(0,k.jam-dt);k.flash=Math.max(0,k.flash-dt*3);k.idle+=dt;if(k.idle>6.283/k.spd*1.15&&!k.out)railMiss(s,k);if(k.t>=k.TL)ilEnd();}
 function railDraw(c,s,t){const k=s.rl;if(!k)return;const W=s.W,H=s.H,cx=W/2,cy=H*.46,R=Math.min(W,H)*.27;
   c.lineWidth=14;c.strokeStyle='#14203a';c.beginPath();c.arc(cx,cy,R,0,6.283);c.stroke();
   c.strokeStyle=k.jam>0?'#ff5c6c':'#38e09b';c.shadowColor=c.strokeStyle;c.shadowBlur=10;c.beginPath();c.arc(cx,cy,R,k.zc-k.zw/2,k.zc+k.zw/2);c.stroke();c.shadowBlur=0;
   c.strokeStyle='#e1f9ff';c.lineWidth=3;c.beginPath();c.moveTo(cx+Math.cos(k.a)*(R-16),cy+Math.sin(k.a)*(R-16));c.lineTo(cx+Math.cos(k.a)*(R+16),cy+Math.sin(k.a)*(R+16));c.stroke();
   c.fillStyle=`rgba(127,243,255,${.15+k.flash*.5})`;c.beginPath();c.arc(cx,cy,R*.6,0,6.283);c.fill();
   c.textAlign='center';c.fillStyle='#e1f9ff';c.font='700 40px Oxanium, sans-serif';c.fillText(String(k.rounds),cx,cy+14);c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText('ROUNDS',cx,cy+30);
-  c.fillStyle='#7ff3ff';c.font='700 22px Oxanium, sans-serif';c.fillText(`${k.rounds} shots in the strafing run`,W/2,56);c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText(k.jam>0?'JAMMED':'TAP WHEN THE NEEDLE IS IN THE GREEN · CENTRE LOADS 2',W/2,72);
+  c.fillStyle='#7ff3ff';c.font='700 22px Oxanium, sans-serif';c.fillText(`${k.rounds} shots in the strafing run`,W/2,56);c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText(k.jam>0?'JAMMED':'TAP IN THE GREEN EVERY LAP · CENTRE LOADS 2',W/2,72);
   const u=Math.max(0,1-k.t/k.TL);c.fillStyle='#1a2440';c.fillRect(W*.2,78,W*.6,5);c.fillStyle='#7ff3ff';c.fillRect(W*.2,78,W*.6*u,5);
-  for(let i=0;i<20;i++){c.fillStyle=i<k.rounds?'#ffd84a':'#1a2440';c.fillRect(W*.2+i*(W*.6/20),cy+R+34,W*.6/20-3,12);}}
+  for(let i=0;i<20;i++){c.fillStyle=i<k.rounds?'#ffd84a':'#1a2440';c.fillRect(W*.2+i*(W*.6/20),cy+R+34,W*.6/20-3,12);}
+  if(k.rounds>20){c.fillStyle='#ffd84a';c.font='700 12px Oxanium, sans-serif';c.fillText('+'+(k.rounds-20),W*.82,cy+R+44);}
+  for(let i=0;i<k.lives;i++){c.fillStyle='#ff5c6c';c.beginPath();c.arc(W/2-(k.lives-1)*10+i*20,cy+R+68,5,0,6.28);c.fill();}c.fillStyle='#7f8fb2';c.font='8px Silkscreen, monospace';c.fillText(k.lives===1?'ONE MISS ENDS IT':k.lives+' MISSES LEFT',W/2,cy+R+86);}
 function ilRailResult(){const s=IL,k=s.rl,tst=!!s.test;if(!tst){G.barrQ=(G.barrQ||0)+k.rounds;G.od=0;odSync();if(k.rounds)vpPop('RAIL LOADED · '+k.rounds,'#7ff3ff');}
   $('#ilCv').hidden=true;$('#brstRes').hidden=false;$('#brstT').textContent='RAIL LOADER'+(tst?' · TEST':'');
-  $('#brstBody').innerHTML=`<p class="rl-h">${k.rounds} round${k.rounds===1?'':'s'} loaded${k.perf?`, ${k.perf} dead centre`:''}. They fire at the board as a strafing run once it settles.</p><div class="payout"><div><span>Rounds</span><b>${k.rounds}</b></div></div>`;sfx.win();}
+  $('#brstBody').innerHTML=`<p class="rl-h">${k.rounds} round${k.rounds===1?'':'s'} loaded${k.perf?`, ${k.perf} dead centre`:''}${k.out?'. The loader jammed.':''}. They fire at the board as a strafing run once it settles.</p><div class="payout"><div><span>Rounds</span><b>${k.rounds}</b></div></div>`;sfx.win();}
 function ilPipeResult(){const s=IL,p=s.pp,tst=!!s.test,fu=pipeFuel(p);let real=fu;if(!tst){const was=G.fuel;G.fuel=Math.min(ST.tank,G.fuel+fu);real=Math.round(G.fuel-was);pulseFuel();G.od=0;odSync();}
   $('#ilCv').hidden=true;$('#brstRes').hidden=false;$('#brstT').textContent='FUEL SNAKE'+(tst?' · TEST':'');
   $('#brstBody').innerHTML=`<p class="rl-h">${p.n} fuel cell${p.n===1?'':'s'} gathered${p.cross?`, ${p.cross} bonus`:''}${p.dead?'. The line broke.':'. Time ran out.'}</p><div class="payout"><div><span>Fuel</span><b>+${real}</b></div></div>`;sfx.win();}
@@ -4596,7 +4599,7 @@ const CORE_UP=[
  {k:'repair',g:'▤',n:'Emergency repair',d:r=>`+${r*12}% hull from the stack`},
  {k:'storm',g:'⚡',n:'Storm stopper',d:r=>`${r+1} bank attempt${r?'s':''} (the rest auto-bank at half)`},
  {k:'burn',g:'≫',n:'Afterburn',d:r=>`+${r*15}% AU for every gate`},
- {k:'rail',g:'✹',n:'Rail loader',d:r=>`start with ${r} round${r===1?'':'s'} already loaded`}];
+ {k:'rail',g:'✹',n:'Rail loader',d:r=>`${r+1} miss${r?'es':''} allowed before the loader jams`}];
 const CORE_COST=[[3,60],[6,130],[10,240]];
 function renderCore(){const stn=ensureStation(),cap=rl('tach');
   $('#coreBody').innerHTML=`<p class="hg-note" style="margin-top:0">Tune the core for each Overdrive mini-game. Your core level (${cap}) sets the highest rank.</p><div class="rl-list">`+CORE_UP.map(u=>{const r=core(u.k),nx=r<cap&&r<3,c=CORE_COST[r]||[0,0],ok=nx&&stn.alloy>=c[0]&&S.bucks>=c[1];
@@ -5504,7 +5507,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v109';
+const BUILD='v110';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
