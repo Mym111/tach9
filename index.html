@@ -834,6 +834,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
   <section class="screen off" id="station">
     <div class="topbar">
       <button class="iconbtn" id="stBack" aria-label="Back to galaxy map">‹</button>
+      <button class="iconbtn" id="stWho" aria-label="Captain profile and ship name" style="padding:3px"><canvas class="pix" id="stPilot" width="10" height="10" style="width:26px;height:26px"></canvas></button>
       <div class="tb-title">Ship</div>
       <button class="bucks w4" id="stBucks" aria-label="Credits, Alloy, Legend and Ship rating"></button>
     <button class="iconbtn gear" aria-label="Options"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M7 0h2l.4 2.1 1.3.5 1.8-1.2 1.4 1.4-1.2 1.8.5 1.3L16 7v2l-2.1.4-.5 1.3 1.2 1.8-1.4 1.4-1.8-1.2-1.3.5L9 16H7l-.4-2.1-1.3-.5-1.8 1.2-1.4-1.4 1.2-1.8-.5-1.3L0 9V7l2.1-.4.5-1.3-1.2-1.8 1.4-1.4 1.8 1.2 1.3-.5zM8 5a3 3 0 100 6 3 3 0 000-6z"/></svg></button></div>
@@ -4573,7 +4574,7 @@ function renderStation(){
   const stn=ensureStation();crewSync();const g=ensureGalaxy(),here=g.stars[g.at];g.stars.forEach(alloyInit);
   $('#stBucks').innerHTML=wallet();
   $('#stLabel').textContent=`PARKED AT ${here.name.toUpperCase()}`;
-  if(!RM.pc)RM.pc=blankCanvas(10,10);drawPortrait(RM.pc,S.pilot);
+  if(!RM.pc)RM.pc=blankCanvas(10,10);drawPortrait(RM.pc,S.pilot);drawPortrait($('#stPilot'),S.pilot);
   // room chips
   const tabs=$('#rtabs');tabs.innerHTML='';
   for(const d of ROOMS){const L=rl(d.k),b=document.createElement('button');b.className='rtab';b.setAttribute('role','tab');
@@ -5531,7 +5532,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v113';
+const BUILD='v114';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5660,6 +5661,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function goSplash(){scene='splash';SP.shipX=-innerWidth*.6;renderSplash();renderInstall();only('#splash');}
 function goMap(){if($('#chartBox'))$('#chartBox').classList.remove('big'),$('#zBig').textContent='⤢',MAP.z=1,MAP.panX=MAP.panY=0;scene='map';renderMap();only('#map');}
 function goHangar(){scene='hangar';renderHangar();only('#hangar');}
+function openQuarters(){ensureStation();H.tab='quarters';H.room='habitat';H.intro=false;sfx.tick();goHangar();const b=$('#hangar .hg-body');if(b)b.scrollTop=0;}
 function openPilotIntro(){H.tab='quarters';H.room='habitat';H.intro=true;goHangar();}
 function pilotDone(){H.intro=false;sfx.tick();goMap();}
 function applyWarBoost(){if(!G.warPend)return;G.warPend=false;{const ls=TR||!CHOICE?0:((S.loss||{})[CHOICE.starId]||0);if(ls){for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2*ls);setTimeout(()=>{if(scene==='game'&&G.running)vpPop(`LESSONS LEARNED · ALL SYSTEMS +${2*ls}`,'#ffd84a');},700);}}const w=Math.max(0,rle('war')-1)*2+(peak('war')?2:0);if(!w)return;const n=[0,0,0,0];for(const row of B.grid)for(const x of row)if(x&&x.t<4)n[x.t]++;const m=n.indexOf(Math.max(...n));
@@ -5927,7 +5929,7 @@ $('#callIn').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur();}
 $('#cmdIn').addEventListener('input',e=>{S.cmd=e.target.value.replace(/[<>]/g,'').slice(0,CMD_MAX);persist();$('#cmdChips').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(cmdText()===b.textContent)));});
 $('#cmdIn').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur();});
 $('#warpCv').addEventListener('click',e=>warpTap(e));
-$('.who').onclick=()=>{ensureStation();openRoom('habitat');};
+$('.who').onclick=openQuarters;$('#stWho').onclick=openQuarters;
 function askChoice(title,html,a,b){return new Promise(res=>{$('#cfTitle').textContent=title;$('#cfBody').innerHTML=html;$('#cfYes').textContent=a;$('#cfNo').textContent=b;
   const done=v=>{show('#confirm',false);sfx.tick();$('#cfNo').textContent='Back';res(v);};$('#cfYes').onclick=()=>done('a');$('#cfNo').onclick=()=>done('b');$('#cfX').onclick=()=>done(null);show('#confirm',true);sfx.tick();});}
 function askConfirm(title,html,yes='Launch'){return new Promise(res=>{$('#cfTitle').textContent=title;$('#cfBody').innerHTML=html;$('#cfYes').textContent=yes;
