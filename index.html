@@ -3629,19 +3629,20 @@ function pipeDraw(c,s,t){const p=s.pp;if(!p)return;const cs=p.cs,gx=p.gx,gy=p.gy
 /* ---- Storm stopper: bank power into the four systems before lightning wipes it */
 const STORM_NAMES=['WEAPONS','SHIELDS','SENSORS','ENGINES'],STORM_MAX=10,stormAmt=v=>Math.floor(v*v*.2),stormCol=w=>w>.8?'#4da6ff':w>.4?'#ffd84a':'#ff5c6c';
 function stormInit(){const s=IL,W=s.W,H=s.H,lw=Math.floor((W-80)/4)-8,gx=Math.round((W-(lw*4+24))/2),y0=Math.round(H*.74),lh=Math.round(H*.4);
-  s.sm={lw,lh,y0,gx,t:0,TL:18,next:2.2,banks:Math.min(4,1+core('storm')),used:0,lanes:[0,1,2,3].map(m=>({m,v:0,spd:.95+Math.random()*.5,fq:.5+Math.random()*1.1,ph:Math.random()*6.3,banked:false,bv:0,warn:0,hit:0})),bolt:null,flash:0,fin:0};}
+  s.sm={lw,lh,y0,gx,t:0,TL:18,next:2.2,lanes:[0,1,2,3].map(m=>({m,v:Math.random()*10,tv:Math.random()*10,rs:(5+Math.random()*7)*(1-.08*core('storm')),pend:0,banked:false,bv:0,warn:0,hit:0})),bolt:null,flash:0,fin:0};}
 function stormStep(dt){const s=IL,k=s.sm;if(!k)return;if(s.end)return;k.t+=dt;k.flash=Math.max(0,k.flash-dt*3);
-  for(const l of k.lanes){l.hit=Math.max(0,l.hit-dt*2);if(l.banked)continue;if(l.v>=8.2&&!l.warn){l.hold=(l.hold||0)+dt;if(l.hold>.55){l.hold=0;l.warn=Math.random()<.5?.3:.8;tone(180,.4,'sawtooth',.05,0,0);}}else if(l.v<8.2)l.hold=0;l.v=Math.min(STORM_MAX,l.v+l.spd*(.5+.95*(.5+.5*Math.sin(k.t*l.fq+l.ph)))*dt);if(l.warn>0){l.warn-=dt;if(l.warn<=0){l.v=0;l.hit=1;k.bolt={m:l.m,t:0};k.flash=1;s.flash=.25;sfx.boom&&sfx.boom();}}}
+  for(const l of k.lanes){l.hit=Math.max(0,l.hit-dt*2);if(l.banked)continue;{const dv=l.tv-l.v,st=l.rs*(1+k.t*.03)*dt;if(Math.abs(dv)<=st){l.v=l.tv;l.tv=Math.random()<.3?(Math.random()<.5?0:STORM_MAX):Math.random()*STORM_MAX;l.rs=(5+Math.random()*7)*(1-.08*core('storm'))*(1+k.t*.03);}else l.v+=Math.sign(dv)*st;}
+    if(l.pend>0){l.pend-=dt;if(l.pend<=0){l.banked=true;l.bv=stormAmt(l.v);l.warn=0;sfx.coin();tone(700+l.bv*60,.12,'sine',.08);const i=k.lanes.indexOf(l);s.fx.push({x:k.gx+i*(k.lw+8)+k.lw/2,y:k.y0-k.lh*l.v/STORM_MAX,t:0,txt:'+'+l.bv,boom:false});}continue;}if(l.warn>0){l.warn-=dt;if(l.warn<=0){l.v=0;l.hit=1;k.bolt={m:l.m,t:0};k.flash=1;s.flash=.25;sfx.boom&&sfx.boom();}}}
   if(k.bolt){k.bolt.t+=dt;if(k.bolt.t>.3)k.bolt=null;}
   k.next-=dt;if(k.next<=0){const n=1+(k.t>4?1:0)+(Math.random()<.22?1:0)+(k.t>10&&Math.random()<.3?1:0);
-    for(let q=0;q<n;q++){const open=k.lanes.filter(l=>!l.banked&&!l.warn&&l.v>=.7);if(!open.length)break;let tot=open.reduce((a,l)=>a+l.v*l.v+.6,0),r=Math.random()*tot,l=open[0];for(const o of open){r-=o.v*o.v+.6;if(r<=0){l=o;break;}}
+    for(let q=0;q<n;q++){const open=k.lanes.filter(l=>!l.banked&&!(l.pend>0)&&!l.warn&&l.v>=.7);if(!open.length)break;let tot=open.reduce((a,l)=>a+l.v*l.v+.6,0),r=Math.random()*tot,l=open[0];for(const o of open){r-=o.v*o.v+.6;if(r<=0){l=o;break;}}
       const x=Math.random();l.warn=x<.3?.3:x<.65?.8:1.4;tone(180,.4,'sawtooth',.05,0,0);}
     k.next=Math.max(.2,.6-k.t*.025)*(.5+Math.random()*.9);}
   if(k.lanes.every(l=>l.banked)){k.fin+=dt;if(k.fin>.7){return ilEnd();}}
   if(k.t>=k.TL){for(const l of k.lanes)if(!l.banked){l.banked=true;l.bv=Math.floor(stormAmt(l.v)*.5);l.auto=true;}return ilEnd();}}
 function stormTap(x,y){const s=IL,k=s.sm;if(!k||s.end)return;
-  k.lanes.forEach((l,i)=>{const lx=k.gx+i*(k.lw+8);if(x<lx-6||x>lx+k.lw+6||y<k.y0-k.lh-50||y>k.y0+50)return;if(l.banked)return;if(l.v<1){sfx.bad();return;}
-    if(k.used>=k.banks)return;k.used++;l.banked=true;l.bv=stormAmt(l.v);l.warn=0;if(k.used>=k.banks)for(const o of k.lanes)if(!o.banked){o.banked=true;o.bv=Math.floor(stormAmt(o.v)*.5);o.auto=true;o.warn=0;}sfx.coin();tone(700+l.bv*60,.12,'sine',.08);s.fx.push({x:lx+k.lw/2,y:k.y0-k.lh*l.v/STORM_MAX,t:0,txt:'+'+l.bv,boom:false});});}
+  k.lanes.forEach((l,i)=>{const lx=k.gx+i*(k.lw+8);if(x<lx-6||x>lx+k.lw+6||y<k.y0-k.lh-50||y>k.y0+50)return;if(l.banked||l.pend>0)return;
+    l.pend=.08+Math.random()*.2;tone(420,.06,'square',.05);});}
 function stormDraw(c,s,t){const k=s.sm;if(!k)return;const W=s.W,H=s.H;
   // storm cloud
   c.fillStyle=`rgba(30,38,70,${.85})`;for(let i=0;i<9;i++){const x=W*(.12+i*.095)+Math.sin(t*.7+i)*8,y=124+Math.cos(t*.5+i*2)*6;c.beginPath();c.ellipse(x,y,46,22,0,0,6.28);c.fill();}
@@ -3659,7 +3660,7 @@ function stormDraw(c,s,t){const k=s.sm;if(!k)return;const W=s.W,H=s.H;
     if(l.banked){c.fillStyle='#38e09b';c.font='8px Silkscreen, monospace';c.fillText(l.auto?'AUTO':'BANKED',lx+k.lw/2,top+k.lh+0*1+ -k.lh+14);}});
   if(k.bolt){const l=k.lanes[k.bolt.m],lx=k.gx+k.bolt.m*(k.lw+8)+k.lw/2;c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();let x=lx+(Math.random()-.5)*20,y=136;c.moveTo(x,y);while(y<k.y0-4){y+=24;x=lx+(Math.random()-.5)*30;c.lineTo(x,y);}c.stroke();}
   c.textAlign='center';c.fillStyle='#38e09b';c.font='700 22px Oxanium, sans-serif';c.fillText(`+${banked} banked`,W/2,56);
-  c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText(`${k.banks-k.used} BANK${k.banks-k.used===1?'':'S'} LEFT · BLUE SLOW · YELLOW SOON · RED NOW`,W/2,72);
+  c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText('TAP A BAR TO STOP IT · IT SLIPS A MOMENT · BLUE SLOW, YELLOW SOON, RED NOW',W/2,72);
   const u=Math.max(0,1-k.t/k.TL);c.fillStyle='#1a2440';c.fillRect(W*.2,78,W*.6,5);c.fillStyle='#7ff3ff';c.fillRect(W*.2,78,W*.6*u,5);
   if(s.end){c.fillStyle='rgba(4,7,16,.45)';c.fillRect(0,0,W,H);}}
 function ilStormResult(){const s=IL,k=s.sm,tst=!!s.test;const lines=[];let tot=0;
@@ -4597,7 +4598,7 @@ const CORE_UP=[
  {k:'counter',g:'⌖',n:'Counterfire',d:r=>`+${(r*1.5).toFixed(1)} s in the main window`},
  {k:'pipe',g:'⌗',n:'Fuel snake',d:r=>`+${r*15}% fuel from the snake`},
  {k:'repair',g:'▤',n:'Emergency repair',d:r=>`+${r*12}% hull from the stack`},
- {k:'storm',g:'⚡',n:'Storm stopper',d:r=>`${r+1} bank attempt${r?'s':''} (the rest auto-bank at half)`},
+ {k:'storm',g:'⚡',n:'Storm stopper',d:r=>`reels run ${r*8}% slower`},
  {k:'burn',g:'≫',n:'Afterburn',d:r=>`+${r*15}% AU for every gate`},
  {k:'rail',g:'✹',n:'Rail loader',d:r=>`${r+1} miss${r?'es':''} allowed before the loader jams`}];
 const CORE_COST=[[3,60],[6,130],[10,240]];
@@ -5507,7 +5508,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v110';
+const BUILD='v111';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
