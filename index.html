@@ -1320,7 +1320,7 @@ const peak=k=>!!(S.station&&rl(k)&&crewState(k)==='peak');
 
 const UP_TEXT={
   wpn:['+2 capacity','+2 capacity, +1 charge per match','+2 capacity, kills put out a fire','+2 capacity, +1 more charge per match'],
-  shd:['+2 capacity','+2 capacity, +1 charge per match','+2 capacity, +25 max hull','+2 capacity, +1 more charge per match'],
+  shd:['+2 capacity, +6% max hull','+2 capacity, +1 charge per match, +6% hull','+2 capacity, +25 max hull, +6% hull','+2 capacity, +1 more charge, +6% hull'],
   sns:['+2 capacity, longer sensor range','+2 capacity, +1 charge per match','+2 capacity, longer sensor range','+2 capacity, +1 more charge, longer range'],
   eng:['+2 capacity, 8% less fuel drain','+2 capacity, +1 charge per match','+2 capacity, start 15 further from pursuer','+2 capacity, +1 more charge, 8% less drain'],
   fuel:['+15 tank size','+15 tank, +1 fuel per fuel tile','+15 tank size','+15 tank, +1 more fuel per tile'],
@@ -1345,7 +1345,7 @@ function stats(){const s=stats0();if(relicHas('plating'))s.hullMax+=15;if(relicH
 function stats0(){const u=S.up,lv=l=>Math.min(l,4),ex=l=>Math.max(0,l-4);return{
   cap:[u.wpn,u.shd,u.sns,u.eng].map(l=>Math.round((10+2*lv(l))*(1+.06*ex(l)))),
   eff:[u.wpn,u.shd,u.sns,u.eng].map(l=>(l>=2?1:0)+(l>=4?1:0)),
-  pointDef:u.wpn>=3,hullMax:Math.round((100+(u.shd>=3?25:0))*(1+.05*ex(u.shd))),
+  pointDef:u.wpn>=3,hullMax:Math.round((100+(u.shd>=3?25:0))*(1+.06*u.shd)),
   sensor:Math.max(.08,.35-.04*(lv(u.sns)+(u.sns>=4?1:0))-.01*ex(u.sns)),
   drainMul:Math.max(.5,1-.08*((u.eng>=1?1:0)+(u.eng>=4?1:0))-.015*ex(u.eng)),
   gapStart:55+(u.eng>=3?15:0),tank:100+15*u.fuel,fuelTile:2+(u.fuel>=2?1:0)+(u.fuel>=4?1:0),
@@ -4942,7 +4942,7 @@ function renderHangar(){
   // --- ship ---
   const up=$('#upgrades');up.innerHTML='';
   UP_KEYS.forEach((k,i)=>{
-    const lvl=S.up[k],ty=TYPES[i],max=false,cost=lvl<4?Math.round(UP_COST[lvl]):Math.round(UP_COST[3]*Math.pow(1.32,lvl-3)),yard=lvl<4&&lvl>=rle('shipyard'),ocTxt=k==='fuel'?'Overclock: +15 fuel tank, every level':'Overclock: about +1 capacity every level, and it keeps growing.';
+    const lvl=S.up[k],ty=TYPES[i],max=false,cost=lvl<4?Math.round(UP_COST[lvl]):Math.round(UP_COST[3]*Math.pow(1.32,lvl-3)),yard=lvl<4&&lvl>=rle('shipyard'),ocTxt=k==='fuel'?'Overclock: +15 fuel tank, every level':k==='shd'?'Overclock: about +1 capacity and +6% max hull every level.':'Overclock: about +1 capacity every level, and it keeps growing.';
     const row=document.createElement('div');row.className='up';row.style.setProperty('--c',ty.color);
     row.append(iconCanvas(i));
     row.insertAdjacentHTML('beforeend',`<div class="up-name" style="color:${ty.color}">${ty.name.toUpperCase()}<span class="pips">${[0,1,2,3].map(j=>`<i class="${j<lvl?'on':''}"></i>`).join('')}${lvl>4?`<b class="ovc">+${lvl-4}</b>`:''}</span></div>
@@ -5553,7 +5553,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v121';
+const BUILD='v122';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
