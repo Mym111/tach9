@@ -1663,12 +1663,12 @@ function resolve(e){
       G.bounty+=Math.round((SYS.bounty||2)*(gs?1.5:1));
       if(ST.pointDef)extinguishOne();}
     else{const dmg=Math.round(EVENTS[e.type].amt*short);G.fx.push({k:'laser',x1:ex,y1:ey,x2:sx-6,y2:sy,c:'#ffb547',t:-.15,d:.3});
-      e.passing=true;e.x=ex;damage(dmg,e.type);vpPop(`HULL -${dmg}`,'#ff4d5e');queueHazard('fire',1+Math.round(short*2)+extra);}
+      e.passing=true;e.x=ex;damage(dmg,e.type);vpPop(`HULL -${dmg}`,'#ff4d5e');queueHazard('fire',Math.max(1,Math.round(short*(3+extra))));}
   }else if(e.type==='asteroid'){
     if(got>0)G.fx.push({k:'shield',t:0,d:.7});
     boom(ex,ey,['#86735f','#ad967a','#5e5048'],18);e.dead=true;
     if(perfect){vpPop('DEFLECTED','#4da6ff');sfx.good();G.bounty+=1;}
-    else{const dmg=Math.round(EVENTS.asteroid.amt*short);damage(dmg,'asteroid');vpPop(`HULL -${dmg}`,'#ff4d5e');queueHazard('debris',1+Math.round(short*3)+extra);}
+    else{const dmg=Math.round(EVENTS.asteroid.amt*short);damage(dmg,'asteroid');vpPop(`HULL -${dmg}`,'#ff4d5e');queueHazard('debris',Math.max(1,Math.round(short*(4+extra))));}
   }else if(e.type==='planet'){
     G.fx.push({k:'scan',x2:ex,y2:ey,r:e.spr.height/2,ok:ratio>0,t:0,d:.9});
     const gain=Math.round(EVENTS.planet.amt*ratio*(SYS.richPlanets?1.1:1));e.passing=true;e.x=ex;
@@ -5553,7 +5553,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v120';
+const BUILD='v121';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
