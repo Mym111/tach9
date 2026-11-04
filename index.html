@@ -474,6 +474,7 @@ button:disabled{cursor:default}
 .chainctr{position:absolute;left:50%;top:6px;--ty:0px;transform:translate(-50%,var(--ty)) rotate(-5deg);z-index:90;pointer-events:none;text-align:center;line-height:.9;display:flex;align-items:baseline;gap:6px;white-space:nowrap}
 .chainctr.big{top:50%;--ty:-50%}.chainctr.big small{font-size:22px}
 .chainctr[hidden]{display:none}
+.tilectr{position:absolute;left:8px;top:4px;z-index:80;pointer-events:none;display:flex;align-items:baseline;gap:5px;opacity:.85}.tilectr small{font:9px Silkscreen,monospace;color:#7f8fb2;letter-spacing:.08em}.tilectr b{font:700 15px Oxanium,sans-serif;color:#e1e9f7;text-shadow:0 1px 0 #04101c}
 .chainctr.big b{font-size:calc(52px + var(--n,5)*4px)}
 .chainctr b{font:900 italic calc(30px + var(--n,2)*3px) Oxanium,sans-serif;color:hsl(calc(55 - var(--n,2)*4) 100% 58%);-webkit-text-stroke:5px #1a0a2e;paint-order:stroke fill;text-shadow:3px 4px 0 #1a0a2e,0 0 18px hsl(calc(55 - var(--n,2)*4) 100% 55%);display:inline-block}
 .chainctr small{font:900 italic 15px Oxanium,sans-serif;letter-spacing:.06em;color:#fff;-webkit-text-stroke:4px #1a0a2e;paint-order:stroke fill;text-shadow:2px 3px 0 #1a0a2e}
@@ -913,7 +914,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
       <div class="gauges" id="gauges"></div>
       <div class="boardwrap" id="boardwrap">
         <div class="vbar" id="hullBar" aria-label="Hull"><b id="hullNum">100</b><div class="track"><canvas class="gcv"></canvas></div><canvas class="pix vic" id="hullIc"></canvas></div>
-        <canvas id="board"></canvas><div class="chainctr" id="chainCtr" hidden><b>×2</b><small>CHAIN!</small></div>
+        <canvas id="board"></canvas><div class="chainctr" id="chainCtr" hidden><b>×2</b><small>CHAIN!</small></div><div class="tilectr" id="tileCtr"><small>TILES</small><b>0</b></div>
         <div class="vbar" id="fuelBar" aria-label="Fuel"><b id="fuelNum">100</b><div class="track"><canvas class="gcv"></canvas></div><canvas class="pix vic" id="fuelIc"></canvas></div>
       </div>
     </div>
@@ -1013,7 +1014,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
         <button class="od-tile" id="bpCounter"><i>⌖</i><b>Counterfire</b><small>push back the pursuer</small></button>
         <button class="od-tile" id="bpGun"><i>⌗</i><b>Fuel snake</b><small>steer a fuel line</small></button>
         <button class="od-tile" id="bpRepair"><i>▤</i><b>Repair</b><small>stack plates, mend hull</small></button>
-        <button class="od-tile" id="bpStorm"><i>⚡</i><b>Storm stopper</b><small>bank power into systems</small></button>
+        <button class="od-tile" id="bpStorm"><i>⚡</i><b>Power slots</b><small>spend fuel, spin charge</small></button>
         <button class="od-tile" id="bpBurn"><i>≫</i><b>Afterburn</b><small>fly the gates, gain distance</small></button>
         <button class="od-tile" id="bpRail"><i>✹</i><b>Rail loader</b><small>load rounds, blast tiles</small></button></div>
         <p class="od-hint">Tap every target. The first miss ends it.</p></div>
@@ -1963,12 +1964,13 @@ async function clearCells(set,chain,makes=[],wild=new Map()){
     const h=t.sp===1;B.beams.push({h,i:h?r:c,t:0,color:tdef(t.t).color});sfx.beam();
     for(let j=0;j<(h?COLS:ROWS);j++){const kk=h?r*COLS+j:j*COLS+c;if(!set.has(kk)){set.add(kk);queue.push(kk);}}
   }
-  for(const k of [...set]){const r=Math.floor(k/COLS),c=k%COLS,t=g[r][c];if(t&&t.sp===4){G.flare={r,until:G.time+5};boardPop('SOLAR FLARE',COLS/2,r+.5,'#ffb547');sfx.special();}}
+  for(const k of [...set]){const r=Math.floor(k/COLS),c=k%COLS,t=g[r][c];if(t&&t.sp===4){G.flare={r,until:G.time+2.5};boardPop('SOLAR FLARE',COLS/2,r+.5,'#ffb547');sfx.special();}}
   let broke=0;
   for(const k of [...set]){const r=Math.floor(k/COLS),c=k%COLS;
     for(const[dr,dc]of[[1,0],[-1,0],[0,1],[0,-1]]){const nr=r+dr,nc=c+dc;if(nr<0||nr>=ROWS||nc<0||nc>=COLS)continue;
       const t=g[nr][nc],nk=nr*COLS+nc;if(t&&t.t===DEBRIS&&!set.has(nk)){set.add(nk);broke++;}}}
   B.swapCleared=(B.swapCleared||0)+set.size;
+  G.cleared=(G.cleared||0)+set.size;{const e=$('#tileCtr b');if(e)e.textContent=G.cleared;}
   const gains=[0,0,0,0],crates=[];let fuel=0,fires=0,fr=0,fc=0,fn=0,bucks=0,br0=0,bc0=0;const br=B.cv.getBoundingClientRect();let streaks=0;
   for(const k of set){
     const r=Math.floor(k/COLS),c=k%COLS,t=g[r][c];if(!t)continue;
@@ -2040,7 +2042,7 @@ async function cascade(pivots){
 }
 async function flareBurn(){
   let n=0;
-  while(G.flare&&G.time<G.flare.until&&G.running&&!G.ending&&n++<12){
+  while(G.flare&&G.time<G.flare.until&&G.running&&!G.ending&&n++<5){
     const r=G.flare.r,set=new Set();
     for(let c=0;c<COLS;c++){const t=B.grid[r][c];if(t&&t.t!==DEBRIS&&!t.lock&&t.sp!==4)set.add(r*COLS+c);}
     if(!set.size)break;
@@ -2742,7 +2744,7 @@ function loadTileURL(k){if(_tileC[k])return _tileC[k];const cv=document.createEl
   else{const ty=tdef(0);c.fillStyle=ty.dark;rr(c,x,y,sz,sz,rad);c.fill();c.strokeStyle=ty.color+'80';c.lineWidth=2;c.stroke();c.drawImage(ICONS[0],12,12,24,24);
     c.strokeStyle='rgba(255,255,255,.88)';c.lineWidth=3;c.beginPath();c.moveTo(7,24);c.lineTo(41,24);c.moveTo(11,24);c.lineTo(17,19);c.moveTo(11,24);c.lineTo(17,29);c.moveTo(37,24);c.lineTo(31,19);c.moveTo(37,24);c.lineTo(31,29);c.stroke();}}catch(e){}
   return _tileC[k]=cv.toDataURL();}
-const SPECIAL_DESC={line:'Match 4 in a row to forge a line tile. Match it later to sweep its whole row or column.',nova:'Match 5 to forge a nova core. Swap it with any tile to clear every tile of that colour.',loot:'Credits tiles and salvage crates join the board.',flare:'Match an L, T or + shape to forge a flare tile. Match it later to set its row burning for 5 seconds: every tile that falls into that row is burned.'};
+const SPECIAL_DESC={line:'Match 4 in a row to forge a line tile. Match it later to sweep its whole row or column.',nova:'Match 5 to forge a nova core. Swap it with any tile to clear every tile of that colour.',loot:'Credits tiles and salvage crates join the board.',flare:'Match an L, T or + shape to forge a flare tile. Match it later to set its row burning for 2.5 seconds: every tile that falls into that row is burned.'};
 const LOAD_ICO={
  line:'<svg viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="4" rx="1" fill="currentColor"/><path d="M5 5l2 3M12 4v4M19 5l-2 3M5 19l2-3M12 20v-4M19 19l-2-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
  nova:'<svg viewBox="0 0 24 24"><path d="M12 2l2.2 6.8L21 6l-4.2 5.8L22 14l-7 1.2L12 22l-2.6-6.8L2 14l5.2-2.2L3 6l6.8 2.8z" fill="currentColor"/></svg>',
@@ -3512,7 +3514,7 @@ function odGain(n){if(TR||!feat('burst'))return;const was=G.od||0,need=odNeed();
 function openBurst(){if(IL||!G.running||G.ending||CINE||perkOpen||scene!=='game'||(G.od||0)<odNeed())return;
   IL={pick:true};IL_WAS=paused;paused=true;drag=null;
   $('#brstPick').hidden=false;$('#ilCv').hidden=true;$('#brstRes').hidden=true;$('#bpCounter').disabled=!feat('pursuer');$('#bpRepair').disabled=G.hull>=ST.hullMax-1;
-  {const f=odFuel(),ok=G.fuel>f+3;['bpCounter','bpRepair','bpStorm','bpBurn','bpRail'].forEach(id=>{const e=$('#'+id);e.disabled=e.disabled||!ok;});const h=document.querySelector('#brstPick .od-hint');if(h)h.textContent=`Each Overdrive burns ${f} fuel (${Math.round(G.fuel)} left). The Fuel snake is free. First miss ends a game.`;}
+  {const f=odFuel(),ok=G.fuel>f+3;['bpCounter','bpRepair','bpBurn','bpRail'].forEach(id=>{const e=$('#'+id);e.disabled=e.disabled||!ok;});$('#bpStorm').disabled=G.fuel<=slotCost()+3;const h=document.querySelector('#brstPick .od-hint');if(h)h.textContent=`Each Overdrive burns ${f} fuel (${Math.round(G.fuel)} left). Fuel snake is free. Power slots pay per line.`;}
   show('#burst',true);sfx.tick();{const bu=$('#burst');bu.style.pointerEvents='none';setTimeout(()=>{bu.style.pointerEvents='';},600);}}
 function openView(){if(IL||!G.running||G.ending||CINE||perkOpen||scene!=='game')return;
   IL={pick:true};IL_WAS=paused;paused=true;drag=null;show('#burst',true);startBurst('view');sfx.tick();}
@@ -3522,9 +3524,9 @@ function ilFinSet(s){if(s.mode==='view'||s.test)return;const hw=s.hw||0,ho=s.ho|
   if(s.mode==='burn'){const b=s.bn;s.fin={t:`${b.passed} GATES`,n:'AFTERBURN',s:`+${+(b.passed*.1*(1+.15*core('burn'))).toFixed(1)} AU`,c:'#ff9640',calm:false};}
   else if(s.mode==='pipe')s.fin={t:`${s.pp.n} FUEL CELLS`,n:'TANKS TOPPED',s:`+${pipeFuel(s.pp)} FUEL`,c:'#ffd84a',calm:true};
   else if(s.mode==='repair')s.fin={t:`${s.stk.n} LAYERS WELDED`,n:'HULL RESTORED',s:`+${stkRep(s.stk.n,s.stk.pf)} HULL`,c:'#5ef0d0',calm:true};
-  else if(s.mode==='storm')s.fin={t:`WAVE ${s.sm.wave||1}`,n:'POWER BANKED',s:'SYSTEMS CHARGED',c:'#7ff3ff',calm:true};
+  else if(s.mode==='storm'){const on=s.sm.reels.filter(r=>r.on),tot=on.reduce((a,r)=>a+r.v,0);s.fin={t:`${on.length} LINE${on.length>1?'S':''}`,n:'POWER SLOTS',s:`+${tot} CHARGE`,c:'#ffd84a',calm:true};}
   else if(s.mode==='counter')s.fin={t:`${hw+ho} HITS`,n:'PURSUER DRIVEN BACK',s:`+${Math.round(hw*2+ho*4)} GAP`,c:'#ff8a95',calm:true};}
-function ilTachUi(){const b=$('#ilTach'),s=IL;if(!b)return;const on=s&&!s.pick&&!s.end&&s.mode!=='view'&&!$('#ilCv').hidden;b.hidden=!on;if(!on)return;const tx=s.tach>0?`Slowed ${Math.ceil(s.tach)}s`:s.tl>0?`Use Tach ×${s.tl}`:'No Tach';if(b.textContent!==tx)b.textContent=tx;b.disabled=s.tach>0||s.tl<=0;}
+function ilTachUi(){const b=$('#ilTach'),s=IL;if(!b)return;const on=s&&!s.pick&&!s.end&&s.mode!=='view'&&s.mode!=='storm'&&!$('#ilCv').hidden;b.hidden=!on;if(!on)return;const tx=s.tach>0?`Slowed ${Math.ceil(s.tach)}s`:s.tl>0?`Use Tach ×${s.tl}`:'No Tach';if(b.textContent!==tx)b.textContent=tx;b.disabled=s.tach>0||s.tl<=0;}
 function ilTachUse(){const s=IL;if(!s||s.pick||s.end||s.tach>0||s.tl<=0)return;s.tl--;if(!s.test){S.station.mod=Math.max(0,modHave()-1);persist();}s.tach=5.5;tone(220,.5,'sine',.12,-80);tone(330,.4,'triangle',.07,0,.1);ilTachUi();}
 function startBurst(mode){const cv=$('#ilCv');$('#brstPick').hidden=true;cv.hidden=false;$('#burst').classList.add('il');
   const W=cv.clientWidth,H=cv.clientHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
@@ -3649,48 +3651,55 @@ function pipeDraw(c,s,t){const p=s.pp;if(!p)return;const cs=p.cs,gx=p.gx,gy=p.gy
   else if(!s.end){const u=Math.max(0,1-(p.t-p.lead)/p.TL);c.fillStyle='#1a2440';c.fillRect(s.W*.2,66,s.W*.6,6);c.fillStyle='#ffd84a';c.fillRect(s.W*.2,66,s.W*.6*u,6);}
   const ay=gy+p.R*cs+26;c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText('SWIPE OR DRAG ANYWHERE TO TURN THE SNAKE',s.W/2,ay);c.fillText('WALLS, ROCKS AND YOUR OWN TAIL BREAK THE LINE',s.W/2,ay+16);
   if(s.end){c.fillStyle='rgba(4,7,16,.45)';c.fillRect(0,0,s.W,s.H);}}
-/* ---- Storm stopper: bank power into the four systems before lightning wipes it */
-const STORM_NAMES=['WEAPONS','SHIELDS','SENSORS','ENGINES'],STORM_MAX=10,stormAmt=v=>Math.floor(v*v*.2),stormCol=w=>w>.8?'#4da6ff':w>.4?'#ffd84a':'#ff5c6c';
-function stormInit(){const s=IL,W=s.W,H=s.H,lw=Math.floor((W-80)/4)-8,gx=Math.round((W-(lw*4+24))/2),y0=Math.round(H*.74),lh=Math.round(H*.4);
-  s.sm={lw,lh,y0,gx,t:0,TL:18,next:2.2,lanes:[0,1,2,3].map(m=>({m,v:Math.random()*10,tv:Math.random()*10,rs:(5+Math.random()*7)*(1-.08*core('storm')),pend:0,banked:false,bv:0,warn:0,hit:0})),bolt:null,flash:0,fin:0};}
-function stormStep(dt){const s=IL,k=s.sm;if(!k)return;if(s.end)return;k.t+=dt;k.flash=Math.max(0,k.flash-dt*3);
-  for(const l of k.lanes){l.hit=Math.max(0,l.hit-dt*2);if(l.banked)continue;{const dv=l.tv-l.v,st=l.rs*(1+k.t*.03)*dt;if(Math.abs(dv)<=st){l.v=l.tv;l.tv=Math.random()<.3?(Math.random()<.5?0:STORM_MAX):Math.random()*STORM_MAX;l.rs=(5+Math.random()*7)*(1-.08*core('storm'))*(1+k.t*.03);}else l.v+=Math.sign(dv)*st;}
-    if(l.pend>0){l.pend-=dt;if(l.pend<=0){l.banked=true;l.bv=stormAmt(l.v);l.warn=0;sfx.coin();tone(700+l.bv*60,.12,'sine',.08);const i=k.lanes.indexOf(l);s.fx.push({x:k.gx+i*(k.lw+8)+k.lw/2,y:k.y0-k.lh*l.v/STORM_MAX,t:0,txt:'+'+l.bv,boom:false});}continue;}if(l.warn>0){l.warn-=dt;if(l.warn<=0){l.v=0;l.hit=1;k.bolt={m:l.m,t:0};k.flash=1;s.flash=.25;sfx.boom&&sfx.boom();}}}
-  if(k.bolt){k.bolt.t+=dt;if(k.bolt.t>.3)k.bolt=null;}
-  k.next-=dt;if(k.next<=0){const n=1+(k.t>4?1:0)+(Math.random()<.22?1:0)+(k.t>10&&Math.random()<.3?1:0);
-    for(let q=0;q<n;q++){const open=k.lanes.filter(l=>!l.banked&&!(l.pend>0)&&!l.warn&&l.v>=.7);if(!open.length)break;let tot=open.reduce((a,l)=>a+l.v*l.v+.6,0),r=Math.random()*tot,l=open[0];for(const o of open){r-=o.v*o.v+.6;if(r<=0){l=o;break;}}
-      const x=Math.random();l.warn=x<.3?.3:x<.65?.8:1.4;tone(180,.4,'sawtooth',.05,0,0);}
-    k.next=Math.max(.2,.6-k.t*.025)*(.5+Math.random()*.9);}
-  if(k.lanes.every(l=>l.banked)){k.fin+=dt;if(k.fin>.7){return ilEnd();}}
-  if(k.t>=k.TL){for(const l of k.lanes)if(!l.banked){l.banked=true;l.bv=Math.floor(stormAmt(l.v)*.5);l.auto=true;}return ilEnd();}}
-function stormTap(x,y){const s=IL,k=s.sm;if(!k||s.end)return;
-  k.lanes.forEach((l,i)=>{const lx=k.gx+i*(k.lw+8);if(x<lx-6||x>lx+k.lw+6||y<k.y0-k.lh-50||y>k.y0+50)return;if(l.banked||l.pend>0)return;
-    l.pend=.08+Math.random()*.2;tone(420,.06,'square',.05);});}
-function stormDraw(c,s,t){const k=s.sm;if(!k)return;const W=s.W,H=s.H;
-  // storm cloud
-  c.fillStyle=`rgba(30,38,70,${.85})`;for(let i=0;i<9;i++){const x=W*(.12+i*.095)+Math.sin(t*.7+i)*8,y=124+Math.cos(t*.5+i*2)*6;c.beginPath();c.ellipse(x,y,46,22,0,0,6.28);c.fill();}
-  if(k.flash>0){c.fillStyle=`rgba(190,210,255,${k.flash*.35})`;c.fillRect(0,0,W,H);}
-  let banked=0,risk=0;
-  k.lanes.forEach((l,i)=>{const lx=k.gx+i*(k.lw+8),top=k.y0-k.lh,td=tdef(l.m),col=td.color,fh=k.lh*l.v/STORM_MAX;banked+=l.banked?l.bv:0;risk+=l.banked?0:stormAmt(l.v);
-    c.fillStyle='#0a1226';c.fillRect(lx,top,k.lw,k.lh);c.strokeStyle=l.warn>0?stormCol(l.warn):l.banked?'#38e09b':'#27406b';c.lineWidth=l.warn>0?4:2;c.strokeRect(lx+1,top+1,k.lw-2,k.lh-2);
-    if(!l.banked){const g=c.createLinearGradient(0,k.y0,0,top);g.addColorStop(0,td.dark);g.addColorStop(1,col);c.fillStyle=g;c.fillRect(lx+3,k.y0-fh,k.lw-6,fh);}
-    else{c.fillStyle='rgba(56,224,155,.22)';c.fillRect(lx+3,k.y0-k.lh*Math.min(1,l.bv/8),k.lw-6,k.lh*Math.min(1,l.bv/8));}
-    if(l.hit>0){c.fillStyle=`rgba(255,255,255,${l.hit*.6})`;c.fillRect(lx,top,k.lw,k.lh);}
-    try{c.drawImage(ICONS[l.m],lx+k.lw/2-11,k.y0+10,22,22);}catch(e){}
-    c.textAlign='center';c.fillStyle=col;c.font='8px Silkscreen, monospace';c.fillText(STORM_NAMES[l.m],lx+k.lw/2,k.y0+46);
-    c.fillStyle=l.banked?'#38e09b':'#e1e9f7';c.font='700 18px Oxanium, sans-serif';c.fillText(l.banked?`+${l.bv}`:`+${stormAmt(l.v)}`,lx+k.lw/2,top-8);
-    if(l.warn>0){const wc=stormCol(l.warn);c.save();c.shadowColor=wc;c.shadowBlur=14;c.strokeStyle=wc;c.lineWidth=2.5;c.beginPath();let zx=lx+k.lw/2,zy=top-30;c.moveTo(zx,zy);while(zy<k.y0){zy+=18;zx=lx+k.lw/2+(Math.random()-.5)*k.lw*.8;c.lineTo(zx,zy);}c.stroke();c.restore();c.fillStyle=wc;c.font='700 20px Oxanium, sans-serif';c.fillText('⚡',lx+k.lw/2,top+k.lh/2);}
-    if(l.banked){c.fillStyle='#38e09b';c.font='8px Silkscreen, monospace';c.fillText(l.auto?'AUTO':'BANKED',lx+k.lw/2,top+k.lh+0*1+ -k.lh+14);}});
-  if(k.bolt){const l=k.lanes[k.bolt.m],lx=k.gx+k.bolt.m*(k.lw+8)+k.lw/2;c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();let x=lx+(Math.random()-.5)*20,y=136;c.moveTo(x,y);while(y<k.y0-4){y+=24;x=lx+(Math.random()-.5)*30;c.lineTo(x,y);}c.stroke();}
-  c.textAlign='center';c.fillStyle='#38e09b';c.font='700 22px Oxanium, sans-serif';c.fillText(`+${banked} banked`,W/2,56);
-  c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText('TAP A BAR TO STOP IT · IT SLIPS A MOMENT · BLUE SLOW, YELLOW SOON, RED NOW',W/2,72);
-  const u=Math.max(0,1-k.t/k.TL);c.fillStyle='#1a2440';c.fillRect(W*.2,78,W*.6,5);c.fillStyle='#7ff3ff';c.fillRect(W*.2,78,W*.6*u,5);
+/* ---- Power slots: spend fuel on lines, then spin the systems for charge */
+const SLOT_NAMES=['WEAPONS','SHIELDS','SENSORS','ENGINES'],SLOT_W=[8,9,11,13,14,13,11,9,6,4,2];
+const slotCost=()=>Math.max(4,Math.round(ST.tank*.04));
+const slotRoll=()=>{let x=Math.random()*100,i=0;for(;i<SLOT_W.length;i++){x-=SLOT_W[i];if(x<0)break;}return Math.min(10,i);};
+function stormInit(){const s=IL,W=s.W,H=s.H,rw=Math.floor((W-56)/4)-6,gx=Math.round((W-(rw*4+18))/2);
+  s.sm={phase:'bet',t:0,st:0,rw,gx,ry:Math.round(H*.3),rh:Math.round(H*.3),sb:{x:Math.round((W-210)/2),y:Math.round(H*.72),w:210,h:38},nb:{x:Math.round((W-120)/2),y:Math.round(H*.72)+46,w:120,h:26},
+    reels:[0,1,2,3].map(m=>({m,on:false,v:0,fin:0,stopAt:0,done:false,disp:Math.random()*11})),flash:0,after:0,jack:false};}
+function stormStep(dt){const s=IL,k=s.sm;if(!k||s.end)return;k.t+=dt;k.flash=Math.max(0,k.flash-dt*3);
+  if(k.phase!=='spin')return;k.st+=dt;let all=true;
+  for(const r of k.reels){if(!r.on||r.done)continue;all=false;r.disp=(r.disp+dt*30)%11;
+    if(k.st>=r.stopAt){r.done=true;r.v=r.fin;sfx.coin();tone(500+r.v*70,.14,'sine',.08);k.flash=.5;const i=k.reels.indexOf(r);s.fx.push({x:k.gx+i*(k.rw+6)+k.rw/2,y:k.ry-6,t:0,txt:'+'+r.v,boom:false});}}
+  if(all){k.after+=dt;if(k.after>.9)ilEnd();}}
+function stormTap(x,y){const s=IL,k=s.sm;if(!k||s.end||k.phase!=='bet')return;
+  const cost=slotCost(),cnt=k.reels.filter(r=>r.on).length,inR=(b)=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h;
+  if(inR(k.nb)){sfx.tick();closeBurst();return;}
+  if(inR(k.sb)){if(!cnt){sfx.bad();return;}
+    if(!s.test){G.fuel-=cnt*cost;G.R.fuel.od=(G.R.fuel.od||0)+cnt*cost;pulseFuel();}
+    const luck=core('storm')*.12;let n=0;
+    for(const r of k.reels){if(!r.on)continue;let v=slotRoll();if(v<=2&&Math.random()<luck)v=Math.max(v,slotRoll());r.fin=v;r.stopAt=1.1+n*.6;n++;}
+    k.phase='spin';k.st=0;sfx.tick();return;}
+  k.reels.forEach((r,i)=>{const lx=k.gx+i*(k.rw+6);if(x<lx||x>lx+k.rw||y<k.ry-30||y>k.ry+k.rh+30)return;
+    if(r.on){r.on=false;sfx.tick();}else if(s.test||G.fuel-(cnt+1)*cost>3){r.on=true;tone(520,.05,'square',.04);}else{sfx.bad();s.msg=1.2;}});}
+function stormDraw(c,s,t){const k=s.sm;if(!k)return;const W=s.W,H=s.H,cost=slotCost(),cnt=k.reels.filter(r=>r.on).length;
+  if(k.flash>0){c.fillStyle=`rgba(255,216,74,${k.flash*.12})`;c.fillRect(0,0,W,H);}
+  c.textAlign='center';c.fillStyle='#ffd84a';c.font='700 22px Oxanium, sans-serif';c.fillText('POWER SLOTS',W/2,50);
+  c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText(k.phase==='bet'?'TAP SYSTEMS TO PLAY THEM · EACH LINE COSTS FUEL':'SPINNING...',W/2,68);
+  c.fillStyle='#ffd84a';c.fillText(`FUEL ${Math.round(G.fuel)} · ${cost} PER LINE`,W/2,84);
+  k.reels.forEach((r,i)=>{const lx=k.gx+i*(k.rw+6),td=tdef(r.m),col=td.color;
+    c.fillStyle='#0a1226';c.fillRect(lx,k.ry,k.rw,k.rh);c.strokeStyle=r.on?col:'#27406b';c.lineWidth=r.on?3:1.5;c.strokeRect(lx+1,k.ry+1,k.rw-2,k.rh-2);
+    c.fillStyle=r.on?col:'#566a93';c.font='8px Silkscreen, monospace';c.fillText(SLOT_NAMES[r.m],lx+k.rw/2,k.ry-10);
+    if(r.on){const spin=k.phase==='spin'&&!r.done,v=spin?Math.floor(r.disp):r.v;
+      if(k.phase==='bet'){c.fillStyle=col;c.font='700 30px Oxanium, sans-serif';c.fillText('?',lx+k.rw/2,k.ry+k.rh/2+10);c.font='8px Silkscreen, monospace';c.fillText('LINE ON',lx+k.rw/2,k.ry+k.rh-10);}
+      else{c.save();c.beginPath();c.rect(lx+2,k.ry+2,k.rw-4,k.rh-4);c.clip();
+        if(spin){c.fillStyle=col+'55';for(let j=-1;j<=1;j++){c.font='700 30px Oxanium, sans-serif';c.fillText(String((v+j+11)%11),lx+k.rw/2,k.ry+k.rh/2+10+j*(k.rh*.38)+((r.disp%1)*k.rh*.38));}}
+        else{c.fillStyle=r.v>=7?'#ffd84a':r.v>=4?'#38e09b':'#e1e9f7';c.font='700 40px Oxanium, sans-serif';c.fillText('+'+v,lx+k.rw/2,k.ry+k.rh/2+14);}
+        c.restore();}}
+    else{c.fillStyle='#566a93';c.font='9px Silkscreen, monospace';c.fillText('OFF',lx+k.rw/2,k.ry+k.rh/2+4);}});
+  if(k.phase==='bet'){const b=k.sb,ok=cnt>0;c.fillStyle=ok?'#2a2208':'#10182c';c.fillRect(b.x,b.y,b.w,b.h);c.strokeStyle=ok?'#ffd84a':'#27406b';c.lineWidth=2;c.strokeRect(b.x+1,b.y+1,b.w-2,b.h-2);
+    c.fillStyle=ok?'#ffd84a':'#566a93';c.font='700 14px Oxanium, sans-serif';c.fillText(ok?`SPIN ${cnt} LINE${cnt>1?'S':''} · −${cnt*cost} FUEL`:'PICK A LINE',b.x+b.w/2,b.y+b.h/2+5);
+    const n=k.nb;c.fillStyle='#7f8fb2';c.font='9px Silkscreen, monospace';c.fillText('NOT NOW',n.x+n.w/2,n.y+n.h/2+3);
+    if(s.msg>0){c.fillStyle='#ff8a95';c.fillText('NOT ENOUGH FUEL',W/2,k.sb.y-8);}}
   if(s.end){c.fillStyle='rgba(4,7,16,.45)';c.fillRect(0,0,W,H);}}
-function ilStormResult(){const s=IL,k=s.sm,tst=!!s.test;const lines=[];let tot=0;
-  for(const l of k.lanes){let g=l.bv+((k.acc&&k.acc[l.m])||0);if(!tst&&g>0){const was=G.meters[l.m];G.meters[l.m]=Math.min(ST.cap[l.m],G.meters[l.m]+g);g=Math.round(G.meters[l.m]-was);}tot+=g;lines.push([STORM_NAMES[l.m][0]+STORM_NAMES[l.m].slice(1).toLowerCase(),`+${g}`]);}
+function ilStormResult(){const s=IL,k=s.sm,tst=!!s.test;const lines=[],on=k.reels.filter(r=>r.on);let tot=0;
+  const jack=on.length>=2&&on.every(r=>r.v===on[0].v),mult=jack?2:1;
+  for(const r of on){let g=r.v*mult;if(!tst&&g>0){const was=G.meters[r.m];G.meters[r.m]=Math.min(ST.cap[r.m],G.meters[r.m]+g);g=Math.round(G.meters[r.m]-was);}tot+=g;lines.push([SLOT_NAMES[r.m][0]+SLOT_NAMES[r.m].slice(1).toLowerCase(),`+${g}`]);}
   if(!tst){G.od=0;odSync();if(tot>0)vpPop(`SYSTEMS +${tot}`,'#7ff3ff');}
-  $('#ilCv').hidden=true;$('#brstRes').hidden=false;$('#brstT').textContent='STORM STOPPER'+(tst?' · TEST':'');
-  $('#brstBody').innerHTML=`<p class="rl-h">${k.lanes.filter(l=>l.banked&&!l.auto).length} of 4 banked in time${k.lanes.some(l=>l.auto)?'. The rest were auto-banked at half.':'.'}</p><div class="payout">${lines.map(l=>`<div><span>${l[0]}</span><b>${l[1]}</b></div>`).join('')}</div>`;sfx.win();}
+  $('#ilCv').hidden=true;$('#brstRes').hidden=false;$('#brstT').textContent='POWER SLOTS'+(tst?' · TEST':'');
+  $('#brstBody').innerHTML=`<p class="rl-h">${jack?'JACKPOT! Every line matched, so the payout doubled.':on.length+' line'+(on.length>1?'s':'')+' played.'}</p><div class="payout">${lines.map(l=>`<div><span>${l[0]}</span><b>${l[1]}</b></div>`).join('')}</div>`;sfx.win();}
+
 
 /* ---- v97 Overdrive: Afterburn (flappy gates that accelerate) and Rail loader (timing -> ammo for a strafing run) ---- */
 function burnInit(){const s=IL;s.bn={y:s.H*.5,vy:-120,started:true,t:0,passed:0,gates:[],next:.9,x:s.W*.26,dead:false,fin:0};}
@@ -3788,7 +3797,7 @@ function ilDraw(cv,s,t){const c=cv.getContext('2d'),W=s.W,H=s.H;c.setTransform(d
    const gl=c.createLinearGradient(m,m,W*.7,H*.45);gl.addColorStop(0,'rgba(190,230,255,.10)');gl.addColorStop(.35,'rgba(190,230,255,.02)');gl.addColorStop(1,'rgba(190,230,255,0)');
    c.fillStyle=gl;c.beginPath();c.roundRect(m+4,m+4,W-2*m-8,H-2*m-8,rr-3);c.fill();c.restore();}
   if(s.mode==='view'){c.textAlign='center';c.fillStyle='#7ff3ff';c.font='9px Silkscreen, monospace';c.fillText('VIEWPORT',W/2,26);c.fillStyle='rgba(225,233,247,'+(.45+.25*Math.sin(t*3))+')';c.fillText('TAP ANYWHERE TO RETURN',W/2,H-34);return;}
-  c.textAlign='center';c.fillStyle='#7ff3ff';c.font='9px Silkscreen, monospace';c.fillText(s.mode==='counter'?'COUNTERFIRE':s.mode==='repair'?'EMERGENCY REPAIR':s.mode==='storm'?'STORM STOPPER':s.mode==='burn'?'AFTERBURN':s.mode==='rail'?'RAIL LOADER':'FUEL SNAKE',W/2,26);
+  c.textAlign='center';c.fillStyle='#7ff3ff';c.font='9px Silkscreen, monospace';c.fillText(s.mode==='counter'?'COUNTERFIRE':s.mode==='repair'?'EMERGENCY REPAIR':s.mode==='storm'?'POWER SLOTS':s.mode==='burn'?'AFTERBURN':s.mode==='rail'?'RAIL LOADER':'FUEL SNAKE',W/2,26);
   if(s.mode==='repair'||s.mode==='pipe'||s.mode==='storm'||s.mode==='burn'||s.mode==='rail'){if(s.end){c.fillStyle='rgba(4,7,16,.5)';c.fillRect(0,0,W,H);}return;}
   c.fillStyle='#7ff3ff';c.font='700 22px Oxanium, sans-serif';c.fillText('+'+Math.round(s.hw*2+s.ho*4)+' push-back',W/2,56);
   if(!s.over){const u=s.t/ilWin();c.fillStyle='#1a2440';c.fillRect(W*.2,68,W*.6,6);c.fillStyle='#7ff3ff';c.fillRect(W*.2,68,W*.6*(1-u),6);}
@@ -3797,7 +3806,7 @@ function ilDraw(cv,s,t){const c=cv.getContext('2d'),W=s.W,H=s.H;c.setTransform(d
   if(s.end){c.fillStyle='rgba(4,7,16,.5)';c.fillRect(0,0,W,H);}}
 (()=>{const cv=$('#ilCv');cv.addEventListener('pointermove',e=>{if(IL&&IL.mode==='pipe'&&!IL.end&&e.buttons){const r=cv.getBoundingClientRect();pipeSwipe(e.clientX-r.left,e.clientY-r.top);e.preventDefault();}});cv.style.touchAction='none';cv.addEventListener('pointerup',pipeUp);window.addEventListener('pointerup',pipeUp);cv.addEventListener('pointerleave',pipeUp);cv.addEventListener('pointercancel',pipeUp);cv.addEventListener('pointerdown',e=>{if(IL&&IL.mode==='view'&&!IL.pick){sfx.tick();closeBurst();e.preventDefault();return;}if(!IL||IL.pick||IL.end)return;const r=cv.getBoundingClientRect();ilHit(e.clientX-r.left,e.clientY-r.top);e.preventDefault();});
   $('#ilTach').onclick=e=>{e.stopPropagation();audio();ilTachUse();};
-  const odGo=m=>()=>{audio();if(m!=='pipe'){const f=odFuel();if(G.fuel<=f+3){vpPop('NEED '+f+' FUEL','#ffd84a');sfx.bad();return;}G.fuel-=f;G.R.fuel.od=(G.R.fuel.od||0)+f;pulseFuel();}startBurst(m);};
+  const odGo=m=>()=>{audio();if(m!=='pipe'&&m!=='storm'){const f=odFuel();if(G.fuel<=f+3){vpPop('NEED '+f+' FUEL','#ffd84a');sfx.bad();return;}G.fuel-=f;G.R.fuel.od=(G.R.fuel.od||0)+f;pulseFuel();}startBurst(m);};
   $('#bpRepair').onclick=odGo('repair');$('#bpStorm').onclick=odGo('storm');$('#bpBurn').onclick=odGo('burn');$('#bpRail').onclick=odGo('rail');
   $('#bpCounter').onclick=odGo('counter');$('#bpGun').onclick=odGo('pipe');
   $('#bpNo').onclick=()=>{sfx.tick();closeBurst();};$('#brstGo').onclick=()=>{sfx.tick();closeBurst();};})();
@@ -4296,7 +4305,7 @@ const COACH_TIPS={
   tach_fail:{el:'.tc-res',t:()=>'We lost a level on every system that failed. Hard lesson. Rebuild at the planets, research what broke, and we go again.'},
   depth:{el:'#brDepth',t:()=>'Your call on how deep we dive. Fly-by is quiet and pays less. Deep survey brings every threat, pays more, and offers better ship systems. The depth sets the stakes, so choose it before you give the order.'},
   load:{el:'#brLoad',t:()=>'We only have room for so many special tiles. Tap one to swap it in. Upgrading the Refinery adds a slot.'},
-  burst:{el:'#board',t:()=>'Overdrive is charged. Tap the glowing bolt tile on the board. Clear it in a match and you lose charge. Counterfire pushes the pursuer back, Fuel line is a pipe puzzle that tops up the tank, Repair is a plate-welding game that mends the hull, and Storm stopper banks power into your systems: bank early or push your luck.'},
+  burst:{el:'#board',t:()=>'Overdrive is charged. Tap the glowing bolt tile on the board. Clear it in a match and you lose charge. Counterfire pushes the pursuer back, Fuel line is a pipe puzzle that tops up the tank, Repair is a plate-welding game that mends the hull, and Power slots spends fuel to spin your systems for charge: pick how many lines to play.'},
   relic:{el:'#relicCards',t:()=>'A ship system. It stays installed for the whole campaign, so choose what we will lean on. We only have three slots.'},
   trade:{el:'#commsBody',t:()=>'The sensor array reaches further now. We can buy Alloy from systems in range, straight from their cards.'},
 };
@@ -4622,7 +4631,7 @@ const CORE_UP=[
  {k:'counter',g:'⌖',n:'Counterfire',d:r=>`+${(r*1.5).toFixed(1)} s in the main window`},
  {k:'pipe',g:'⌗',n:'Fuel snake',d:r=>`+${r*15}% fuel from the snake`},
  {k:'repair',g:'▤',n:'Emergency repair',d:r=>`+${r*12}% hull from the stack`},
- {k:'storm',g:'⚡',n:'Storm stopper',d:r=>`reels run ${r*8}% slower`},
+ {k:'storm',g:'⚡',n:'Power slots',d:r=>`${r*12}% chance a weak reel spins again`},
  {k:'burn',g:'≫',n:'Afterburn',d:r=>`+${r*15}% AU for every gate`},
  {k:'rail',g:'✹',n:'Rail loader',d:r=>`${r+1} miss${r?'es':''} allowed before the loader jams`}];
 const CORE_COST=[[3,60],[6,130],[10,240]];
@@ -5532,7 +5541,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v114';
+const BUILD='v115';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5668,7 +5677,7 @@ function applyWarBoost(){if(!G.warPend)return;G.warPend=false;{const ls=TR||!CHO
   G.meters[m]=Math.min(ST.cap[m],G.meters[m]+w);G.warBoost={m,w};const el=gEls[m].g;el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),600);vpPop(`WAR ROOM · ${TYPES[m].name.toUpperCase()} CHARGED +${w}`,TYPES[m].color);}
 function startRun(){
   CINE=null;RUNX=TR?null:{depth:depthNow(),load:loadNow()};
-  SYS=sysView(CHOICE.key);resetGame();G.hold=false;G.depth=RUNX?RUNX.depth:1;G.aegis=0;G.od=0;IL=null;setTimeout(odSync,60);if(peak('shipyard'))for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2);sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
+  SYS=sysView(CHOICE.key);resetGame();{const e=$('#tileCtr b');if(e)e.textContent='0';}G.hold=false;G.depth=RUNX?RUNX.depth:1;G.aegis=0;G.od=0;IL=null;setTimeout(odSync,60);if(peak('shipyard'))for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2);sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
   for(let m=0;m<4;m++)gEls[m].bar.style.setProperty('--n',ST.cap[m]);
   B.waiters.length=0;B.dying=[];B.beams=[];B.bomb=null;B.barr=null;B.pops=[];B.hazards=[];B.sel=null;B.hint=null;B.idle=0;B.glow=null;
   fillBoard();B.busy=true;settle().then(()=>{B.busy=false;});
