@@ -1959,6 +1959,7 @@ async function clearCells(set,chain,makes=[],wild=new Map()){
     const h=t.sp===1;B.beams.push({h,i:h?r:c,t:0,color:tdef(t.t).color});sfx.beam();
     for(let j=0;j<(h?COLS:ROWS);j++){const kk=h?r*COLS+j:j*COLS+c;if(!set.has(kk)){set.add(kk);queue.push(kk);}}
   }
+  for(const k of [...set]){const r=Math.floor(k/COLS),c=k%COLS,t=g[r][c];if(t&&t.sp===4){G.flare={r,until:G.time+5};boardPop('SOLAR FLARE',COLS/2,r+.5,'#ffb547');sfx.special();}}
   let broke=0;
   for(const k of [...set]){const r=Math.floor(k/COLS),c=k%COLS;
     for(const[dr,dc]of[[1,0],[-1,0],[0,1],[0,-1]]){const nr=r+dr,nc=c+dc;if(nr<0||nr>=ROWS||nc<0||nc>=COLS)continue;
@@ -2016,20 +2017,32 @@ function chainShow(n){const e=$('#chainCtr');if(!e)return;e.hidden=false;e.class
 async function cascade(pivots){
   let chain=0;
   for(;;){
+    await flareBurn();
     const runs=findRuns();if(!runs.length)break;chain++;if(chain>=2)chainShow(chain);
     const set=new Set(),makes=[],wild=new Map();
+    if(feat('flare'))for(let i=0;i<runs.length;i++)for(let j=i+1;j<runs.length;j++){const a=runs[i],b=runs[j];if(a.t!==b.t||a.dir===b.dir)continue;const x=a.cells.find(([r,c])=>b.cells.some(([r2,c2])=>r2===r&&c2===c));if(x){const k=x[0]*COLS+x[1];if(!makes.some(m=>m.k===k))makes.push({k,r:x[0],c:x[1],t:a.t,sp:4});}}
     for(const run of runs){
       run.cells.forEach(([r,c])=>{const k=r*COLS+c;set.add(k);if(isWild(B.grid[r][c]?.t)&&!wild.has(k))wild.set(k,run.t);});
       if(run.cells.length>=4){boardShake(run.cells.length);
         const piv=run.cells.find(([r,c])=>pivots.some(p=>p[0]===r&&p[1]===c))||run.cells[Math.floor(run.cells.length/2)];
         const k=piv[0]*COLS+piv[1];
-        const nv=run.cells.length>=5&&feat('nova');if(!makes.some(m=>m.k===k)&&(nv||feat('line')))makes.push({k,r:piv[0],c:piv[1],t:nv?NOVA:run.t,sp:nv?3:(run.dir==='h'?1:2)});
+        const nv=run.cells.length>=5&&feat('nova');if(!makes.some(m=>m.k===k)&&!makes.some(m=>m.sp===4&&run.cells.some(([r,c])=>r===m.r&&c===m.c))&&(nv||feat('line')))makes.push({k,r:piv[0],c:piv[1],t:nv?NOVA:run.t,sp:nv?3:(run.dir==='h'?1:2)});
       }
     }
     await clearCells(set,chain,makes,wild);await collapse();pivots=[];
   }
   G.bestChain=Math.max(G.bestChain,chain);
   if(chain>=3){G.R.chains3++;maybeOfferPerk(chain);}
+}
+async function flareBurn(){
+  let n=0;
+  while(G.flare&&G.time<G.flare.until&&G.running&&!G.ending&&n++<12){
+    const r=G.flare.r,set=new Set();
+    for(let c=0;c<COLS;c++){const t=B.grid[r][c];if(t&&t.t!==DEBRIS&&!t.lock&&t.sp!==4)set.add(r*COLS+c);}
+    if(!set.size)break;
+    B.beams.push({h:true,i:r,t:0,color:'#ff9640'});
+    await clearCells(set,1,[],new Map());B.swapCleared=Math.max(0,(B.swapCleared||0)-set.size);await collapse();
+  }
 }
 async function reshuffle(){
   if(G.R)G.R.reshuffles++;boardPop('RECALIBRATING',COLS/2,ROWS/2);await wait(.5);
@@ -2166,6 +2179,7 @@ function drawTile(c,t,T){
     if(t.t===CRATE){const p=(Math.sin(B.t*4+t.id)+1)/2;      for(let i=0;i<2;i++){const a=B.t*1.7+t.id+i*3.1,sx=cx+Math.cos(a)*size*.42,sy=cy+Math.sin(a*1.3)*size*.42,ss=Math.max(1,size*.05);c.fillStyle=`rgba(255,250,220,${.5+.5*Math.sin(B.t*6+i)})`;c.fillRect(sx-ss,sy,ss*3,ss*.8);c.fillRect(sx,sy-ss,ss*.8,ss*3);}}
     if(t.t===BUCKS&&size>10){c.strokeStyle=`rgba(255,209,241,${.25+Math.sin(B.t*4+t.id)*.2})`;c.lineWidth=1;rr(c,x+3,y+3,size-6,size-6,size*.5-3);c.stroke();}
     else{c.fillStyle='rgba(255,255,255,.05)';rr(c,x+2,y+2,size-4,size*.42,size*.18);c.fill();}
+    if(t.sp===4){const a=.55+Math.sin(B.t*8)*.35;c.strokeStyle=`rgba(255,181,71,${a})`;c.lineWidth=2;for(let i=0;i<8;i++){const an=i*.7854+B.t*1.5;c.beginPath();c.moveTo(cx+Math.cos(an)*size*.3,cy+Math.sin(an)*size*.3);c.lineTo(cx+Math.cos(an)*size*.44,cy+Math.sin(an)*size*.44);c.stroke();}c.strokeStyle=`rgba(255,150,64,${a})`;rr(c,x,y,size,size,rad);c.stroke();}
     if(t.sp===1||t.sp===2){
       const a=.55+Math.sin(B.t*8)*.35,h=t.sp===1,e=size*.42;
       c.strokeStyle=`rgba(255,255,255,${a*.5})`;c.lineWidth=2;c.beginPath();
@@ -2223,6 +2237,7 @@ function drawBoard(){
   c.globalAlpha=1;c.fillStyle='rgba(77,166,255,.22)';
   for(const[a,b2]of B.traces)if((a*7+b2*3)%5===0)c.fillRect(a*T-1.5,b2*T-1.5,3,3);
   if(B.sel){const[r,cc]=B.sel;c.fillStyle='rgba(255,181,71,.08)';c.fillRect(0,r*T,B.w,T);c.fillRect(cc*T,0,T,B.h);}
+  if(G&&G.flare&&G.time<G.flare.until){const fa=.18+.12*Math.sin(B.t*14);c.fillStyle=`rgba(255,150,64,${fa})`;c.fillRect(0,G.flare.r*T,B.w,T);}
   for(const bm of B.beams){
     const a=1-bm.t/.4;
     if(bm.nova){c.fillStyle=`rgba(199,146,255,${a*.25})`;c.fillRect(0,0,B.w,B.h);continue;}
@@ -2718,14 +2733,16 @@ function drawChart(t){
 const _tileC={};
 function loadTileURL(k){if(_tileC[k])return _tileC[k];const cv=document.createElement('canvas');cv.width=cv.height=48;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;const sz=40,x=4,y=4,rad=sz*.22;
   try{if(k==='nova'){c.fillStyle='#24123d';rr(c,x,y,sz,sz,rad);c.fill();const g=c.createLinearGradient(0,0,48,48);['#ff7ad9','#7ff3ff','#ffd84a','#b48cff'].forEach((col,i,a)=>g.addColorStop(i/(a.length-1),col));c.strokeStyle=g;c.lineWidth=2.5;c.stroke();c.drawImage(ICONS[NOVA],12,12,24,24);}
+  else if(k==='flare'){const ty=tdef(1);c.fillStyle=ty.dark;rr(c,x,y,sz,sz,sz*.22);c.fill();c.strokeStyle='#ff9640';c.lineWidth=2.5;c.stroke();c.fillStyle='#ffb547';c.beginPath();c.arc(24,24,7,0,6.283);c.fill();c.strokeStyle='#ffb547';c.lineWidth=2.5;c.beginPath();for(let i=0;i<8;i++){const a=i*.7854;c.moveTo(24+Math.cos(a)*10,24+Math.sin(a)*10);c.lineTo(24+Math.cos(a)*15,24+Math.sin(a)*15);}c.stroke();}
   else if(k==='loot'){const ty=tdef(BUCKS);c.fillStyle=ty.dark;rr(c,x,y,sz,sz,sz*.5);c.fill();c.strokeStyle=ty.color+'d0';c.lineWidth=2.5;c.stroke();c.drawImage(ICONS[BUCKS],12,12,24,24);}
   else{const ty=tdef(0);c.fillStyle=ty.dark;rr(c,x,y,sz,sz,rad);c.fill();c.strokeStyle=ty.color+'80';c.lineWidth=2;c.stroke();c.drawImage(ICONS[0],12,12,24,24);
     c.strokeStyle='rgba(255,255,255,.88)';c.lineWidth=3;c.beginPath();c.moveTo(7,24);c.lineTo(41,24);c.moveTo(11,24);c.lineTo(17,19);c.moveTo(11,24);c.lineTo(17,29);c.moveTo(37,24);c.lineTo(31,19);c.moveTo(37,24);c.lineTo(31,29);c.stroke();}}catch(e){}
   return _tileC[k]=cv.toDataURL();}
-const SPECIAL_DESC={line:'Match 4 in a row to forge a line tile. Match it later to sweep its whole row or column.',nova:'Match 5 to forge a nova core. Swap it with any tile to clear every tile of that colour.',loot:'Credits tiles and salvage crates join the board.'};
+const SPECIAL_DESC={line:'Match 4 in a row to forge a line tile. Match it later to sweep its whole row or column.',nova:'Match 5 to forge a nova core. Swap it with any tile to clear every tile of that colour.',loot:'Credits tiles and salvage crates join the board.',flare:'Match an L, T or + shape to forge a flare tile. Match it later to set its row burning for 5 seconds: every tile that falls into that row is burned.'};
 const LOAD_ICO={
  line:'<svg viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="4" rx="1" fill="currentColor"/><path d="M5 5l2 3M12 4v4M19 5l-2 3M5 19l2-3M12 20v-4M19 19l-2-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
  nova:'<svg viewBox="0 0 24 24"><path d="M12 2l2.2 6.8L21 6l-4.2 5.8L22 14l-7 1.2L12 22l-2.6-6.8L2 14l5.2-2.2L3 6l6.8 2.8z" fill="currentColor"/></svg>',
+ flare:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
  loot:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 6.5v11M9 9.5h4.5a1.8 1.8 0 0 1 0 3.5H9.5a1.8 1.8 0 0 0 0 3.5H15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>'};
 const loadBtn=(k,on,tag='button')=>`<${tag} ${tag==='button'?'type="button" ':''}data-k="${k}" data-tip="<b>${SPECIAL_NAME[k]}</b><br>${SPECIAL_DESC[k]}" class="ldi${on?' on':''}" aria-label="${SPECIAL_NAME[k]}"><img class="tile-i" src="${loadTileURL(k)}" alt=""></${tag}>`;
 function loadPanel(id){const av=availSpecials(),ld=loadNow(),n=loadSlots();if(!unl('load')||!av.length)return '';
@@ -3412,15 +3429,15 @@ function renderCampaignReport(){
 const TACH_GOAL=9;
 /* ================= STAGES: the ten-minute lesson plan. Each Tach attempt introduces one new idea ================= */
 /* v75: nothing unlocks by Tach number any more. Complexity is the player's choice (survey depth), and tools unlock by clearing runs. */
-const UNL={line:0,nova:2,loot:3,load:3,relics:1,burst:2,rooms:2,perks:4},DEPTH_UNL=[0,1,3];
+const UNL={line:0,nova:2,loot:3,flare:4,load:3,relics:1,burst:2,rooms:2,perks:4},DEPTH_UNL=[0,1,3];
 const prog=()=>career().cleared||0,unl=k=>prog()>=(UNL[k]||0);
 const depthMax=()=>prog()>=DEPTH_UNL[2]?2:prog()>=DEPTH_UNL[1]?1:0;
 const stageNow=()=>9;
 /* ================= v71: SURVEY DEPTH, TILE LOADOUT, RELICS ================= */
 const DEPTH_NAME=['Fly-by','Survey','Deep survey'],DEPTH_PAY=[.6,1,1.6],DEPTH_SUB=['light pay','standard','+60% pay'];
 const DEPTH_NOTE=['Quiet space. No pursuer, no attacks. Pays 40% less and finds no ship systems.','Standard flight. A pursuer shadows us. Ship system offer: choose 1 of 2.','Every threat the Tach allows is live. Pays 60% more. Ship system offer: choose 1 of 3.'];
-const DEPTH_MIN={pursuer:1,strike:2,own:2,mods:2,intercept:2},SPECIALS=['line','nova','loot'];
-const SPECIAL_NAME={line:'Line tiles',nova:'Nova core',loot:'Credits & crates'};
+const DEPTH_MIN={pursuer:1,strike:2,own:2,mods:2,intercept:2},SPECIALS=['line','nova','loot','flare'];
+const SPECIAL_NAME={line:'Line tiles',nova:'Nova core',loot:'Credits & crates',flare:'Solar flare'};
 let RUNX=null;
 const depthNow=()=>Math.min(S.depth==null?1:S.depth,depthMax());
 const loadSlots=()=>2+(S.station&&rle('refinery')>=1?1:0);
@@ -5508,7 +5525,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v111';
+const BUILD='v112';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
