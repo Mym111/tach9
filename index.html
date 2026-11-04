@@ -1971,7 +1971,7 @@ async function clearCells(set,chain,makes=[],wild=new Map()){
     for(const[dr,dc]of[[1,0],[-1,0],[0,1],[0,-1]]){const nr=r+dr,nc=c+dc;if(nr<0||nr>=ROWS||nc<0||nc>=COLS)continue;
       const t=g[nr][nc],nk=nr*COLS+nc;if(t&&t.t===DEBRIS&&!set.has(nk)){set.add(nk);broke++;}}}
   B.swapCleared=(B.swapCleared||0)+set.size;
-  G.cleared=(G.cleared||0)+set.size;{const e=$('#tileCtr b');if(e)e.textContent=G.cleared;}
+  G.tilesCleared=(G.tilesCleared||0)+set.size;{const e=$('#tileCtr b');if(e)e.textContent=G.tilesCleared;}
   const gains=[0,0,0,0],crates=[];let fuel=0,fires=0,fr=0,fc=0,fn=0,bucks=0,br0=0,bc0=0;const br=B.cv.getBoundingClientRect();let streaks=0;
   for(const k of set){
     const r=Math.floor(k/COLS),c=k%COLS,t=g[r][c];if(!t)continue;
@@ -5550,7 +5550,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v118';
+const BUILD='v119';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
