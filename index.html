@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#070b16">
-<meta name="description" content="Push your station past the speed of light, one jump at a time.">
+<meta name="description" content="Push your ship past the speed of light, one jump at a time.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -300,9 +300,9 @@ button:disabled{cursor:default}
 .hg-body{flex:1;display:flex;flex-direction:column;gap:10px;padding-bottom:8px}
 @keyframes bob{50%{transform:translateY(-4px)}}
 .callrow{display:flex;align-items:center;gap:10px}
-#callIn{flex:1;min-width:0;font-family:var(--f-display);font-size:16px;letter-spacing:.08em;color:var(--ink);background:#0a1120;border:1px solid var(--bezel);border-radius:8px;padding:11px 12px;-webkit-user-select:text;user-select:text;touch-action:manipulation}
-#callIn:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
-#callIn::placeholder,#cmdIn::placeholder{color:var(--dim)}
+#callIn,#shipIn{flex:1;min-width:0;font-family:var(--f-display);font-size:16px;letter-spacing:.08em;color:var(--ink);background:#0a1120;border:1px solid var(--bezel);border-radius:8px;padding:11px 12px;-webkit-user-select:text;user-select:text;touch-action:manipulation}
+#callIn:focus,#shipIn:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+#callIn::placeholder,#shipIn::placeholder,#cmdIn::placeholder{color:var(--dim)}
 #cmdIn{flex:1;min-width:0;font-family:var(--f-display);font-size:15px;letter-spacing:.04em;color:var(--amber);background:#0a1120;border:1px solid var(--bezel);border-radius:8px;padding:11px 12px}
 #cmdIn:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
 .cmdchips{display:flex;flex-wrap:wrap;gap:6px}
@@ -766,15 +766,15 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
 
 <canvas id="space" aria-hidden="true"></canvas>
 <canvas id="fx" aria-hidden="true"></canvas>
-<canvas id="warpCv" hidden aria-label="Station jump"></canvas>
+<canvas id="warpCv" hidden aria-label="Ship jump"></canvas>
 
 <div id="app">
   <!-- SPLASH -->
   <section class="screen" id="splash">
     <div class="sp-top">
-      <div class="eyebrow">Station log</div>
+      <div class="eyebrow">Ship log</div>
       <h1 class="title">Tach 9</h1>
-      <p class="tag">Push your station past the speed of light, one jump at a time.</p>
+      <p class="tag">Push your ship past the speed of light, one jump at a time.</p>
     </div>
     <nav class="sp-menu" aria-label="Main menu">
       <button class="btn" id="continueBtn" hidden>Continue</button>
@@ -820,12 +820,12 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
     <div class="topbar">
       <button class="iconbtn" id="mapBack" aria-label="Main console">‹</button>
       <div class="who"><canvas class="portrait pix" id="mapPilot" width="10" height="10"></canvas><div><div class="callsign" id="mapCall">Ace</div><div class="sub" id="mapSub"></div></div></div>
-      <button class="bucks w4" id="mapBucks" aria-label="Credits, Alloy, Legend and Station rating"></button>
+      <button class="bucks w4" id="mapBucks" aria-label="Credits, Alloy, Legend and Ship rating"></button>
     <button class="iconbtn gear" aria-label="Options"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M7 0h2l.4 2.1 1.3.5 1.8-1.2 1.4 1.4-1.2 1.8.5 1.3L16 7v2l-2.1.4-.5 1.3 1.2 1.8-1.4 1.4-1.8-1.2-1.3.5L9 16H7l-.4-2.1-1.3-.5-1.8 1.2-1.4-1.4 1.2-1.8-.5-1.3L0 9V7l2.1-.4.5-1.3-1.2-1.8 1.4-1.4 1.8 1.2 1.3-.5zM8 5a3 3 0 100 6 3 3 0 000-6z"/></svg></button></div>
     <div class="chart" id="chartBox"><canvas id="chartCv" aria-label="Star chart. Pinch or use the buttons to zoom."></canvas><div class="swidget" id="sWidget" hidden></div><div class="chart-ui"><button id="zIn" aria-label="Zoom in">+</button><button id="zOut" aria-label="Zoom out">−</button><button id="zBig" aria-label="Expand star chart">⤢</button></div></div>
     <div class="carousel" id="carousel" aria-label="Systems in range" hidden></div>
     <div class="carnav" hidden><button class="iconbtn" id="carPrev" aria-label="Previous system">‹</button><div class="dots" id="dots"></div><button class="iconbtn" id="carNext" aria-label="Next system">›</button></div>
-    <div class="map-actions"><button class="btn ghost" id="hangarBtn">Station</button><button class="btn ghost" id="commsBtn" hidden>Sensors</button><button class="btn" id="resBtn" hidden>Research</button><button class="btn" id="moveBtn">Move here</button><button class="btn" id="jumpBtn">Launch</button></div>
+    <div class="map-actions"><button class="btn ghost" id="hangarBtn">Ship</button><button class="btn ghost" id="commsBtn" hidden>Sensors</button><button class="btn" id="resBtn" hidden>Research</button><button class="btn" id="moveBtn">Move here</button><button class="btn" id="jumpBtn">Launch</button></div>
   </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -834,11 +834,11 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
   <section class="screen off" id="station">
     <div class="topbar">
       <button class="iconbtn" id="stBack" aria-label="Back to galaxy map">‹</button>
-      <div class="tb-title">Station</div>
-      <button class="bucks w4" id="stBucks" aria-label="Credits, Alloy, Legend and Station rating"></button>
+      <div class="tb-title">Ship</div>
+      <button class="bucks w4" id="stBucks" aria-label="Credits, Alloy, Legend and Ship rating"></button>
     <button class="iconbtn gear" aria-label="Options"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M7 0h2l.4 2.1 1.3.5 1.8-1.2 1.4 1.4-1.2 1.8.5 1.3L16 7v2l-2.1.4-.5 1.3 1.2 1.8-1.4 1.4-1.8-1.2-1.3.5L9 16H7l-.4-2.1-1.3-.5-1.8 1.2-1.4-1.4 1.2-1.8-.5-1.3L0 9V7l2.1-.4.5-1.3-1.2-1.8 1.4-1.4 1.8 1.2 1.3-.5zM8 5a3 3 0 100 6 3 3 0 000-6z"/></svg></button></div>
-    <div class="bay stbay"><canvas id="stCv" aria-label="Station cutaway. Tap a room."></canvas><div class="bay-label" id="stLabel"></div></div>
-    <div class="rtabs" id="rtabs" role="tablist" aria-label="Station rooms"></div>
+    <div class="bay stbay"><canvas id="stCv" aria-label="Ship cutaway. Tap a room."></canvas><div class="bay-label" id="stLabel"></div></div>
+    <div class="rtabs" id="rtabs" role="tablist" aria-label="Ship rooms"></div>
     <div class="hg-body scroll">
       <div class="room-card" id="roomCard"></div>
     </div>
@@ -849,7 +849,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
     <div class="topbar">
       <button class="iconbtn" id="hangarBack" aria-label="Back to galaxy map">‹</button>
       <div class="tb-title" id="hgTitle">Hangar</div>
-      <button class="bucks w4" id="hgBucks" aria-label="Credits, Alloy, Legend and Station rating"></button>
+      <button class="bucks w4" id="hgBucks" aria-label="Credits, Alloy, Legend and Ship rating"></button>
     <button class="iconbtn gear" aria-label="Options"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M7 0h2l.4 2.1 1.3.5 1.8-1.2 1.4 1.4-1.2 1.8.5 1.3L16 7v2l-2.1.4-.5 1.3 1.2 1.8-1.4 1.4-1.8-1.2-1.3.5L9 16H7l-.4-2.1-1.3-.5-1.8 1.2-1.4-1.4 1.2-1.8-.5-1.3L0 9V7l2.1-.4.5-1.3-1.2-1.8 1.4-1.4 1.8 1.2 1.3-.5zM8 5a3 3 0 100 6 3 3 0 000-6z"/></svg></button></div>
     <div class="bay"><canvas id="bayCv"></canvas><div class="bay-label" id="bayLabel"></div></div>
     <div class="htabs" role="tablist">
@@ -861,6 +861,8 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
       <div class="hpane" data-p="quarters">
         <label class="hg-label" for="callIn">Captain call sign</label>
         <div class="callrow"><input id="callIn" type="text" maxlength="12" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done"><span class="callhint">Up to 12 letters</span></div>
+        <label class="hg-label" for="shipIn">Ship name</label>
+        <div class="callrow"><input id="shipIn" type="text" maxlength="16" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done"><span class="callhint">Up to 16 letters</span></div>
         <label class="hg-label" for="cmdIn">Jump command</label>
         <div class="callrow"><input id="cmdIn" class="cmdin" type="text" maxlength="18" autocomplete="off" spellcheck="false" enterkeyhint="done" placeholder="Engage!"><span class="callhint">Up to 18</span></div>
         <div class="cmdchips" id="cmdChips"></div>
@@ -1322,6 +1324,7 @@ const UP_TEXT={
 
 /* ================= SAVE ================= */
 const SAVE_KEY='bridgeduty.save.v3';
+const shipName=()=>(S.shipName||'').trim()||'Ship';
 const captainName=()=>(S.callsign||'').trim()||PILOTS[S.pilot].n;
 const defaultSave=()=>({bucks:0,cleared:0,up:{wpn:0,shd:0,sns:0,eng:0,fuel:0},paint:0,pilot:0,callsign:'',perks:{},slots:['surge','burn','burn'],career:null,choices:null,gal:null,station:null,legend:0,ver:2,sq:null,deck:null,face:null});
 let hasSave=false,S=defaultSave(),TR=null;   // TR: training session (see TRAINING below)
@@ -2522,7 +2525,7 @@ function drawScan(cv,ch,t){
   const sv=ch.salvage==null?1:ch.salvage,pay=String(Math.round(gateBonusBase(ch.threat,sys)*sv*(ch.sig==='storm'?1.6:1)));c.font='700 18px Oxanium, sans-serif';const pw=c.measureText(pay).width;
   drawCoin(c,W-16-pw-20,fy,7);c.fillStyle='#ff7ad9';c.fillText(pay,W-14-pw,fy+1);
   c.font='8px Silkscreen, monospace';c.textAlign='right';c.fillStyle=sv<1?'#ffb547':'rgba(56,224,155,.85)';c.fillText(`SALVAGE ${Math.round(sv*100)}%`,W-14,fy-16);c.textAlign='left';
-  // alloy market (buy only where the station is parked)
+  // alloy market (buy only where the ship is parked)
   {const st=S.gal&&S.gal.stars[ch.starId];if(st){alloyInit(st);
     const x0=52+lw+30,x1=W-14-pw-34,bw=Math.min(118,x1-x0-6),mx=(x0+x1)/2,price=alloyPrice(st),stock=st.alloy;
     if(bw>60){
@@ -2556,7 +2559,7 @@ function renderMap(){
   carIdx=0;car.scrollLeft=0;MAP.selOut=false;updateMapActions();
   {const g=S.gal;requestAnimationFrame(()=>{const keep=MAP.wSel!=null&&S.choices.some(c=>c.starId===MAP.wSel);showStarWidget(g.stars[keep?MAP.wSel:g.at]);});}
 }
-/* ================= GALAXY: procedural star chart, parked station, range ================= */
+/* ================= GALAXY: procedural star chart, parked ship, range ================= */
 const REGION_A=['Kessler','Vey','Orun','Talis','Myrr','Castor','Ilos','Durn','Ashra','Corvo','Nadir','Rhee'];
 const REGION_B=['Expanse','Reach','Drift','Verge','Marches','Deep','Shoals','Frontier'];
 const REGION_COLS=['#4da6ff','#c792ff','#ff9640'];
@@ -2593,7 +2596,7 @@ function genGalaxyLegacy(seed,num=1){
   revealAround(g);return g;
 }
 /* ================= v73: CONSTELLATION MAPS. Each Tach is a real constellation, star to star, to the Exodus Gate at the far end ================= */
-// s: [name, x, y] on a 0..1 chart; e: lines between stars. The leftmost star is where the station starts, the rightmost is the Exodus Gate.
+// s: [name, x, y] on a 0..1 chart; e: lines between stars. The leftmost star is where the ship starts, the rightmost is the Exodus Gate.
 const CONSTELLATIONS=[
  {name:'Crux',s:[['Mimosa',.08,.50],['Ginan',.46,.52],['Gacrux',.46,.10],['Acrux',.46,.90],['Imai',.92,.45]],e:[[0,1],[1,2],[1,3],[1,4]]},
  {name:'Cassiopeia',s:[['Caph',.07,.30],['Schedar',.28,.72],['Cih',.50,.35],['Ruchbah',.72,.72],['Segin',.93,.28]],e:[[0,1],[1,2],[2,3],[3,4]]},
@@ -2713,7 +2716,7 @@ function drawChart(t){
     if(u>=1){MAP.anim=null;A.done();}}
   c.fillStyle='rgba(127,243,255,.12)';c.beginPath();c.arc(sx,sy,13+Math.sin(t*3)*2,0,6.28);c.fill();
   stationSprite(c,sx,sy,t);
-  // badge: your captain marks where the station is
+  // badge: your captain marks where the ship is
   if(!MAP.anim&&rvT==null){{const key=S.pilot+JSON.stringify(S.face||0);if(!MAP.pc||MAP.pcI!==key){MAP.pc=blankCanvas(10,10);drawPortrait(MAP.pc,S.pilot);MAP.pcI=key;}}
     const bs=20,bx=Math.round(sx-bs-6),by=Math.round(sy-bs-8),p=(Math.sin(t*3)+1)/2;c.fillStyle='rgba(4,6,13,.92)';rr(c,bx-2,by-2,bs+4,bs+4,5);c.fill();c.strokeStyle=`rgba(127,243,255,${.7+.3*p})`;c.lineWidth=1.5;c.stroke();
     c.save();c.imageSmoothingEnabled=false;c.drawImage(MAP.pc,bx,by,bs,bs);c.restore();c.fillStyle='#7ff3ff';c.beginPath();c.moveTo(bx+bs-2,by+bs+2);c.lineTo(bx+bs+5,by+bs+6);c.lineTo(bx+bs+2,by+bs-1);c.closePath();c.fill();}
@@ -2773,7 +2776,7 @@ function showStarWidget(s){
       g.cons&&s.terra?['◍','Terraformed · counts toward the Exodus Gate','#5ef0d0']:null,
       g.cons?null:s.res?['⚗',`Researched · ${s.res.name} · ${reelDef(s.res.k).name} +${s.res.amt}`,reelDef(s.res.k).col]:g.cons?null:canResearch(s)?['⚗','Research ready · park here','#ffd84a']:s.id!==g.gate&&!s.clears?['⚗','Clear it to unlock research','#7f8fb2']:null,
       s.clears?['✓',`Cleared ${s.clears}× · salvage ${Math.round(salvageOf(s)*100)}%`,'#38e09b']:null].filter(Boolean);
-    const sub=here?'Station here':i>=0?'One jump':'Out of range';
+    const sub=here?'Ship here':i>=0?'One jump':'Out of range';
     const dial=here&&!TR?depthPanel(s):'';
     const tfRow=here&&!TR&&g.cons&&s.id!==g.gate?(canTerra(s)?(()=>{const pl=tfPlan(s);return `<div class="sw-tf"><span>Terraform · tune 6 Terra-reels · ideal colony ${terraPop(s)} people (${S.station?S.station.pop:0} aboard)</span><button type="button" id="swTerra"${popOk(s)?'':' disabled'}>${popOk(s)?'Terraform':'Need people'}</button></div>`;})():s.terra?'<div class="sw-tf ok">✓ Terraformed</div>':s.clears?'':'<div class="sw-tf dim">Clear a run here, then terraform it</div>'):'';
     const pay2=here?Math.round(pay*DEPTH_PAY[depthNow()]):pay;
@@ -2821,7 +2824,7 @@ function moveStation(){
     if(sigs)rows.push(['New signals on scope',String(sigs),'#ffd84a','signals']);
     if(st.sig)rows.push(['Signal here',SIGS[st.sig].name,SIGS[st.sig].col,'sig:'+st.sig]);
     alloyInit(st);if(peak('comms')&&st.alloy<8)st.alloy++;rows.push(['Alloy market',st.alloy>0?`${st.alloy} in stock · ${alloyPrice(st)} CR`:'Sold out',st.alloy>0?'#cfe0f5':'#7f8fb2','alloy']);
-    rows.push(['Station rating',String(rating()),'#ffd84a','rating']);
+    rows.push(['Ship rating',String(rating()),'#ffd84a','rating']);
     persist();renderMap();return rows;});
   updateMapActions();
 }
@@ -2829,7 +2832,7 @@ function updateMapActions(){
   const ch=S.choices&&S.choices[carIdx],mb=$('#moveBtn');if(!ch)return;
   const busy=!!(MAP.anim||WARP||TC),jb=$('#jumpBtn'),out=MAP.selOut;
   const ib=(b,ico,lab)=>{b.classList.add('mib');b.innerHTML=`<span class="ib-i">${ICO[ico]}</span><span class="ib-t">${lab}</span>`;};
-  ib($('#hangarBtn'),'station','Station');ib($('#commsBtn'),'signal','Sensors');
+  ib($('#hangarBtn'),'station','Ship');ib($('#commsBtn'),'signal','Sensors');
   {const rb=$('#resBtn'),here=S.gal.stars[S.gal.at];if(S.gal.cons){rb.hidden=out||!ch.here||here.id===S.gal.gate;rb.disabled=busy||!!here.terra;ib(rb,'flask',here.terra?'Terraformed':'Terraform');rb.classList.toggle('tfready',!rb.hidden&&canTerra(here));rb.classList.toggle('dim',!rb.hidden&&!canTerra(here));}else{rb.classList.remove('tfready');rb.hidden=out||!ch.here||!canResearch(here);rb.disabled=busy;ib(rb,'flask','Research');}}
   jb.hidden=out||!ch.here;jb.disabled=busy;if(ch.gate)ib(jb,'tach',S.gal.cons?(S.gal.gateWon?'Jump on':terraDone(S.gal)<terraNeed(S.gal)?'Sealed':'Exodus Gate'):`Tach ${S.gal.num}`);else ib(jb,'rocket','Launch');jb.classList.toggle('tachb',!!ch.gate);
   mb.hidden=out||ch.here;
@@ -2930,13 +2933,13 @@ function arrivalDetail(k){
   if(NEWS_DETAIL[k])return NEWS_DETAIL[k]();
   return({
     region:`You crossed into ${st?g.regions[st.r].name:'a new region'}. Threat climbs region by region, and so do payouts and the number of migrants.`,
-    migrants:'People join the first time your station parks at a new star. Regions further east send more. They live in the Habitat and count toward your station rating.',
-    away:'The Habitat had no room for them. Upgrade it at the station to hold more people.',
+    migrants:'People join the first time your ship parks at a new star. Regions further east send more. They live in the Habitat and count toward your ship rating.',
+    away:'The Habitat had no room for them. Upgrade it at the ship to hold more people.',
     familiar:'You have parked here before, so nobody new is waiting to board.',
-    people:'People aboard out of what the Habitat can hold. Every person counts toward your station rating.',
+    people:'People aboard out of what the Habitat can hold. Every person counts toward your ship rating.',
     charted:'Stars your scanners can now see. Upgrade the Sensors to see further out.',
     signals:'New signals on the chart: distress calls, salvage caches and anomalies. Look for the small icons beside stars.',
-    alloy:'Alloy for sale at this star. Buy it from this system’s card on the map or at the station market. The price climbs with each one you buy.',
+    alloy:'Alloy for sale at this star. Buy it from this system’s card on the map or at the ship market. The price climbs with each one you buy.',
     rating:`Your score for this galaxy: people aboard (${S.station?S.station.pop:0}) plus Legend (${legendOf()}). Legend comes from expedition ranks, long chains and board clears.`,
   })[k]||'';
 }
@@ -3052,13 +3055,13 @@ function drawWarp(dt){
 const FRONT_COL='#ff4d5e';
 const LANDMARKS={
   yard:{name:'Ancient Shipyard',short:'SHIPYARD',col:'#7ff3ff',
-        desc:'A derelict dry dock still full of tooling. The first time your station parks here, your Shipyard gains a free level (or 3 Alloy if it is maxed).'},
+        desc:'A derelict dry dock still full of tooling. The first time your ship parks here, your Shipyard gains a free level (or 3 Alloy if it is maxed).'},
   ark:{name:'Derelict Ark',short:'DERELICT ARK',col:'#38e09b',
         desc:'A colony ark adrift with sleepers aboard. Clear an expedition here to wake them: 12 people for the Habitat and 10 Legend. Once only.'},
   hub:{name:'Trade Hub',short:'TRADE HUB',col:'#cfe0f5',
         desc:'A busy free port. A deep Alloy market at 40% off, as long as the hub stays free.'},
   relay:{name:'Relay Beacon',short:'RELAY',col:'#c792ff',
-        desc:'An old navigation relay with a deep archive. The first time your station parks here, the archive grants +6 ★ Legend.'},
+        desc:'An old navigation relay with a deep archive. The first time your ship parks here, the archive grants +6 ★ Legend.'},
 };
 function initPhase4(g){
   g.td=1;if(g.cons)g.shardInit=true;
@@ -3419,13 +3422,13 @@ function renderCampaignReport(){
   <div class="rp-grid">
     ${box('Galaxy',[['stars visited',`${g.visited.length} / ${g.stars.length}`],['systems cleared · researched',`${g.stars.filter(s=>s.clears).length} · ${g.stars.filter(s=>s.res).length}`],['gate parts',`${shardsMine(g)} / ${SHARD_NEED}`],['Tach attempts',(L.tach||[]).filter(a=>a.T===g.num).map(a=>`${a.p}% ${a.ok?'✓':'✕'}`).join(' ')||'—']])}
     ${box('Expeditions',[['flown / won',`${ex.length} / ${won.length}`],['win rate',pct(won.length,ex.length)],['avg threat',ex.length?(ex.reduce((a,e)=>a+e.T,0)/ex.length).toFixed(1):'—'],['avg time',ex.length?`${f(ex.reduce((a,e)=>a+e.time,0)/ex.length)}s`:'—'],['ranks',Object.entries(rank).map(([k,v])=>`${k}×${v}`).join(' ')||'—']])}
-    ${box('Station',[['credits',S.bucks],['alloy',S.station.alloy],['people',`${S.station.pop}/${HAB_CAP[rl('habitat')]}`],['legend',legendOf()],['rating',rating()]])}
+    ${box('Ship',[['credits',S.bucks],['alloy',S.station.alloy],['people',`${S.station.pop}/${HAB_CAP[rl('habitat')]}`],['legend',legendOf()],['rating',rating()]])}
     ${box('Pace',[['expeditions per 10 min',(ex.length/mins*10).toFixed(1)],['jumps per 10 min',(L.jumps/mins*10).toFixed(1)],['avg payout',ex.length?f(ex.reduce((a,e)=>a+(e.cr||0),0)/ex.length)+' CR':'—']])}
   </div>
   <div class="rp-b"><h4>Recent missions</h4><pre>${L.exp.slice(-10).map(e=>`${e.hold?'EXODUS GATE':e.name} (threat ${e.T}) ${e.win?'won '+e.rank:'lost'} · ${e.time}s · hull ${e.hull}%`).join('\n')||'—'}</pre></div>`;
   show('#report',true);
 }
-/* ================= TACH DRIVE: push the station past light. One reel per system, and every reel must hold ================= */
+/* ================= TACH DRIVE: push the ship past light. One reel per system, and every reel must hold ================= */
 const TACH_GOAL=9;
 /* ================= STAGES: the ten-minute lesson plan. Each Tach attempt introduces one new idea ================= */
 /* v75: nothing unlocks by Tach number any more. Complexity is the player's choice (survey depth), and tools unlock by clearing runs. */
@@ -3484,6 +3487,7 @@ function takeRelic(id,replace){S.relics=S.relics||[];if(replace){const i=S.relic
 
 /* ================= v72: OVERDRIVE. Perfect clears charge a burst: tap targets, short window then overtime ================= */
 function core(k){const r=S&&S.station&&S.station.core&&S.station.core[k]||0;return Math.min(3,r+(relicHas('capacitor')?1:0));}
+const odFuel=()=>Math.max(8,Math.round(ST.tank*.1));
 const IL_WIN=9,ilWin=()=>IL_WIN+1.5*core('counter');const odNeed=()=>{const L=S.station?rl('tach'):1;return L>=3?3:L===2?4:5;};
 let IL=null,IL_WAS=false;
 function odSync(){const on=!TR&&scene==='game'&&G.running,has=feat('burst'),need=odNeed(),n=Math.min(need,G.od||0),bar=$('#odBar');
@@ -3507,6 +3511,7 @@ function odGain(n){if(TR||!feat('burst'))return;const was=G.od||0,need=odNeed();
 function openBurst(){if(IL||!G.running||G.ending||CINE||perkOpen||scene!=='game'||(G.od||0)<odNeed())return;
   IL={pick:true};IL_WAS=paused;paused=true;drag=null;
   $('#brstPick').hidden=false;$('#ilCv').hidden=true;$('#brstRes').hidden=true;$('#bpCounter').disabled=!feat('pursuer');$('#bpRepair').disabled=G.hull>=ST.hullMax-1;
+  {const f=odFuel(),ok=G.fuel>f+3;['bpCounter','bpRepair','bpStorm','bpBurn','bpRail'].forEach(id=>{const e=$('#'+id);e.disabled=e.disabled||!ok;});const h=document.querySelector('#brstPick .od-hint');if(h)h.textContent=`Each Overdrive burns ${f} fuel (${Math.round(G.fuel)} left). The Fuel snake is free. First miss ends a game.`;}
   show('#burst',true);sfx.tick();{const bu=$('#burst');bu.style.pointerEvents='none';setTimeout(()=>{bu.style.pointerEvents='';},600);}}
 function openView(){if(IL||!G.running||G.ending||CINE||perkOpen||scene!=='game')return;
   IL={pick:true};IL_WAS=paused;paused=true;drag=null;show('#burst',true);startBurst('view');sfx.tick();}
@@ -3791,8 +3796,9 @@ function ilDraw(cv,s,t){const c=cv.getContext('2d'),W=s.W,H=s.H;c.setTransform(d
   if(s.end){c.fillStyle='rgba(4,7,16,.5)';c.fillRect(0,0,W,H);}}
 (()=>{const cv=$('#ilCv');cv.addEventListener('pointermove',e=>{if(IL&&IL.mode==='pipe'&&!IL.end&&e.buttons){const r=cv.getBoundingClientRect();pipeSwipe(e.clientX-r.left,e.clientY-r.top);e.preventDefault();}});cv.style.touchAction='none';cv.addEventListener('pointerup',pipeUp);window.addEventListener('pointerup',pipeUp);cv.addEventListener('pointerleave',pipeUp);cv.addEventListener('pointercancel',pipeUp);cv.addEventListener('pointerdown',e=>{if(IL&&IL.mode==='view'&&!IL.pick){sfx.tick();closeBurst();e.preventDefault();return;}if(!IL||IL.pick||IL.end)return;const r=cv.getBoundingClientRect();ilHit(e.clientX-r.left,e.clientY-r.top);e.preventDefault();});
   $('#ilTach').onclick=e=>{e.stopPropagation();audio();ilTachUse();};
-  $('#bpRepair').onclick=()=>{audio();startBurst('repair');};$('#bpStorm').onclick=()=>{audio();startBurst('storm');};$('#bpBurn').onclick=()=>{audio();startBurst('burn');};$('#bpRail').onclick=()=>{audio();startBurst('rail');};
-  $('#bpCounter').onclick=()=>{audio();startBurst('counter');};$('#bpGun').onclick=()=>{audio();startBurst('pipe');};
+  const odGo=m=>()=>{audio();if(m!=='pipe'){const f=odFuel();if(G.fuel<=f+3){vpPop('NEED '+f+' FUEL','#ffd84a');sfx.bad();return;}G.fuel-=f;G.R.fuel.od=(G.R.fuel.od||0)+f;pulseFuel();}startBurst(m);};
+  $('#bpRepair').onclick=odGo('repair');$('#bpStorm').onclick=odGo('storm');$('#bpBurn').onclick=odGo('burn');$('#bpRail').onclick=odGo('rail');
+  $('#bpCounter').onclick=odGo('counter');$('#bpGun').onclick=odGo('pipe');
   $('#bpNo').onclick=()=>{sfx.tick();closeBurst();};$('#brstGo').onclick=()=>{sfx.tick();closeBurst();};})();
 /* ================= v79: TERRAFORM, geo-forms (push-your-luck dice, after Zombie Dice) ================= */
 const terraNeed=g=>g&&g.cons?Math.min(4,1+Math.ceil(g.num/3)):0;
@@ -3981,7 +3987,7 @@ function sysView(key){const b=SYSTEMS[key];if(!TR&&depthNow()>=2)return b;const 
   if(!feat('mods')){for(const k of ['bounty','bucksW','drainAdd','gapRate','gateMul','richPlanets','sensorAdd','slingBonus','twist','bonus','twistT','bonusT'])delete o[k];}
   return o;}
 const STAGES=[null,
- {short:'The basics',obj:'Fly this system and reach the gate. Swap two neighbouring tiles to line up three or more of a colour. Each colour charges one ship system, and that system deals with one kind of contact on the scope. Work your way along the constellation, star by star, to the Exodus Gate at the far end. Clear that last system and the station jumps on to the next Tach.',
+ {short:'The basics',obj:'Fly this system and reach the gate. Swap two neighbouring tiles to line up three or more of a colour. Each colour charges one ship system, and that system deals with one kind of contact on the scope. Work your way along the constellation, star by star, to the Exodus Gate at the far end. Clear that last system and the ship jumps on to the next Tach.',
   news:['Match 3+: Weapons beat ships, Shields deflect rocks, Sensors scan planets, Engines slingshot wells','Fuel cells top up the tank. Keep an eye on fuel and hull','Nothing is chasing us yet. Take your time and learn the board']},
  {short:'Line tiles',obj:'Same job, one new trick for the board.',
   news:['Match 4 in a row to forge a LINE tile','Match a line tile later and it sweeps its whole row or column']},
@@ -3989,8 +3995,8 @@ const STAGES=[null,
   news:['Match 5 to forge a NOVA core. Swap it with any tile to clear every tile of that colour','Credits tiles (pink) pay straight into your wallet','Salvage crates join a match of 4+ and crack open for a prize','Special tiles now ride in loadout slots. Pick which ones fly with us in the briefing','Clear a system and the crew offers a relic: a permanent ship upgrade']},
  {short:'A pursuer, and its attacks',obj:'Something has picked up our trail.',
   news:['An Empire cruiser now chases us. Watch the GAP bar, top-left of the viewport','Missed contacts close the gap. Perfect clears push it back. At zero we are caught','It launches attacks too. Have enough charge banked in the system it names before the timer ends','SURVEY DEPTH is yours to set in the briefing. Fly-by is quiet and pays less. Deep survey brings every threat and pays more']},
- {short:'Station rooms unlock',obj:'Time to build out the station.',
-  news:['Credits and Alloy can now build and upgrade rooms: Sensors, Shipyard, War room, Refinery, Habitat, Drone bay and Tach drive','Open the Station from the map to spend','OVERDRIVE: perfect clears charge the ring beside Pause. Tap it for a burst of Counterfire or Gunnery. Hit every target, and miss nothing in overtime']},
+ {short:'Ship rooms unlock',obj:'Time to build out the ship.',
+  news:['Credits and Alloy can now build and upgrade rooms: Sensors, Shipyard, War room, Refinery, Habitat, Drone bay and Tach drive','Open the Ship from the map to spend','OVERDRIVE: perfect clears charge the ring beside Pause. Tap it for a burst of Counterfire or Gunnery. Hit every target, and miss nothing in overtime']},
  {short:'Combo perks',obj:'Big chains pay off now.',
   news:['Chains of 3+ let your crew fire a combo perk','Set the loadout in the War room. Longer chains unlock stronger perks']},
  {short:'Every pursuer is different',obj:'Each system now has its own pursuer.',
@@ -4055,7 +4061,7 @@ function openTach(){
       <div class="tc-o"><b>${pctTxt(r.p)}</b><i class="tc-bar"><u style="width:${Math.round(r.p*100)}%"></u></i></div>
       <div class="tc-win" id="tcW${i}"><span>?</span></div></div>`).join('')}</div>
     <div class="tc-tot"><span>Chance to reach <b>Tach ${plan.T}</b></span><em>${pctTxt(plan.total)}</em></div>
-    <p class="tc-note">${can?'Every reel must hold. Each system that fails loses a level, and a failed calibration loses a gate part.':'Park the station at the Exodus Gate to attempt the jump. Raise the odds by upgrading ship systems and rooms, recovering gate parts, and researching at the planets you clear.'}</p>`;
+    <p class="tc-note">${can?'Every reel must hold. Each system that fails loses a level, and a failed calibration loses a gate part.':'Park the ship at the Exodus Gate to attempt the jump. Raise the odds by upgrading ship systems and rooms, recovering gate parts, and researching at the planets you clear.'}</p>`;
   b.querySelectorAll('canvas.tc-ic').forEach(cv=>{const r=plan.reels[+cv.dataset.i],img=r.ico==null?LUX_IC:ICONS[r.ico];cv.width=img.width;cv.height=img.height;cv.getContext('2d').drawImage(img,0,0);});
   const go=$('#tcGo'),bk=$('#tcX');go.hidden=!can;go.disabled=false;go.innerHTML=`<i class="tc-gi">${ICO.tach}</i>Attempt Tach ${plan.T}`;go.onclick=runTach;
   bk.hidden=false;bk.onclick=closeTach;
@@ -4092,7 +4098,7 @@ function finishTach(){
   const b=$('#tcBody');b.classList.remove('running');
   const done=T>=TACH_GOAL;
   b.insertAdjacentHTML('beforeend',`<div class="tc-res ${ok?'ok':'bad'}"><b>${ok?(done?`TACH ${T} · YOU MADE IT`:`TACH ${T} REACHED`):'DRIVE FAILURE'}</b>
-    <p>${ok?(done?'The station breaks Tach 9. Nobody has gone faster. The galaxies beyond are yours if you want to keep pushing.':'The station tears through the barrier into a new galaxy. The next Tach asks more of every system.'):'The drive shuts down short of the barrier. Rebuild what broke and try again.'}</p>
+    <p>${ok?(done?'The ship breaks Tach 9. Nobody has gone faster. The galaxies beyond are yours if you want to keep pushing.':'The ship tears through the barrier into a new galaxy. The next Tach asks more of every system.'):'The drive shuts down short of the barrier. Rebuild what broke and try again.'}</p>
     <ul>${lines.map(l=>`<li>${l}</li>`).join('')}</ul>${rateWidget('tach '+T+(ok?' ok':' fail'))}</div>`);bindRate(b);
   $('#tcX').hidden=false;const go=$('#tcGo');go.hidden=false;go.innerHTML=ok?`<i class="tc-gi">${ICO.tach}</i>${done?'Keep going':'Make the jump'}`:'Back to the map';
   go.onclick=ok?()=>{closeTach();nextGalaxy();}:closeTach;
@@ -4282,7 +4288,7 @@ const COACH_TIPS={
   research:{el:'.rv-opts',t:()=>'Science team, pick one project. Each one strengthens a reel of the Tach drive for every jump attempt in this galaxy. One project per planet.'},
   move:{el:'#chartCv',t:()=>'Helm, tap a star one jump away and Move. Jumps cost credits. New stars bring migrants, Alloy markets and sometimes something strange.'},
   part:{el:'#chartCv',t:()=>'See the teal crystal? A gate part. Win the system that holds it and the part calibrates our Luxometer. Four makes for a clean Tach jump.'},
-  station:{el:'#stCv',t:()=>feat('rooms')?'Our station. Rooms run on Alloy, credits and crew. The Shipyard rebuilds our systems, and the Tach drive will push us past light.':'Our station. Room upgrades unlock at Tach 5. For now the Shipyard can still rebuild our ship systems.'},
+  station:{el:'#stCv',t:()=>feat('rooms')?'Our ship. Rooms run on Alloy, credits and crew. The Shipyard rebuilds our systems, and the Tach drive will push us past light.':'Our ship. Room upgrades unlock at Tach 5. For now the Shipyard can still rebuild our ship systems.'},
   anomaly:{el:'#anBody',t:()=>'An anomaly. Every choice out here is a trade or a gamble. Read the odds and make the call.'},
   gate:{el:'#chartCv',t:()=>'The Exodus Gate is in reach. It is the last system in this constellation. Clear it and we jump on to the next. Tap it to see what is waiting.'},
   tach:{el:'.tc-tot',t:()=>'Five reels, one per system, and all five must hold. The chances multiply, so one weak reel drags the whole jump down. Shore up the weakest first.'},
@@ -4423,7 +4429,7 @@ const ROOMS=[
    desc:'The ship\'s sensor array. You calibrate it to each Terra-reel in a Terraform, and until you do the ideal and danger zones are barely visible. It also trades Alloy at the star you are parked at.',
    eff:L=>`Calibrate Terra-reels up to rank ${Math.max(0,L-1)}${L>1?` · trade Alloy ${L-1} jump${L>2?'s':''} away`:''}`},
   {k:'shipyard',name:'Shipyard',col:'#7ff3ff',max:4,cost:[null,[2,40],[4,90],[7,160]],panel:'ship',open:'Ship systems & paint',
-   desc:'The mechanics bay. Your crew rebuilds the station’s weapons, shields, sensors and engines here and repaints the hull. Its level caps how far each system can be upgraded.',
+   desc:'The mechanics bay. Your crew rebuilds the ship’s weapons, shields, sensors and engines here and repaints the hull. Its level caps how far each system can be upgraded.',
    eff:L=>`Ship systems up to level ${L}`},
   {k:'war',name:'War room',col:'#ff6a7a',max:3,cost:[null,[3,60],[6,130]],panel:'combos',open:'Combo loadout',
    desc:'Tactical command. Plan the combo perks your crew fires on big chains. From level 2, the tacticians read the opening board and pre-charge whichever system has the most tiles on it.',
@@ -4432,13 +4438,13 @@ const ROOMS=[
    desc:'Smelts the salvage from every system you clear into Alloy for building and upgrading rooms. The foundry also distils Tach, a scarce vial that slows Terraform and the Overdrive mini-games when you need it most, and keeps the ledger of your installed ship systems.',
    eff:L=>L?`+${L/2} Alloy per clear · holds ${L} Tach`:'Offline'},
   {k:'habitat',name:'Habitat',col:'#ffb547',max:4,cost:[null,[3,50],[6,110],[9,180]],panel:'crew',open:'Crew deck',
-   desc:'Living decks and the captain’s quarters. Pick your pilot and call sign and review your service record. Survivors and migrants will need the room as the station grows.',
+   desc:'Living decks and the captain’s quarters. Pick your pilot and call sign and review your service record. Survivors and migrants will need the room as the ship grows.',
    eff:L=>`Room for ${HAB_CAP[L]} people`},
   {k:'drone',name:'Drone bay',col:'#c792ff',max:3,cost:[[3,60],[5,120],[8,200]],panel:'drones',open:'Drone payloads',
    desc:'Drones ride along on every expedition. Every so often one drops onto the board carrying the payload you picked: a line clearer, a bomb or a hazard seeker. Higher levels mean more frequent drops and bigger payloads, and from level 2 drones also seal one hull breach when the hull runs low.',
    eff:L=>L?`A drone every ${DRONE_T[L]}s · ${PAYLOADS[payload()].name.toLowerCase()} ${PAYLOADS[payload()].eff(L)}${PATCH[L]?` · seals ${PATCH[L]} hull once`:''}`:'Offline'},
   {k:'tach',name:'Overdrive core',col:'#5ef0d0',max:3,cost:[null,[6,150],[10,300]],panel:'core',open:'Core tuning',
-   desc:'The reactor behind Overdrive. Perfect clears charge it, and a bigger core needs fewer of them. Engage it from under the systems for Counterfire, Gunnery or Emergency Repair. The same drive carries the station through the Exodus Gate.',
+   desc:'The reactor behind Overdrive. Perfect clears charge it, and a bigger core needs fewer of them. Engage it from under the systems for Counterfire, Gunnery or Emergency Repair. The same drive carries the ship through the Exodus Gate.',
    eff:L=>`Overdrive charges in ${[0,5,4,3][L]} perfect clears · tuning up to rank ${L}`},
 ];
 {const ord=['comms','shipyard','war','habitat','refinery','drone','tach'];ROOMS.sort((a,b)=>ord.indexOf(a.k)-ord.indexOf(b.k));}
@@ -4629,7 +4635,7 @@ function renderCrew(){const stn=ensureStation();crewSync();const rooms=CREWED.fi
    (rooms.length?rooms.map(k=>{const d=roomDef(k),cap=crewCap(k);return`<div class="crew" data-k="${k}" style="--rc:${d.col};margin-bottom:10px"><div class="crew-h">${ICO.person}<b>${d.name} L${rl(k)} · <span data-n></span> / ${cap}</b><em data-st></em></div>
     <input type="range" class="crew-sl" min="0" max="${cap}" step="1" value="${stn.crew[k]||0}" aria-label="Crew assigned to ${d.name}">
     <div class="crew-scale"><i style="left:50%"></i><i style="left:99%"></i><span style="left:25%">UNDERSTAFFED</span><span style="left:72%">STAFFED</span><span style="left:96%">FULL</span></div>
-    <p class="crew-note" data-note></p></div>`;}).join(''):'<p class="hg-note">No crewed rooms yet. Build rooms from the station view.</p>');
+    <p class="crew-note" data-note></p></div>`;}).join(''):'<p class="hg-note">No crewed rooms yet. Build rooms from the ship view.</p>');
   const paint=()=>{const f=crewIdle();$('#cdIdle').textContent=f;
     $('#crewBody').querySelectorAll('.crew[data-k]').forEach(el=>{const k=el.dataset.k,cap=crewCap(k),v=stn.crew[k]||0,st=crewState(k),L=rl(k);el.querySelector('[data-n]').textContent=v;
       const e=el.querySelector('[data-st]');e.textContent=st==='low'?'UNDERSTAFFED':st==='peak'?'FULL CREW':'STAFFED';e.style.color=CREW_COL[st];
@@ -4896,7 +4902,7 @@ function drawStation(dt){
 function renderHangar(){
   SHIP=makeShip(S.paint,S.up);
   ensureStation();$('#hgBucks').innerHTML=wallet();
-  {const rd=ROOMS.find(r=>r.panel===H.tab);$('#hgTitle').textContent=H.intro?'Create your pilot':rd?rd.name:'Station';$('#record').style.display=$('#recLab').style.display=H.intro?'none':'';$('#pilotDone').style.display=H.intro?'':'none';$('#hangar .htabs').hidden=true;}
+  {const rd=ROOMS.find(r=>r.panel===H.tab);$('#hgTitle').textContent=H.intro?'Create your pilot':rd?rd.name:shipName();$('#record').style.display=$('#recLab').style.display=H.intro?'none':'';$('#pilotDone').style.display=H.intro?'':'none';$('#hangar .htabs').hidden=true;}
   if(!S.slots)S.slots=DEFAULT_SLOTS.slice();
   document.querySelectorAll('.htab').forEach(b=>{const on=b.dataset.t===H.tab;b.setAttribute('aria-selected',on?'true':'false');});
   document.querySelectorAll('.hpane').forEach(p=>p.hidden=p.dataset.p!==H.tab);
@@ -4910,7 +4916,7 @@ function renderHangar(){
   if(document.activeElement!==$('#cmdIn'))$('#cmdIn').value=S.cmd||'';
   $('#cmdChips').innerHTML=CMD_PRESETS.map(p=>`<button type="button" aria-pressed="${cmdText()===p}">${p}</button>`).join('');
   $('#cmdChips').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.cmd=b.textContent;persist();sfx.tick();renderHangar();});
-  if(document.activeElement!==$('#callIn'))$('#callIn').value=S.callsign||'';$('#callIn').placeholder=PILOTS[S.pilot].n;
+  if(document.activeElement!==$('#callIn'))$('#callIn').value=S.callsign||'';if(document.activeElement!==$('#shipIn'))$('#shipIn').value=S.shipName||'';$('#shipIn').placeholder='Ship';$('#callIn').placeholder=PILOTS[S.pilot].n;
   const pl=$('#pilots');pl.innerHTML='';
   PILOTS.forEach((p,i)=>{const b=document.createElement('button');b.className='pilotpick';b.setAttribute('aria-label','Pilot '+p.n);b.setAttribute('aria-pressed',S.pilot===i&&!S.face?'true':'false');
     const cv=document.createElement('canvas');cv.className='pix';const keep=S.face;S.face=null;drawPortrait(cv,i);S.face=keep;b.append(cv);
@@ -5043,9 +5049,9 @@ function tipFor(key,ch){
     text:`Threat ${ch.threat}. It climbs region by region as you travel east. Contacts need more charge and hazards hit harder.`};
   if(key==='lm'&&ch.lm){const L=LANDMARKS[ch.lm];return{title:L.name,col:L.col,toks:[['gate']],text:L.desc};}
   if(key==='shard')return{title:'Gate part',col:SHARD_COL,toks:[['gate']],text:(ch.shardClaimed?'You recovered this part. ':'This system guards a gate part: threat is 1 higher. Win an expedition here to recover it. ')+`Each part you hold (up to ${SHARD_NEED}) calibrates the Luxometer for the Tach jump. You hold ${shardsMine(S.gal)}.`};
-  if(key==='gatepill')return{title:'Exodus Gate',col:'#ffd84a',toks:[['gate']],text:S.gal.cons?`The end of the constellation. Terraform ${terraNeed(S.gal)} worlds along the way to unseal it, then clear it to jump on to the next constellation.`:`Where the station attempts Tach ${S.gal.num}. You can try whenever you are parked here: five reels spin, one per system, and every one must hold. Your chance right now is ${pctTxt(tachPlan().total)}. Gate parts calibrate the Luxometer: you hold ${Math.min(shardsMine(S.gal),SHARD_NEED)} of ${SHARD_NEED}.`};
+  if(key==='gatepill')return{title:'Exodus Gate',col:'#ffd84a',toks:[['gate']],text:S.gal.cons?`The end of the constellation. Terraform ${terraNeed(S.gal)} worlds along the way to unseal it, then clear it to jump on to the next constellation.`:`Where the ship attempts Tach ${S.gal.num}. You can try whenever you are parked here: five reels spin, one per system, and every one must hold. Your chance right now is ${pctTxt(tachPlan().total)}. Gate parts calibrate the Luxometer: you hold ${Math.min(shardsMine(S.gal),SHARD_NEED)} of ${SHARD_NEED}.`};
   if(key==='alloy'){const st=S.gal.stars[ch.starId];return{title:'Alloy market',col:'#9fb8d8',toks:[['icon',BUCKS],['arrow'],['gate']],art:(c,W,H)=>{hexPath(c,W/2,H/2,18);c.fillStyle='#9fb8d8';c.fill();c.fillStyle='#e6f0ff';hexPath(c,W/2-4,H/2-5,6);c.fill();},
-    text:`${st.alloy>0?`${st.alloy} Alloy for sale here at ${alloyPrice(st)} Credits each.`:'Sold out.'} You can only buy where your station is parked, so move the station here first. The price climbs with each one you buy.`};}
+    text:`${st.alloy>0?`${st.alloy} Alloy for sale here at ${alloyPrice(st)} Credits each.`:'Sold out.'} You can only buy where your ship is parked, so move the ship here first. The price climbs with each one you buy.`};}
   if(key==='sig'&&ch.sig){const sg=SIGS[ch.sig];return{title:sg.name,col:sg.col,toks:ch.sig==='sos'?[['mini','pod'],['arrow'],['icon',2]]:ch.sig==='cache'?[['icon',BUCKS],['plus'],['icon',4]]:[['gate']],text:sg.desc};}
   if(key==='system')return{title:sys.type,col:sys.star,art:(c,W,H)=>{drawPortraitSys(ch.key,SP.t);c.imageSmoothingEnabled=false;const s=Math.min(W,H)*1.1;c.drawImage(PB,W/2-s/2,H/2-s/2,s,s);},text:SYS_DESC[ch.key]};
   if(key==='pursuer')return{title:'Pursuer · '+sys.pName,col:'#ff4d5e',toks:[['pursuer']].concat(Array(sys.gapRate>1?2:1).fill(['fast'])),
@@ -5525,7 +5531,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v112';
+const BUILD='v113';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5547,7 +5553,7 @@ function renderReport(){
   <table class="rp-t"><thead><tr><th></th><th>seen</th><th>✓</th><th>½</th><th>✗</th><th>need</th><th>had</th></tr></thead><tbody>${rows}</tbody></table>
   <div class="rp-grid">
     <div class="rp-b"><h4>Hull lost</h4>${hullRows}</div>
-    <div class="rp-b"><h4>Fuel</h4><div><span>start</span><b>${f(R.fuel.start)}</b></div><div><span>+ tiles</span><b>${f(R.fuel.tiles)}</b></div><div><span>+ planets</span><b>${f(R.fuel.planets)}</b></div><div><span>+ perks</span><b>${f(R.fuel.perks)}</b></div><div><span>− drain</span><b>${f(R.fuel.drain)}</b></div><div><span>− wells</span><b>${f(R.fuel.wells)}</b></div><div><span>end</span><b>${f(G.fuel)}</b></div></div>
+    <div class="rp-b"><h4>Fuel</h4><div><span>start</span><b>${f(R.fuel.start)}</b></div><div><span>+ tiles</span><b>${f(R.fuel.tiles)}</b></div><div><span>+ planets</span><b>${f(R.fuel.planets)}</b></div><div><span>+ perks</span><b>${f(R.fuel.perks)}</b></div><div><span>− drain</span><b>${f(R.fuel.drain)}</b></div><div><span>− wells</span><b>${f(R.fuel.wells)}</b></div><div><span>− overdrives</span><b>${f(R.fuel.od||0)}</b></div><div><span>end</span><b>${f(G.fuel)}</b></div></div>
     <div class="rp-b"><h4>Pursuer</h4><div><span>start / min</span><b>${f(R.gapStart)} / ${f(R.gapMin)}</b></div><div><span>lost to misses</span><b>${f(R.gapMiss)}</b></div><div><span>lost to attacks</span><b>${f(R.gapAttack)}</b></div><div><span>attacks repelled</span><b>${R.out.attack[0]}/${R.spawn.attack}</b></div></div>
     <div class="rp-b"><h4>Board</h4><div><span>moves / invalid</span><b>${moves} / ${R.invalid}</b></div><div><span>avg s per move</span><b>${moves?(G.time/moves).toFixed(1):'—'}</b></div><div><span>longest idle</span><b>${R.idleMax.toFixed(1)}s</b></div><div><span>chains ≥3 / perks</span><b>${R.chains3} / ${G.log.perks||0}</b></div><div><span>hazards d/f/l</span><b>${R.haz.debris}/${R.haz.fire}/${R.haz.lock}</b></div><div><span>burnouts</span><b>${R.burnouts}</b></div><div><span>debris broke/eject</span><b>${R.broken}/${R.ejected}</b></div><div><span>reshuffles</span><b>${R.reshuffles}</b></div><div><span>crates opened</span><b>${G.log.crates||0}</b></div></div>
     <div class="rp-b"><h4>Time in danger</h4><div><span>low fuel</span><b>${f(R.lowFuelT)}s</b></div><div><span>low hull</span><b>${f(R.lowHullT)}s</b></div><div><span>pursuer close</span><b>${f(R.closeT)}s</b></div><div><span>perfect clears</span><b>${pct(G.cleared,G.contacts)}</b></div></div>
@@ -5717,7 +5723,7 @@ function buildDebrief(win,reason){
    if(win&&dp!==1&&base>0)pay.push([`${DEPTH_NAME[dp]} · pay ${dp<1?'−40%':'+60%'}`,Math.round(base*(DEPTH_PAY[dp]-1))]);
    if(win&&base>0&&relicHas('salvager'))pay.push(['Salvager · +20%',Math.round(base*.2)]);
    }
-  {const sub=pay.reduce((a,p)=>a+p[1],0);if(sub>0)pay.push(['Station upkeep · −25%',-Math.round(sub*.25)]);}
+  {const sub=pay.reduce((a,p)=>a+p[1],0);if(sub>0)pay.push(['Ship upkeep · −25%',-Math.round(sub*.25)]);}
   d.pay=pay;d.total=pay.reduce((a,p)=>a+p[1],0);
   // bank immediately so leaving early never loses anything
   if(!TR&&CHOICE&&CHOICE.starId!=null){S.loss=S.loss||{};if(win)delete S.loss[CHOICE.starId];else S.loss[CHOICE.starId]=Math.min(3,(S.loss[CHOICE.starId]||0)+1);}
@@ -5736,7 +5742,7 @@ function buildDebrief(win,reason){
    d.legend=legendFor(d);S.legend=legendOf()+d.legend;
    if(d.legend)d.extra.push(['Legend',`<em style="color:#ffd84a">+${d.legend} ★</em>`]);
 }
-  if(S.gal){const st=S.gal.stars[CHOICE.starId];if(st&&win)st.clears++;d.extra.push(['Station rating',`<em style="color:#ffd84a">${rating()}</em>`]);S.choices=genChoices();}
+  if(S.gal){const st=S.gal.stars[CHOICE.starId];if(st&&win)st.clears++;d.extra.push(['Ship rating',`<em style="color:#ffd84a">${rating()}</em>`]);S.choices=genChoices();}
   {const cr=career();cr.runs++;if(win)cr.cleared++;else cr.lost++;cr.bestChain=Math.max(cr.bestChain,d.chain);cr.earned+=d.total;cr.contacts+=d.cleared;
    cr.repelled+=G.log.repelled||0;cr.perks+=G.log.perks||0;if(win&&RANK_ORDER.indexOf(d.rank)>RANK_ORDER.indexOf(cr.bestRank))cr.bestRank=d.rank;}
   if(win&&!TR&&unl('relics')&&(G.depth==null?1:G.depth)>=1){const rr=rollRelics((G.depth||1)>=2?3:2);S.pendRelics=rr.map(r=>r.id);if(rr.length)d.extra.push(['Relic found',`<em style="color:#ff7ad9">${rr.length} to choose from</em>`]);}
@@ -5799,8 +5805,8 @@ async function runDebrief(d,ctrEls,rows){
   const bx=$('#dbBtns');bx.innerHTML='';
   const row=document.createElement('div');row.className='ib-row';bx.append(row);
   if(d.win){const rs=S.gal&&S.gal.stars[CHOICE.starId];if(canResearch(rs)){const b=iconBtn(row,'flask','Research','hot',()=>openResearch(rs.id));b.id='dbResBtn';}
-    iconBtn(row,'map','Galaxy map',canResearch(rs)?'':'hot',goMap);iconBtn(row,'station','Station','',goStation);}
-  else{iconBtn(row,'map','Galaxy map','hot',goMap);iconBtn(row,'station','Station','',goStation);}
+    iconBtn(row,'map','Galaxy map',canResearch(rs)?'':'hot',goMap);iconBtn(row,'station','Ship','',goStation);}
+  else{iconBtn(row,'map','Galaxy map','hot',goMap);iconBtn(row,'station','Ship','',goStation);}
   if(d.win&&(S.pendRelics||[]).length){const b=iconBtn(row,'hexa','Ship system','hot',openRelicOffer);b.id='dbRelicBtn';setTimeout(()=>{if(scene==='debrief'&&(S.pendRelics||[]).length)openRelicOffer();},800);}
   if(d.win&&CHOICE.gate&&S.gal&&S.gal.cons){iconBtn(row,'tach','Jump on','hot',gateJump);const mp=row.querySelector('.ibtn.hot');}
   const small=document.createElement('div');small.className='db-small';bx.append(small);
@@ -5915,6 +5921,8 @@ $('#stCv').addEventListener('click',stationTap);
 $('#bayCv').addEventListener('click',e=>{if(H.tab!=='combos')return;const r=e.currentTarget.getBoundingClientRect(),i=clamp(Math.floor((e.clientX-r.left)/r.width*3),0,2);if(i!==H.slot){H.slot=i;sfx.tick();renderHangar();}});
 document.querySelectorAll('.htab').forEach(b=>b.onclick=()=>{H.tab=b.dataset.t;sfx.tick();renderHangar();$('#hangar .hg-body').scrollTop=0;});
 $('#callIn').addEventListener('input',e=>{S.callsign=e.target.value.replace(/[<>]/g,'').slice(0,12);persist();});
+$('#shipIn').addEventListener('input',e=>{S.shipName=e.target.value.replace(/[<>]/g,'').slice(0,16);persist();});
+$('#shipIn').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur();});
 $('#callIn').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur();});
 $('#cmdIn').addEventListener('input',e=>{S.cmd=e.target.value.replace(/[<>]/g,'').slice(0,CMD_MAX);persist();$('#cmdChips').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(cmdText()===b.textContent)));});
 $('#cmdIn').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur();});
@@ -5935,7 +5943,7 @@ $('#jumpBtn').onclick=()=>{if(MAP.anim||WARP||TC)return;audio();launchChoice(S.c
 $('#moveBtn').onclick=()=>{audio();moveStation();};
 $('#resBtn').onclick=()=>{audio();if(S.gal&&S.gal.cons){const h=S.gal.stars[S.gal.at];if(canTerra(h))openTerra(h);else if(h.terra)toast('<b>Already terraformed</b>','#5ef0d0');else toast('<b>Terraform unavailable</b><span>Clear a run at this star first. Then its world can be terraformed.</span>','#5ef0d0');}else openResearch();};
 $('#commsBtn').onclick=()=>{audio();ensureStation();openRoom('comms');};
-document.querySelectorAll('.bucks.w4').forEach(b=>b.onclick=()=>{sfx.tick();toast(`<b>Credits ${S.bucks} · Alloy ${S.station?S.station.alloy:0}</b><span>★ Legend ${legendOf()} comes from how well you fly. ◆ Station rating ${rating()} is people aboard plus Legend.</span>`,'#ffd84a');});
+document.querySelectorAll('.bucks.w4').forEach(b=>b.onclick=()=>{sfx.tick();toast(`<b>Credits ${S.bucks} · Alloy ${S.station?S.station.alloy:0}</b><span>★ Legend ${legendOf()} comes from how well you fly. ◆ Ship rating ${rating()} is people aboard plus Legend.</span>`,'#ffd84a');});
 $('#chartCv').addEventListener('click',e=>{if(MAP.dragged){MAP.dragged=false;return;}chartTap(e);});
 $('#zIn').onclick=()=>{setZoom((MAP.z||1)*1.35);sfx.tick();};$('#zOut').onclick=()=>{setZoom((MAP.z||1)/1.35);if((MAP.z||1)<=1.01){MAP.panX=MAP.panY=0;}sfx.tick();};$('#zBig').onclick=()=>toggleBigChart();
 $('#carPrev').onclick=()=>carGo(-1);$('#carNext').onclick=()=>carGo(1);
@@ -5961,7 +5969,7 @@ $('#dbgOd').addEventListener('click',e=>{const b=e.target.closest('button');if(!
   show('#sound',false);IL_WAS=paused;paused=true;$('#brstRes').hidden=true;$('#brstPick').hidden=true;show('#burst',true);startBurst(b.dataset.m);IL.test=true;});
 /* Debug: Terraform test with a dummy world. Nothing is saved or paid out. */
 $('#dbgTf').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||TF||TR)return;
-  if(!(scene==='map'||scene==='station'||scene==='hangar')){toast('<b>Terraform test</b><span>Open it from the map or the station.</span>','#ff8a95');return;}
+  if(!(scene==='map'||scene==='station'||scene==='hangar')){toast('<b>Terraform test</b><span>Open it from the map or the ship.</span>','#ff8a95');return;}
   show('#sound',false);openTerra({id:-1,name:'Test World',threat:+b.dataset.t,clears:1,terra:false},true);});
 $('#soundDone').onclick=()=>show('#sound',false);$('#sound').addEventListener('click',e=>{if(e.target.id==='sound')show('#sound',false);});
 $('#togMusic').onclick=()=>{AUD.music=!AUD.music;if(!AUD.music)musicStop();saveAudio();applyAudio();renderSound();};
@@ -6038,21 +6046,21 @@ const TRAIN_CH=[
 ];
 TRAIN_CH.push(
  {k:'map',t:'Galaxy map',d:'Moving between stars, gate parts and the action buttons.',sandbox:true,feats:['pursuer','strike','rooms','line','nova','loot','perks'],steps:[
-  {say:'This is the galaxy map. Each dot is a star system, and the ring marks where your station is parked. This lesson runs on a practice save.',next:'tap',ring:'#chartCv',enter(){goMap();}},
+  {say:'This is the galaxy map. Each dot is a star system, and the ring marks where your ship is parked. This lesson runs on a practice save.',next:'tap',ring:'#chartCv',enter(){goMap();}},
   {say:'The cards underneath are the systems in range. Swipe through them. Each shows its threat, how far the gate is and what to expect.',next:'tap',ring:'#carousel'},
   {say:'Let’s move. Swipe to a card that is not your current system, then press Move. Jumps cost credits.',next:'cond',cond:()=>S.gal.at!==TR.at0&&!WARP&&!MAP.anim,ring:['#carousel','#moveBtn'],delay:900,enter(){TR.at0=S.gal.at;}},
   {say:'Arrived. Moving brings you to the next star on the line. Clear a system there for credits.',next:'tap',ring:'#chartCv'},
-  {say:'The buttons along the bottom: Launch flies the selected system (turned off in training), Terraform works on a world you have cleared, and Station opens your base and markets.',next:'tap',ring:'.map-actions'},
+  {say:'The buttons along the bottom: Launch flies the selected system (turned off in training), Terraform works on a world you have cleared, and Ship opens your base and markets.',next:'tap',ring:'.map-actions'},
   {say:'Terraform enough worlds and the Exodus Gate unseals. Then Launch becomes the jump to the next constellation. That is the goal of every campaign.',next:'end'}]},
- {k:'station',t:'Station upgrades',d:'Rooms, ship systems and crew.',sandbox:true,feats:['pursuer','strike','rooms','line','nova','loot','perks'],steps:[
-  {say:'This is your station. Rooms give it abilities, and you pay for them with Alloy and credits. This lesson runs on a practice save with some resources.',next:'tap',ring:'#stCv',enter(){goStation();}},
+ {k:'station',t:'Ship upgrades',d:'Rooms, ship systems and crew.',sandbox:true,feats:['pursuer','strike','rooms','line','nova','loot','perks'],steps:[
+  {say:'This is your ship. Rooms give it abilities, and you pay for them with Alloy and credits. This lesson runs on a practice save with some resources.',next:'tap',ring:'#stCv',enter(){goStation();}},
   {say:'Each tab is a room: Sensors, Yard, War room, Refinery, Hab, Drone bay and Tach drive. Tap a couple of tabs to read what they do.',next:'cond',cond:()=>RM.sel!==TR.sel0,ring:'#rtabs',delay:900,enter(){TR.sel0=RM.sel;}},
   {say:'Build the Refinery. It costs Alloy and credits (shown top right) and smelts salvage into more Alloy.',next:'cond',cond:()=>S.station.rooms.refinery>=1,ring:['#rcBuild'],delay:1200,enter(){RM.sel='refinery';renderStation();}},
   {say:'Built. Rooms have levels, and they need crew to run at full strength. The card tells you when one is short. The Habitat holds your people.',next:'tap',ring:'#roomCard'},
   {say:'Now the Shipyard. Press Open to go to the ship bay.',next:'cond',cond:()=>scene==='hangar',ring:'#rcOpen',delay:700,enter(){RM.sel='shipyard';renderStation();}},
   {say:'Here you upgrade ship systems: weapons, shields, sensors, engines and fuel. Upgrades cost credits. Upgrade any one of them.',next:'cond',cond:()=>JSON.stringify(S.up)!==TR.up0,ring:'#upgrades',delay:1000,enter(){TR.up0=JSON.stringify(S.up);}},
-  {say:'Upgraded. The Shipyard’s level caps how far each system can go, so building rooms keeps you growing. Tap the back arrow to return to the station.',next:'cond',cond:()=>scene==='station',ring:'#hangarBack',delay:500},
-  {say:'One more room worth knowing: the War room sets your combo perks, so bigger chains fire stronger effects. That is the whole station loop: earn, build, upgrade, launch.',next:'end',enter(){RM.sel='war';renderStation();}}]});
+  {say:'Upgraded. The Shipyard’s level caps how far each system can go, so building rooms keeps you growing. Tap the back arrow to return to the ship.',next:'cond',cond:()=>scene==='station',ring:'#hangarBack',delay:500},
+  {say:'One more room worth knowing: the War room sets your combo perks, so bigger chains fire stronger effects. That is the whole ship loop: earn, build, upgrade, launch.',next:'end',enter(){RM.sel='war';renderStation();}}]});
 let TRSOON=[];
 
 function trRects(st){
