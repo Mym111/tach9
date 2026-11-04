@@ -1642,7 +1642,7 @@ function damage(n,src='other'){
 function addBucks(n,label){if(n<=0)return;G.runBucks+=n;sfx.coin();const el=$('#runBucksEl');el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);if(label)vpPop(`+${n} ${label}`,'#ff7ad9');}
 function resolve(e){
   if(e.type==='pod')return resolvePod(e);
-  if(G.autoClear>0){G.autoClear--;for(const q of e.reqs)G.meters[q.m]=Math.max(G.meters[q.m],q.c);vpPop('LOCKED ON','#ff5c6c');}
+  if(G.autoClear>0){G.autoClear--;for(const q of e.reqs)G.meters[q.m]=Math.max(G.meters[q.m],q.c);vpPop('LOCKED ON','#ff5c6c');{const x1=shipX()+14,y1=G.shipY,x2=evX(e.p),y2=e.y;G.fx.push({k:'laser',t:0,d:.5,x1,y1,x2,y2,c:'#ff5c6c',w:3},{k:'laser',t:0,d:.35,x1,y1,x2,y2,c:'#ffffff',w:1});boom(x2,y2,['#ff5c6c','#fff3bf','#ffb547'],14);sfx.laser();}}
   e.resolved=true;let need=0,got=0;
   for(const q of e.reqs){const used=Math.min(G.meters[q.m],q.c);G.meters[q.m]-=used;need+=q.c;got+=used;if(used>0&&q.m<4&&!TR)(G.bag=G.bag||[0,0,0,0])[q.m]+=used/3;}
   const ratio=got/need,short=1-ratio,perfect=ratio>=1,T=G.T,extra=Math.floor(T/3);
@@ -1800,7 +1800,7 @@ function drawViewport(){
       b.beginPath();b.moveTo(shipX()+20,G.shipY);b.lineTo(f.x2,f.y2-f.r);b.lineTo(f.x2,f.y2+f.r);b.closePath();b.fill();
     }
     if(f.k==='laser'){
-      b.strokeStyle=f.c;b.globalAlpha=1-u;b.lineWidth=1;
+      b.strokeStyle=f.c;b.globalAlpha=1-u;b.lineWidth=f.w||1;
       for(let i=0;i<3;i++){const o=(i-1)*2;b.beginPath();b.moveTo(f.x1,f.y1+o*u);b.lineTo(f.x2,f.y2+o*u);b.stroke();}
       b.globalAlpha=1;
     }
@@ -1964,7 +1964,7 @@ async function clearCells(set,chain,makes=[],wild=new Map()){
     const h=t.sp===1;B.beams.push({h,i:h?r:c,t:0,color:tdef(t.t).color});sfx.beam();
     for(let j=0;j<(h?COLS:ROWS);j++){const kk=h?r*COLS+j:j*COLS+c;if(!set.has(kk)){set.add(kk);queue.push(kk);}}
   }
-  for(const k of [...set]){const r=Math.floor(k/COLS),c=k%COLS,t=g[r][c];if(t&&t.sp===4){G.flare={r,until:G.time+2.5};boardPop('SOLAR FLARE',COLS/2,r+.5,'#ffb547');sfx.special();}}
+  for(const k of [...set]){const r=Math.floor(k/COLS),c=k%COLS,t=g[r][c];if(t&&t.sp===4){G.flare={r,c,m:t.fm||0,until:G.time+2.5};boardPop('SOLAR FLARE · '+['ROW','COLUMN','SQUARE'][t.fm||0],c+.5,r+.5,'#ffb547');sfx.special();}}
   let broke=0;
   for(const k of [...set]){const r=Math.floor(k/COLS),c=k%COLS;
     for(const[dr,dc]of[[1,0],[-1,0],[0,1],[0,-1]]){const nr=r+dr,nc=c+dc;if(nr<0||nr>=ROWS||nc<0||nc>=COLS)continue;
@@ -1999,7 +1999,7 @@ async function clearCells(set,chain,makes=[],wild=new Map()){
   for(const k of set){const r=Math.floor(k/COLS),c=k%COLS,t=g[r][c];if(!t)continue;if(t.od){t.od=false;if(!IL){G.od=Math.max(0,odNeed()-2);vpPop('OVERDRIVE TILE LOST','#ff5c6c');sfx.bad();setTimeout(odSync,50);}}mine.push(t);B.dying.push(t);g[r][c]=null;}
   await wait(.18);
   B.dying=B.dying.filter(t=>!mine.includes(t));
-  for(const m of makes){const nt=newTile(m.t,m.r,m.c);nt.sp=m.sp;nt.scale=.2;g[m.r][m.c]=nt;}
+  for(const m of makes){const nt=newTile(m.t,m.r,m.c);nt.sp=m.sp;if(m.sp===4)nt.fm=m.fm;nt.scale=.2;g[m.r][m.c]=nt;}
   if(makes.length)sfx.special();
 }
 async function collapse(){
@@ -2026,7 +2026,7 @@ async function cascade(pivots){
     await flareBurn();
     const runs=findRuns();if(!runs.length)break;chain++;if(chain>=2)chainShow(chain);
     const set=new Set(),makes=[],wild=new Map();
-    if(feat('flare'))for(let i=0;i<runs.length;i++)for(let j=i+1;j<runs.length;j++){const a=runs[i],b=runs[j];if(a.t!==b.t||a.dir===b.dir)continue;const x=a.cells.find(([r,c])=>b.cells.some(([r2,c2])=>r2===r&&c2===c));if(x){const k=x[0]*COLS+x[1];if(!makes.some(m=>m.k===k))makes.push({k,r:x[0],c:x[1],t:a.t,sp:4});}}
+    if(feat('flare'))for(let i=0;i<runs.length;i++)for(let j=i+1;j<runs.length;j++){const a=runs[i],b=runs[j];if(a.t!==b.t||a.dir===b.dir)continue;const x=a.cells.find(([r,c])=>b.cells.some(([r2,c2])=>r2===r&&c2===c));if(x&&Math.random()<.5){const k=x[0]*COLS+x[1];if(!makes.some(m=>m.k===k))makes.push({k,r:x[0],c:x[1],t:a.t,sp:4,fm:(G.fmN=(G.fmN||0)+1)%3});}}
     for(const run of runs){
       run.cells.forEach(([r,c])=>{const k=r*COLS+c;set.add(k);if(isWild(B.grid[r][c]?.t)&&!wild.has(k))wild.set(k,run.t);});
       if(run.cells.length>=4){boardShake(run.cells.length);
@@ -2043,10 +2043,10 @@ async function cascade(pivots){
 async function flareBurn(){
   let n=0;
   while(G.flare&&G.time<G.flare.until&&G.running&&!G.ending&&n++<5){
-    const r=G.flare.r,set=new Set();
-    for(let c=0;c<COLS;c++){const t=B.grid[r][c];if(t&&t.t!==DEBRIS&&!t.lock&&t.sp!==4)set.add(r*COLS+c);}
+    const F=G.flare,set=new Set();
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(F.m===0&&r!==F.r)continue;if(F.m===1&&c!==F.c)continue;if(F.m===2&&(Math.abs(r-F.r)>1||Math.abs(c-F.c)>1))continue;const t=B.grid[r][c];if(t&&t.t!==DEBRIS&&!t.lock&&t.sp!==4)set.add(r*COLS+c);}
     if(!set.size)break;
-    B.beams.push({h:true,i:r,t:0,color:'#ff9640'});
+    if(F.m===0)B.beams.push({h:true,i:F.r,t:0,color:'#ff9640'});else if(F.m===1)B.beams.push({h:false,i:F.c,t:0,color:'#ff9640'});
     await clearCells(set,1,[],new Map());B.swapCleared=Math.max(0,(B.swapCleared||0)-set.size);await collapse();
   }
 }
@@ -2185,7 +2185,7 @@ function drawTile(c,t,T){
     if(t.t===CRATE){const p=(Math.sin(B.t*4+t.id)+1)/2;      for(let i=0;i<2;i++){const a=B.t*1.7+t.id+i*3.1,sx=cx+Math.cos(a)*size*.42,sy=cy+Math.sin(a*1.3)*size*.42,ss=Math.max(1,size*.05);c.fillStyle=`rgba(255,250,220,${.5+.5*Math.sin(B.t*6+i)})`;c.fillRect(sx-ss,sy,ss*3,ss*.8);c.fillRect(sx,sy-ss,ss*.8,ss*3);}}
     if(t.t===BUCKS&&size>10){c.strokeStyle=`rgba(255,209,241,${.25+Math.sin(B.t*4+t.id)*.2})`;c.lineWidth=1;rr(c,x+3,y+3,size-6,size-6,size*.5-3);c.stroke();}
     else{c.fillStyle='rgba(255,255,255,.05)';rr(c,x+2,y+2,size-4,size*.42,size*.18);c.fill();}
-    if(t.sp===4){const a=.55+Math.sin(B.t*8)*.35;c.strokeStyle=`rgba(255,181,71,${a})`;c.lineWidth=2;for(let i=0;i<8;i++){const an=i*.7854+B.t*1.5;c.beginPath();c.moveTo(cx+Math.cos(an)*size*.3,cy+Math.sin(an)*size*.3);c.lineTo(cx+Math.cos(an)*size*.44,cy+Math.sin(an)*size*.44);c.stroke();}c.strokeStyle=`rgba(255,150,64,${a})`;rr(c,x,y,size,size,rad);c.stroke();}
+    if(t.sp===4){const a=.55+Math.sin(B.t*8)*.35;c.strokeStyle=`rgba(255,181,71,${a})`;c.lineWidth=2;for(let i=0;i<8;i++){const an=i*.7854+B.t*1.5;c.beginPath();c.moveTo(cx+Math.cos(an)*size*.3,cy+Math.sin(an)*size*.3);c.lineTo(cx+Math.cos(an)*size*.44,cy+Math.sin(an)*size*.44);c.stroke();}c.strokeStyle=`rgba(255,150,64,${a})`;rr(c,x,y,size,size,rad);c.stroke();c.fillStyle=`rgba(255,240,200,${a})`;const fm=t.fm||0;if(fm===0)c.fillRect(x+size*.2,cy-1,size*.6,2);else if(fm===1)c.fillRect(cx-1,y+size*.2,2,size*.6);else c.strokeRect(cx-size*.12,cy-size*.12,size*.24,size*.24);}
     if(t.sp===1||t.sp===2){
       const a=.55+Math.sin(B.t*8)*.35,h=t.sp===1,e=size*.42;
       c.strokeStyle=`rgba(255,255,255,${a*.5})`;c.lineWidth=2;c.beginPath();
@@ -2243,7 +2243,7 @@ function drawBoard(){
   c.globalAlpha=1;c.fillStyle='rgba(77,166,255,.22)';
   for(const[a,b2]of B.traces)if((a*7+b2*3)%5===0)c.fillRect(a*T-1.5,b2*T-1.5,3,3);
   if(B.sel){const[r,cc]=B.sel;c.fillStyle='rgba(255,181,71,.08)';c.fillRect(0,r*T,B.w,T);c.fillRect(cc*T,0,T,B.h);}
-  if(G&&G.flare&&G.time<G.flare.until){const fa=.18+.12*Math.sin(B.t*14);c.fillStyle=`rgba(255,150,64,${fa})`;c.fillRect(0,G.flare.r*T,B.w,T);}
+  if(G&&G.flare&&G.time<G.flare.until){const fa=.18+.12*Math.sin(B.t*14);c.fillStyle=`rgba(255,150,64,${fa})`;const F=G.flare;if(F.m===0)c.fillRect(0,F.r*T,B.w,T);else if(F.m===1)c.fillRect(F.c*T,0,T,B.h);else c.fillRect((F.c-1)*T,(F.r-1)*T,3*T,3*T);}
   for(const bm of B.beams){
     const a=1-bm.t/.4;
     if(bm.nova){c.fillStyle=`rgba(199,146,255,${a*.25})`;c.fillRect(0,0,B.w,B.h);continue;}
@@ -2744,7 +2744,7 @@ function loadTileURL(k){if(_tileC[k])return _tileC[k];const cv=document.createEl
   else{const ty=tdef(0);c.fillStyle=ty.dark;rr(c,x,y,sz,sz,rad);c.fill();c.strokeStyle=ty.color+'80';c.lineWidth=2;c.stroke();c.drawImage(ICONS[0],12,12,24,24);
     c.strokeStyle='rgba(255,255,255,.88)';c.lineWidth=3;c.beginPath();c.moveTo(7,24);c.lineTo(41,24);c.moveTo(11,24);c.lineTo(17,19);c.moveTo(11,24);c.lineTo(17,29);c.moveTo(37,24);c.lineTo(31,19);c.moveTo(37,24);c.lineTo(31,29);c.stroke();}}catch(e){}
   return _tileC[k]=cv.toDataURL();}
-const SPECIAL_DESC={line:'Match 4 in a row to forge a line tile. Match it later to sweep its whole row or column.',nova:'Match 5 to forge a nova core. Swap it with any tile to clear every tile of that colour.',loot:'Credits tiles and salvage crates join the board.',flare:'Match an L, T or + shape to forge a flare tile. Match it later to set its row burning for 2.5 seconds: every tile that falls into that row is burned.'};
+const SPECIAL_DESC={line:'Match 4 in a row to forge a line tile. Match it later to sweep its whole row or column.',nova:'Match 5 to forge a nova core. Swap it with any tile to clear every tile of that colour.',loot:'Credits tiles and salvage crates join the board.',flare:'Match an L, T or + shape to forge a flare tile. Match it later to set a row, column or 3×3 square burning for 2.5 seconds (it rotates): every tile that falls into that row is burned.'};
 const LOAD_ICO={
  line:'<svg viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="4" rx="1" fill="currentColor"/><path d="M5 5l2 3M12 4v4M19 5l-2 3M5 19l2-3M12 20v-4M19 19l-2-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
  nova:'<svg viewBox="0 0 24 24"><path d="M12 2l2.2 6.8L21 6l-4.2 5.8L22 14l-7 1.2L12 22l-2.6-6.8L2 14l5.2-2.2L3 6l6.8 2.8z" fill="currentColor"/></svg>',
@@ -3963,7 +3963,7 @@ let TFA=null;
 function tfAudStop(){if(TFA){try{TFA.g.gain.setTargetAtTime(0,AC.currentTime,.04);TFA.o.stop(AC.currentTime+.25);}catch(e){}TFA=null;}}
 function tfFocus(k){const t=TF;if(!t)return;if(!k||t.focus===k){t.focus=null;tfAudStop();tfRows();return;}t.focus=k;tfAudStop();
   if(AC&&!muted){try{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=300;g.gain.value=0;o.connect(g).connect(SFX_BUS);o.start();TFA={o,g};}catch(e){TFA=null;}}tfRows();}
-const calOf=k=>S.station&&S.station.cal&&S.station.cal[k]||0,reelTier=k=>Math.min(3,1+Math.min(calOf(k),Math.max(0,rle('comms')-1))+(relicHas('seismic')?1:0)),CAL_COST=[2,4];
+const calOf=k=>S.station&&S.station.cal&&S.station.cal[k]||0,reelTier=k=>Math.min(3,1+Math.min(calOf(k),Math.max(0,rle('comms')-1))+(relicHas('seismic')?1:0)),CAL_COST=[[1,40,1],[3,90,1]];
 function tfAudUpdate(now){const t=TF;if(!TFA||!AC)return;const o=t&&!t.done&&t.focus&&t.geo.find(x=>x.k===t.focus);
   if(t&&t.deaf>now){tfAudStop();return;}
   if(!o||o.locked||muted){if(t&&o&&o.locked)t.focus=null;tfAudStop();return;}
@@ -4435,7 +4435,7 @@ function renderInstall(){
 }
 /* ================= STATION (phase 2): rooms, Alloy, cutaway ================= */
 const ROOMS=[
-  {k:'comms',name:'Sensors',col:'#4da6ff',max:3,cost:[null,[3,60],[6,130]],panel:'comms',open:'Terra-reels · markets',
+  {k:'comms',name:'Sensors',col:'#4da6ff',max:3,cost:[null,[3,60],[6,130]],panel:'comms',open:'Terra-reel calibration',
    desc:'The ship\'s sensor array. You calibrate it to each Terra-reel in a Terraform, and until you do the ideal and danger zones are barely visible. It also trades Alloy at the star you are parked at.',
    eff:L=>`Calibrate Terra-reels up to rank ${Math.max(0,L-1)}${L>1?` · trade Alloy ${L-1} jump${L>2?'s':''} away`:''}`},
   {k:'shipyard',name:'Shipyard',col:'#7ff3ff',max:4,cost:[null,[2,40],[4,90],[7,160]],panel:'ship',open:'Ship systems & paint',
@@ -4572,7 +4572,7 @@ const RM={sel:'comms',badges:{},pc:null,t:0,flash:{},rects:[],people:Array.from(
   stars:Array.from({length:60},()=>({x:Math.random(),y:Math.random(),z:Math.random()})),ore:Array.from({length:5},(_,i)=>i/5)};
 function goStation(){ensureStation();ensureGalaxy();scene='station';renderStation();only('#station');}
 const ROOM_ICO={comms:'signal',shipyard:'wrench',war:'cross',habitat:'person',refinery:'hexa',drone:'drone',tach:'tach'};
-const ROOM_NAV={comms:['radar','Terra-reels · markets'],shipyard:['launch','Ship systems & paint'],war:['bolt','Combo loadout'],habitat:['person','Crew deck · staffing'],drone:['drone','Drone payloads'],tach:['tach','Core tuning'],refinery:['hexa','Tach & ship systems']};
+const ROOM_NAV={comms:['radar','Terra-reel calibration'],shipyard:['launch','Ship systems & paint'],war:['bolt','Combo loadout'],habitat:['person','Crew deck · staffing'],drone:['drone','Drone payloads'],tach:['tach','Core tuning'],refinery:['hexa','Tach, alloy & ship systems']};
 function habArrivals(L){
   const g=S.gal,stn=S.station,room=Math.max(0,HAB_CAP[L]-stn.pop),here=g.stars[g.at];
   const rows=here.links.map(i=>g.stars[i]).map(st=>{const fresh=!g.visited.includes(st.id);
@@ -4657,31 +4657,30 @@ function renderCrew(){const stn=ensureStation();crewSync();const rooms=CREWED.fi
 function renderRefinery(){const stn=ensureStation(),own=S.relics||[];
   $('#refBody').innerHTML=modBlock()+`<div class="hg-label">Installed ship systems · ${own.length} / ${RELIC_SLOTS}</div>`+
    (own.length?`<div class="rl-list">${own.map(id=>{const r=relicOf(id);return`<div class="rl-row" style="--rc:${r.c}"><i>${r.g}</i><div><b>${r.name}</b><span>${r.d}</span></div></div>`;}).join('')}</div>`:'<p class="hg-note">None yet. Terraform worlds well and the crew finds ship systems to install.</p>')+
-   `<p class="hg-note">Ship systems stay installed for the whole campaign.</p>`;
+   `<p class="hg-note">Ship systems stay installed for the whole campaign.</p>`+exchangeBlock();
+  {const xb=$('#xchBuy');if(xb)xb.onclick=()=>{if(buyAlloyHere()){renderHangar();H.flash=1;}};}
   {const mc=$('#modCraft');if(mc)mc.onclick=()=>{const stn=ensureStation();if(modHave()>=modCap()||stn.alloy<MOD_COST){sfx.bad();return;}stn.alloy-=MOD_COST;stn.mod=modHave()+1;H.forgeT0=H.t;tone(110,1.4,'sawtooth',.06,6);noise(.9,.05);setTimeout(()=>{sfx.win();},1500);persist();sfx.buy();renderHangar();H.flash=1;};}
 }
 function reelBlock(){const stn=ensureStation(),cap=Math.max(0,rle('comms')-1);
   return`<div class="xch mod"><div class="xch-h"><span>TERRA-REEL CALIBRATION</span><b>up to rank ${cap}</b></div>
     <p class="mod-t">Calibrate the array to one Terra-reel at a time. Each rank makes that reel's ideal and danger zones clearer and its audio cue (the ♪ button in Terraform) louder, and rank 2 shows its coupling tags.${cap?'':' Upgrade the Sensors room to unlock calibration.'}</p>
-    ${GEO.map(g=>{const r=calOf(g.k),can=r<cap&&r<2,ok=can&&stn.alloy>=CAL_COST[r];return`<div class="rl-row" style="--rc:${g.col};margin-bottom:6px"><i><svg viewBox="0 0 24 24" width="18" height="18">${g.ic}</svg></i><div style="flex:1"><b>${g.n}</b><span>${['Zones barely visible','Zones half visible','Fully clear'][r]} · rank ${r}/2</span></div>${can?`<button class="up-buy" data-cal="${g.k}" ${ok?'':'disabled'}>${alloyTag(CAL_COST[r])}</button>`:`<span class="up-max" style="min-width:48px">${r>=2?'MAX':'LOCKED'}</span>`}</div>`;}).join('')}</div>`;}
-function renderComms(){
+    ${GEO.map(g=>{const r=calOf(g.k),can=r<cap&&r<2,ok=can&&stn.alloy>=CAL_COST[r][0]&&S.bucks>=CAL_COST[r][1]&&stn.pop-CAL_COST[r][2]>=1;return`<div class="rl-row" style="--rc:${g.col};margin-bottom:6px"><i><svg viewBox="0 0 24 24" width="18" height="18">${g.ic}</svg></i><div style="flex:1"><b>${g.n}</b><span>${['Zones barely visible','Zones half visible','Fully clear'][r]} · rank ${r}/2</span></div>${can?`<button class="up-buy" data-cal="${g.k}" ${ok?'':'disabled'}>${alloyTag(CAL_COST[r][0])} ${coin(CAL_COST[r][1])} ${ICO.person}${CAL_COST[r][2]}</button>`:`<span class="up-max" style="min-width:48px">${r>=2?'MAX':'LOCKED'}</span>`}</div>`;}).join('')}</div>`;}
+function exchangeBlock(){
   const g=ensureGalaxy(),here=g.stars[g.at];alloyInit(here);const price=alloyPrice(here),stn=ensureStation();
   const ok=here.alloy>0&&S.bucks>=price,max=Math.max(6,here.alloy);
   const pips=Array.from({length:max},(_,i)=>`<i class="${i<here.alloy?'on':''}"></i>`).join('');
   const status=here.alloy<=0?'SOLD OUT':lmActive(here)&&here.lm==='hub'?'TRADE HUB · 40% OFF':'OPEN';
-  $('#commsBody').innerHTML=reelBlock()+`<div class="xch" style="margin-top:12px">
+  return `<div class="xch" style="margin-top:12px">
       <div class="xch-h"><span>ALLOY EXCHANGE</span><b>${here.name.toUpperCase()}</b></div>
       <div class="xch-m"><div class="xch-stock"><span>STOCK</span><div class="xch-pips">${pips}</div><em>${here.alloy} unit${here.alloy===1?'':'s'}</em></div>
         <div class="xch-price"><span>PRICE</span><b>${price}</b><em>CR · next +4</em></div></div>
       <div class="xch-s">${status} · YOU HOLD ${alloyTag(stn.alloy)}</div>
       <button class="btn xch-buy" id="xchBuy" ${ok?'':'disabled'}>Buy 1 Alloy · ${coin(price)}</button>
     </div>
-    <p class="hg-note">You can buy Alloy where you are parked${tradeReach()?` and up to ${tradeReach()} jump${tradeReach()>1?'s':''} away`:'. Upgrade Sensors to trade with systems in reach'}. Prices climb as you buy. Tap a system to see it on the galaxy map.</p>`;
-  $('#commsBody').querySelectorAll('canvas[data-key]').forEach(cv=>{const img=SYS_MARK(cv.dataset.key);cv.width=img.width;cv.height=img.height;cv.getContext('2d').drawImage(img,0,0);});
-  $('#commsBody').querySelectorAll('[data-cal]').forEach(b=>b.onclick=()=>{const k=b.dataset.cal,r=calOf(k),stn=ensureStation();if(r>=Math.min(2,rle('comms')-1)||stn.alloy<CAL_COST[r]){sfx.bad();return;}stn.alloy-=CAL_COST[r];stn.cal=stn.cal||{};stn.cal[k]=r+1;persist();sfx.buy();renderHangar();H.flash=1;});
-  $('#xchBuy').onclick=()=>{if(buyAlloyHere()){renderHangar();H.flash=1;}};
-  $('#commsBody').querySelectorAll('[data-star]').forEach(b=>b.onclick=e=>{if(e.target.closest('[data-buy]'))return;sfx.tick();commsToMap(+b.dataset.star);});
-  $('#commsBody').querySelectorAll('[data-buy]').forEach(b=>b.onclick=e=>{e.stopPropagation();if(buyAlloyAt(+b.dataset.buy)){renderHangar();H.flash=1;}});
+    <p class="hg-note">You can buy Alloy where you are parked${tradeReach()?` and up to ${tradeReach()} jump${tradeReach()>1?'s':''} away`:'. Upgrade Sensors to trade with systems in reach'}. Prices climb as you buy.</p>`;}
+function renderComms(){
+  $('#commsBody').innerHTML=reelBlock();
+  $('#commsBody').querySelectorAll('[data-cal]').forEach(b=>b.onclick=()=>{const k=b.dataset.cal,r=calOf(k),stn=ensureStation();const cc=CAL_COST[r];if(r>=Math.min(2,rle('comms')-1)||!cc||stn.alloy<cc[0]||S.bucks<cc[1]||stn.pop-cc[2]<1){sfx.bad();return;}stn.alloy-=cc[0];S.bucks-=cc[1];stn.pop-=cc[2];crewSync();stn.cal=stn.cal||{};stn.cal[k]=r+1;persist();sfx.buy();renderHangar();H.flash=1;});
 }
 function commsToMap(id){goMap();const st=S.gal.stars[id];requestAnimationFrame(()=>requestAnimationFrame(()=>{MAP.wFull=false;showStarWidget(st);}));}
 function drawCoreScope(c,W,Hh,t){const L=Math.max(1,rl('tach')),cx=W/2,cy=Hh*.52,n=S.gal?Math.min(shardsMine(S.gal),SHARD_NEED):0,pl=.5+.5*Math.sin(t*2.4);
@@ -5199,11 +5198,16 @@ const PERKS=[
   {k:'repair',name:'Patch & refuel',cost:0,icon:()=>SHIP,v:[0,8,14,22],f:[0,10,18,28],
     desc:(p,t)=>`Restore ${p.v[t]} hull and pump in ${p.f[t]} fuel.`,
     apply:(p,t)=>{G.hull=Math.min(ST.hullMax,G.hull+p.v[t]);G.R.fuel.perks+=p.f[t];G.fuel=Math.min(ST.tank,G.fuel+p.f[t]);pulseFuel();vpPop(`HULL +${p.v[t]} · FUEL +${p.f[t]}`,'#e1e9f7');}},
-  {k:'control',name:'Damage control',cost:90,icon:()=>ICONS[DEBRIS],v:[0,2,4,8],
-    desc:(p,t)=>`Repair ${p.v[t]} damaged tiles (debris, fire, locks), then brace for 4s.`,
-    apply:(p,t)=>{const g=B.grid,list=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const x=g[r][c];if(x&&(x.t===DEBRIS||x.fire!=null||x.lock))list.push(x);}
-      list.sort(()=>Math.random()-.5).slice(0,p.v[t]).forEach(x=>{if(x.t===DEBRIS)x.t=randType()%5;x.fire=null;x.lock=false;x.hit=.5;});
-      G.braceT=BRACE_T;boardPop('REPAIRED',COLS/2,ROWS/2,'#4da6ff');}},
+  {k:'control',name:'Damage control',cost:90,icon:()=>ICONS[DEBRIS],v:[0,3,5,8],
+     desc:(p,t)=>`A ship sweeps the board. Every damaged tile and ${p.v[t]} random tiles become System bay specials.`,
+     apply:(p,t)=>{const g=B.grid,dmg=[],rest=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const x=g[r][c];if(!x)continue;if(x.t===DEBRIS||x.fire!=null||x.lock)dmg.push(x);else if(x.t<5&&!x.sp)rest.push(x);}
+       const pool=['line','nova','loot','flare'].filter(k=>feat(k));if(!pool.length)pool.push('line');
+       const tg=dmg.concat(rest.sort(()=>Math.random()-.5).slice(0,p.v[t]));
+       for(const x of tg){x.fire=null;x.lock=false;if(x.t===DEBRIS||x.t>=5)x.t=randType()%4;const k=pool[Math.floor(Math.random()*pool.length)];
+         if(k==='line'){x.sp=Math.random()<.5?1:2;}else if(k==='nova'){x.t=NOVA;x.sp=3;}else if(k==='loot'){x.t=Math.random()<.5?BUCKS:CRATE;x.sp=0;}else{x.sp=4;x.fm=(G.fmN=(G.fmN||0)+1)%3;}
+         x.hit=.5;x.scale=.3;}
+       for(let r=0;r<ROWS;r++)setTimeout(()=>{if(B.beams)B.beams.push({h:true,i:r,t:0,color:'#4da6ff'});},r*70);
+       G.fx.push({k:'burst',t:0,d:1});sfx.special();boardPop(`${tg.length} TILES UPGRADED`,COLS/2,ROWS/2,'#4da6ff');}},
   {k:'decoy',name:'Decoy flare',cost:90,icon:()=>PMINI[SYS.pursuer]||CRUISER,v:[0,15,25,40],
     desc:(p,t)=>`Throw the pursuer off. The gap opens by ${p.v[t]}.`,
     apply:(p,t)=>{G.gap=Math.min(100,G.gap+p.v[t]);vpPop(`DECOY · GAP +${p.v[t]}`,'#ff8a95');}},
@@ -5446,7 +5450,7 @@ function fixSlots(){if(!S.slots)S.slots=DEFAULT_SLOTS.slice();S.slots=S.slots.ma
   const seen=new Set();S.slots=S.slots.map(k=>{if(!seen.has(k)){seen.add(k);return k;}const alt=['surge','burn','repair','control','decoy','lock','mega','barrage'].find(x=>!seen.has(x)&&(PERKS.find(p=>p.k===x).cost===0||S.perks[x]));seen.add(alt);return alt;});}
 const CHAIN_X=(()=>{const c=document.createElement('canvas');c.width=c.height=16;const x=c.getContext('2d');x.strokeStyle='#7a5a00';x.lineWidth=5;x.lineCap='square';x.beginPath();x.moveTo(3,3);x.lineTo(13,13);x.moveTo(13,3);x.lineTo(3,13);x.stroke();x.strokeStyle='#ffd84a';x.lineWidth=3;x.beginPath();x.moveTo(3,3);x.lineTo(13,13);x.moveTo(13,3);x.lineTo(3,13);x.stroke();return c;})();
 const chainLv=()=>(S&&S.chainLv)||0,chainCost=()=>Math.round(120*Math.pow(1.35,chainLv()));
-function chainScale(p){const m=1+.1*chainLv();if(m===1)return p;const sc=a=>a?a.map(x=>x%1?Math.round(x*m*10)/10:Math.round(x*m)):a;return Object.assign({},p,{v:sc(p.v),g:sc(p.g),f:sc(p.f)});}
+function chainScale(p){if(!['burn','surge','repair','decoy'].includes(p.k))return p;const m=(1+.1*chainLv())*(1+.07*Math.max(0,((G&&G.T)||1)-1)+.1*Math.max(0,((S.gal&&S.gal.num)||1)-1));if(m===1)return p;const sc=a=>a?a.map(x=>x%1?Math.round(x*m*10)/10:Math.round(x*m)):a;return Object.assign({},p,{v:sc(p.v),g:sc(p.g),f:sc(p.f)});}
 function maybeOfferPerk(chain){
   if(chain<3||G.ending||!G.running||G.perkCD>0||CINE||!feat('perks'))return;
   const tier=Math.min(3,chain-2),p0=PERKS.find(x=>x.k===(S.slots||DEFAULT_SLOTS)[tier-1]);if(!p0)return;const p=chainScale(p0);
@@ -5541,7 +5545,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v115';
+const BUILD='v116';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
