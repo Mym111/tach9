@@ -987,8 +987,9 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
       <div class="srow"><span>Captain’s tips</span><button class="tog" id="togTips">On</button></div>
       <div class="srow"><span>Tester mode</span><button class="tog" id="togQA">On</button></div>
       <div class="srow"><span>Launch countdown</span><div class="seg" id="cdSeg"><button data-v="0">Off</button><button data-v="3">3s</button><button data-v="5">5s</button></div></div>
+      <div class="srow dbg"><span>Difficulty</span><div class="seg" id="difSeg"><button type="button" data-d="0.7">Easy</button><button type="button" data-d="1">Normal</button><button type="button" data-d="1.3">Hard</button></div></div>
       <div class="srow dbg"><span>Debug</span><div class="seg" id="dbgSeg"><button data-k="cr">+500 CR</button><button data-k="al">+10 Alloy</button></div></div>
-      <div class="srow dbg"><span>Test Overdrive</span><div class="seg" id="dbgOd"><button type="button" data-m="counter">Counter</button><button type="button" data-m="pipe">Fuel</button><button type="button" data-m="repair">Repair</button><button type="button" data-m="storm">Storm</button><button type="button" data-m="burn">Burn</button><button type="button" data-m="rail">Rail</button></div></div>
+      <div class="srow dbg"><span>Test Overdrive</span><div class="seg" id="dbgOd"><button type="button" data-m="counter">Counter</button><button type="button" data-m="pipe">Fuel</button><button type="button" data-m="repair">Repair</button><button type="button" data-m="storm">Slots</button><button type="button" data-m="burn">Burn</button><button type="button" data-m="rail">Rail</button></div></div>
       <div class="srow dbg"><span>Test Terraform</span><div class="seg" id="dbgTf"><button type="button" data-t="0">Easy</button><button type="button" data-t="9">Mid</button><button type="button" data-t="16">Hard</button></div></div>
       <button class="btn ghost" id="optTips">Replay tutorial &amp; tips</button>
       <button class="btn ghost" id="optQA">Tester report</button>
@@ -1489,6 +1490,7 @@ function renderSound(){
   const tg=(id,on)=>{const b=$(id);b.setAttribute('aria-pressed',on?'true':'false');b.textContent=on?'On':'Off';};
   tg('#togMusic',AUD.music);tg('#togSfx',AUD.sfx);tg('#togZoom',AUD.zoom!==false);tg('#togBrief',AUD.brief!==false);tg('#togQA',AUD.tester!==false);tg('#togTips',AUD.tips!==false);tg('#togShake',AUD.shake!==false);
   document.querySelectorAll('#cdSeg button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===(AUD.cd??3)?'true':'false'));
+  document.querySelectorAll('#difSeg button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.d===(AUD.dif??1)?'true':'false'));
   $('#volMaster').value=AUD.master;$('#volMusic').value=AUD.mv;$('#volSfx').value=AUD.sv;
   $('#volMusic').disabled=!AUD.music;$('#volSfx').disabled=!AUD.sfx;
   $('#volMasterV').textContent=AUD.master;$('#volMusicV').textContent=AUD.mv;$('#volSfxV').textContent=AUD.sv;
@@ -1556,10 +1558,11 @@ function resetGame(){
     events:[],spawnT:1.6,sincePlanet:0,contacts:0,cleared:0,bestChain:1,ending:null,endT:0,speedMul:1,
     shipY:null,shipDead:false,warpX:0,shake:0,flash:0,wobble:0,fx:[],pops:[],nebX:0,gap:ST.gapStart,
     runBucks:0,bounty:0,decayT:0,intT:14,skimT:5,alarmT:0,milestones:{half:false,sight:false},
-    sensor:clamp(ST.sensor+(SYS.sensorAdd||0),.15,.75),fireT:Math.max(4.5,8-.5*T),braceT:0,runTime:0,strike:null,strikeT:26+Math.random()*12,perkCD:0,autoClear:0,
+    sensor:clamp(ST.sensor+(SYS.sensorAdd||0),.15,.75),fireT:Math.max(6,8-.4*T*dif()),braceT:0,runTime:0,strike:null,strikeT:26+Math.random()*12,perkCD:0,autoClear:0,
     log:{tiles:[0,0,0,0,0,0],hazards:0,firesOut:0,debris:0}});
   G.R=newReport();G.danger=null;G.alertT=0;
 }
+const dif=()=>(typeof AUD==='object'&&AUD&&AUD.dif)||1;
 const velocity=()=>Math.min(2.6,1+.55*G.prog+.07*G.T);
 const travel=()=>Math.max(5,12/G.vel);
 const interval=()=>Math.max(1.6,(Math.max(2.3,3.9-.2*G.T)*(1-.3*G.prog)+Math.random()*.9)/Math.pow(G.vel,.4));
@@ -1623,7 +1626,7 @@ function spawnEvent(force,opts={}){
     if(G.T===0&&G.contacts+G.events.length<2&&type==='enemy')type='asteroid';
   }
   G.sincePlanet=type==='planet'?0:G.sincePlanet+1;if(G.R)G.R.spawn[type]++;
-  const add=Math.floor(G.T*.5)+Math.floor(G.prog*2);
+  const add=Math.floor(G.T*.42*dif())+Math.floor(G.prog*2);
   const reqs=EVENTS[type].reqs.map(([m,c],i)=>({m,c:Math.min(ST.cap[m]-1,Math.max(2,c+add+(Math.random()<.45?1:0)-(opts.light?1:0)-(i?1:0)-easeNeed()-(!TR&&depthNow()===1&&type==='enemy'?1:0)))}));
   const e={type,reqs,p:0,y:Math.round(V.H*(.28+Math.random()*.44)),ided:false,resolved:false,passing:false,dead:false,seed:Math.random()*10,interceptor:!!opts.interceptor};
   if(type==='asteroid')e.spr=makeAsteroid(5+Math.min(4,reqs[0].c-3));
@@ -1694,7 +1697,7 @@ function updateGame(dt){
   }else{
     G.vel=velocity();G.braceT=Math.max(0,G.braceT-dt);G.perkCD=Math.max(0,G.perkCD-dt);updateStrike(dt);
     G.fuel-=drain()*dt;G.R.fuel.drain+=drain()*dt;
-    if(feat('pursuer'))G.gap-=(.32+.03*G.T)*(SYS.gapRate||1)*(relicHas('steady')?.85:1)*(G.tut?.4:1)*dt;else G.gap=100;
+    if(feat('pursuer'))G.gap-=(.32+.022*G.T*dif())*(SYS.gapRate||1)*(relicHas('steady')?.85:1)*(G.tut?.4:1)*dt;else G.gap=100;
     // charge bleeds slowly so you can't bank everything
     G.decayT+=dt;if(G.decayT>=12){G.decayT=0;for(let m=0;m<4;m++)if(G.meters[m]>0)G.meters[m]--;}
     if(SYS.pursuer==='empire'&&feat('intercept')){G.intT-=dt;if(G.intT<=0&&G.prog<.9){G.intT=Math.max(10,19-G.T);spawnEvent('enemy',{interceptor:true,light:true});vpPop('INTERCEPTOR LAUNCHED','#ff4d5e');sfx.alarm();}}
@@ -5550,7 +5553,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v119';
+const BUILD='v120';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5994,6 +5997,7 @@ $('#dbgTf').addEventListener('click',e=>{const b=e.target.closest('button');if(!
 $('#soundDone').onclick=()=>show('#sound',false);$('#sound').addEventListener('click',e=>{if(e.target.id==='sound')show('#sound',false);});
 $('#togMusic').onclick=()=>{AUD.music=!AUD.music;if(!AUD.music)musicStop();saveAudio();applyAudio();renderSound();};
 document.querySelectorAll('#cdSeg button').forEach(b=>b.onclick=()=>{AUD.cd=+b.dataset.v;saveAudio();renderSound();sfx.tick();});
+document.querySelectorAll('#difSeg button').forEach(b=>b.onclick=()=>{AUD.dif=+b.dataset.d;saveAudio();renderSound();sfx.tick();});
 $('#togShake').onclick=()=>{AUD.shake=AUD.shake===false;saveAudio();renderSound();sfx.tick();if(AUD.shake!==false)boardShake(5,true);};
 $('#togTips').onclick=()=>{AUD.tips=AUD.tips===false;saveAudio();renderSound();sfx.tick();};
 $('#optTips').onclick=()=>{resetTips();};
