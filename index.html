@@ -1036,7 +1036,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
   </section>
   <section class="screen overlay off" id="relic">
     <div class="card console rlcard" style="--sc:#ff7ad9">
-      <div class="console-h"><span>SHIP SYSTEM FOUND</span></div>
+      <div class="console-h"><span>SUBSYSTEM FOUND</span></div>
       <div class="rl-b" id="relicBody"></div>
       <div class="br-btns"><button class="btn ghost" id="rlLater">Decide later</button><button class="btn ghost" id="rlSkip">Decline all</button></div>
     </div>
@@ -2024,7 +2024,7 @@ async function cascade(pivots){
   let chain=0;
   for(;;){
     await flareBurn();
-    const runs=findRuns();if(!runs.length)break;chain++;if(chain>=2)chainShow(chain);
+    const runs=findRuns();if(!runs.length)break;if(chain===0&&G.echo){chain=G.echo;G.echo=0;boardPop('CHAIN ECHO',COLS/2,ROWS/2,'#c792ff');sfx.special();}chain++;if(chain>=2)chainShow(chain);
     const set=new Set(),makes=[],wild=new Map();
     if(feat('flare'))for(let i=0;i<runs.length;i++)for(let j=i+1;j<runs.length;j++){const a=runs[i],b=runs[j];if(a.t!==b.t||a.dir===b.dir)continue;const x=a.cells.find(([r,c])=>b.cells.some(([r2,c2])=>r2===r&&c2===c));if(x&&Math.random()<.5){const k=x[0]*COLS+x[1];if(!makes.some(m=>m.k===k))makes.push({k,r:x[0],c:x[1],t:a.t,sp:4,fm:(G.fmN=(G.fmN||0)+1)%3});}}
     for(const run of runs){
@@ -2753,18 +2753,18 @@ const LOAD_ICO={
 const loadBtn=(k,on,tag='button')=>`<${tag} ${tag==='button'?'type="button" ':''}data-k="${k}" data-tip="<b>${SPECIAL_NAME[k]}</b><br>${SPECIAL_DESC[k]}" class="ldi${on?' on':''}" aria-label="${SPECIAL_NAME[k]}"><img class="tile-i" src="${loadTileURL(k)}" alt=""></${tag}>`;
 function loadPanel(id){const av=availSpecials(),ld=loadNow(),n=loadSlots();if(!unl('load')||!av.length)return '';
   const pick=av.length>n,empt=Array.from({length:Math.max(0,n-av.length)},()=>'<span class="ldi empty"></span>').join('');
-  return `<div class="pull sys"><div class="pull-h"><span>System bay</span><em>${ld.length}/${n} slots · hold for details</em></div><div class="pull-b" id="${id}">${av.map(k=>loadBtn(k,ld.includes(k),pick?'button':'span')).join('')}${empt}</div><p class="ldn">${ld.map(k=>SPECIAL_NAME[k]).join(' · ')}</p></div>`;}
+  return `<div class="pull sys"><div class="pull-h"><span>Tile systems</span><em>${ld.length}/${n} slots · hold for details</em></div><div class="pull-b" id="${id}">${av.map(k=>loadBtn(k,ld.includes(k),pick?'button':'span')).join('')}${empt}</div><p class="ldn">${ld.map(k=>SPECIAL_NAME[k]).join(' · ')}</p></div>`;}
 function pullRow(id){const a=loadPanel(id),b=shipPanel();return a||b?`<div class="pulls">${a}${b}</div>`:'';}
 function shipPanel(){if(!unl('relics'))return '';const own=S.relics||[];
   const sk=own.map(id=>{const r=relicOf(id);return `<span class="rlx" data-tip="<b>${r.name}</b><br>${r.d}" style="--rc:${r.c}"><i>${r.g}</i></span>`;}).join('')+Array.from({length:Math.max(0,RELIC_SLOTS-own.length)},()=>'<span class="rlx empty"></span>').join('');
-  return `<div class="pull ship"><div class="pull-h"><span>Ship systems</span><em>${own.length}/${RELIC_SLOTS} installed</em></div><div class="pull-b">${sk}</div></div>`;}
+  return `<div class="pull ship"><div class="pull-h"><span>SubSystems</span><em>${own.length}/${RELIC_SLOTS} installed</em></div><div class="pull-b">${sk}</div></div>`;}
 // what a survey depth switches on, for the launch window
 const depthOn=(k,d)=>d>=DEPTH_MIN[k];
 function depthOutline(d){const L=[];
   L.push(depthOn('pursuer',d)?(depthOn('strike',d)?'Pursuer with attacks':'Pursuer shadows us'):'No pursuer');
   if(depthOn('mods',d))L.push('twists and bonuses live');else if(depthOn('own',d))L.push('every pursuer type');
   L.push(`pay ×${DEPTH_PAY[d]}`);
-  if(unl('relics'))L.push(d===0?'no ship system':d===1?'ship system: 1 of 2':'ship system: 1 of 3');
+  if(unl('relics'))L.push(d===0?'no subsystem':d===1?'subsystem: 1 of 2':'subsystem: 1 of 3');
   return L.join(' · ');}
 function depthPanel(s){const dp=depthNow(),av=availSpecials(),ld=loadNow();let h='';
   h+=`<div class="sw-d" id="swDepth">${DEPTH_NAME.map((n,i)=>{const lk=i>depthMax();return `<button type="button" data-d="${i}" class="${i===dp?'on':''}${lk?' lk':''}">${n}<small>${lk?'🔒 clear '+DEPTH_UNL[i]+(DEPTH_UNL[i]>1?' runs':' run'):DEPTH_SUB[i]}</small></button>`;}).join('')}</div><p class="sw-dn">${depthOutline(dp)}</p>`;
@@ -3441,7 +3441,7 @@ const depthMax=()=>prog()>=DEPTH_UNL[2]?2:prog()>=DEPTH_UNL[1]?1:0;
 const stageNow=()=>9;
 /* ================= v71: SURVEY DEPTH, TILE LOADOUT, RELICS ================= */
 const DEPTH_NAME=['Fly-by','Survey','Deep survey'],DEPTH_PAY=[.6,1,1.6],DEPTH_SUB=['light pay','standard','+60% pay'];
-const DEPTH_NOTE=['Quiet space. No pursuer, no attacks. Pays 40% less and finds no ship systems.','Standard flight. A pursuer shadows us. Ship system offer: choose 1 of 2.','Every threat the Tach allows is live. Pays 60% more. Ship system offer: choose 1 of 3.'];
+const DEPTH_NOTE=['Quiet space. No pursuer, no attacks. Pays 40% less and finds no subsystems.','Standard flight. A pursuer shadows us. SubSystem offer: choose 1 of 2.','Every threat the Tach allows is live. Pays 60% more. SubSystem offer: choose 1 of 3.'];
 const DEPTH_MIN={pursuer:1,strike:2,own:2,mods:2,intercept:2},SPECIALS=['line','nova','loot','flare'];
 const SPECIAL_NAME={line:'Line tiles',nova:'Nova core',loot:'Credits & crates',flare:'Solar flare'};
 let RUNX=null;
@@ -3475,9 +3475,9 @@ function rollRelics(n){const have=S.relics||[],pool=RELICS.filter(r=>!have.inclu
 let RL=null;
 function openRelicOffer(){const ids=(S.pendRelics||[]).filter(id=>relicOf(id));if(!ids.length||TR)return;RL={sel:null};paintRelic();show('#relic',true);sfx.tick();setTimeout(()=>coach('relic'),500);}
 function paintRelic(){const ids=S.pendRelics||[],own=S.relics||[],full=own.length>=RELIC_SLOTS;
-  $('#relicBody').innerHTML=`<p class="rl-h">${full?'Slots full. Pick one, then tap a ship system of yours to replace it.':'Choose one. It rides with us for the rest of the campaign.'}</p>
+  $('#relicBody').innerHTML=`<p class="rl-h">${full?'Slots full. Pick one, then tap a subsystem of yours to replace it.':'Choose one. It rides with us for the rest of the campaign.'}</p>
    <div class="rl-cards" id="relicCards">${ids.map(id=>{const r=relicOf(id);return`<button type="button" class="rl-c${RL.sel===id?' sel':''}" data-id="${id}" style="--rc:${r.c}"><i>${r.g}</i><b>${r.name}</b><span>${r.d}</span></button>`;}).join('')}</div>
-   <div class="pull ship rl-pull"><div class="pull-h"><span>Ship systems</span><em>${own.length}/${RELIC_SLOTS} installed${full&&RL.sel?' · tap one to replace':''}</em></div>
+   <div class="pull ship rl-pull"><div class="pull-h"><span>SubSystems</span><em>${own.length}/${RELIC_SLOTS} installed${full&&RL.sel?' · tap one to replace':''}</em></div>
     <div class="pull-b rl-own">${own.map(id=>{const r=relicOf(id);return`<button type="button" class="rl-o${RL.sel&&full?' pick':''}" data-own="${id}" style="--rc:${r.c}"><i>${r.g}</i><span><b>${r.name}</b><small>${r.d}</small></span></button>`;}).join('')+Array.from({length:Math.max(0,RELIC_SLOTS-own.length)},()=>'<div class="rl-empty">empty slot</div>').join('')}</div></div>`;}
 function takeRelic(id,replace){S.relics=S.relics||[];if(replace){const i=S.relics.indexOf(replace);if(i<0)return;S.relics[i]=id;}else S.relics.push(id);
   S.pendRelics=[];persist();sfx.coin();show('#relic',false);const r=relicOf(id);toast(`<b>${r.name}</b><span>${r.d}</span>`,r.c);
@@ -3952,7 +3952,7 @@ function geoRow(g,o,t){const bw=o.bw,cu=o.cu,pc=v=>(Math.max(0,Math.min(1,v))*10
     <span class="g-v"><b id="gv-${g.k}">${o.locked?geoFmt(g,g.c):'—'}</b><em>${o.locked?(o.q==='perfect'?'PERFECT':'LOCKED'):''}</em></span></div>`;}
 function tfRows(){const t=TF;if(!t)return;const p=t.p;$('#tfT').textContent=`TERRAFORM · ${t.s.name.toUpperCase()} · ${t.need} COLONISTS`;
   let body;
-  if(t.done){body='<div class="tf-done">'+(t.done==='win'?`<p class="tf-res ok">TERRAFORMED. ${t.s.name} is habitable.</p><p class="tf-hint">+${t.cr} CR · +${t.al} alloy${t.sur?` · ${t.sur} stability bonus`:''} · ${t.need} colonists settled${t.relic?' · a ship system is on offer':''}</p>`
+  if(t.done){body='<div class="tf-done">'+(t.done==='win'?`<p class="tf-res ok">TERRAFORMED. ${t.s.name} is habitable.</p><p class="tf-hint">+${t.cr} CR · +${t.al} alloy${t.sur?` · ${t.sur} stability bonus`:''} · ${t.need} colonists settled${t.relic?' · a subsystem is on offer':''}</p>`
       :`<p class="tf-res bad">THE PLANET DESTABILIZED. ${t.test?'(Test world, nothing lost.)':terraDoomed(S.gal)?'This world is gone for good, and there are not enough worlds left to open the Exodus Gate.':'This world is gone for good. It cannot be attempted again.'}</p>`)+`<pre class="tf-rep">${t.text}</pre><button type="button" class="tf-copy" id="tfCopy">Copy tester report</button></div>`;}
   else body=`<div class="tf-pips">${Array.from({length:p.limit},(_,i)=>`<i class="${i<t.fails?'on':''}"></i>`).join('')}<span>instability · ${p.limit} collapses the planet</span></div>
     <div class="geos">${GEO.map((g,i)=>geoRow(g,t.geo[i],t)).join('')}</div><p class="tf-log">${t.log}</p>`;
@@ -4002,7 +4002,7 @@ const STAGES=[null,
  {short:'Line tiles',obj:'Same job, one new trick for the board.',
   news:['Match 4 in a row to forge a LINE tile','Match a line tile later and it sweeps its whole row or column']},
  {short:'Nova cores, credits, crates',obj:'The board is getting richer.',
-  news:['Match 5 to forge a NOVA core. Swap it with any tile to clear every tile of that colour','Credits tiles (pink) pay straight into your wallet','Salvage crates join a match of 4+ and crack open for a prize','Special tiles now ride in loadout slots. Pick which ones fly with us in the briefing','Clear a system and the crew offers a relic: a permanent ship upgrade']},
+  news:['Match 5 to forge a NOVA core. Swap it with any tile to clear every tile of that colour','Credits tiles (pink) pay straight into your wallet','Salvage crates join a match of 4+ and crack open for a prize','Tile systems now ride in loadout slots. Pick which ones fly with us in the briefing','Clear a system and the crew offers a relic: a permanent ship upgrade']},
  {short:'A pursuer, and its attacks',obj:'Something has picked up our trail.',
   news:['An Empire cruiser now chases us. Watch the GAP bar, top-left of the viewport','Missed contacts close the gap. Perfect clears push it back. At zero we are caught','It launches attacks too. Have enough charge banked in the system it names before the timer ends','SURVEY DEPTH is yours to set in the briefing. Fly-by is quiet and pays less. Deep survey brings every threat and pays more']},
  {short:'Ship rooms unlock',obj:'Time to build out the ship.',
@@ -4303,10 +4303,10 @@ const COACH_TIPS={
   gate:{el:'#chartCv',t:()=>'The Exodus Gate is in reach. It is the last system in this constellation. Clear it and we jump on to the next. Tap it to see what is waiting.'},
   tach:{el:'.tc-tot',t:()=>'Five reels, one per system, and all five must hold. The chances multiply, so one weak reel drags the whole jump down. Shore up the weakest first.'},
   tach_fail:{el:'.tc-res',t:()=>'We lost a level on every system that failed. Hard lesson. Rebuild at the planets, research what broke, and we go again.'},
-  depth:{el:'#brDepth',t:()=>'Your call on how deep we dive. Fly-by is quiet and pays less. Deep survey brings every threat, pays more, and offers better ship systems. The depth sets the stakes, so choose it before you give the order.'},
+  depth:{el:'#brDepth',t:()=>'Your call on how deep we dive. Fly-by is quiet and pays less. Deep survey brings every threat, pays more, and offers better subsystems. The depth sets the stakes, so choose it before you give the order.'},
   load:{el:'#brLoad',t:()=>'We only have room for so many special tiles. Tap one to swap it in. Upgrading the Refinery adds a slot.'},
   burst:{el:'#board',t:()=>'Overdrive is charged. Tap the glowing bolt tile on the board. Clear it in a match and you lose charge. Counterfire pushes the pursuer back, Fuel line is a pipe puzzle that tops up the tank, Repair is a plate-welding game that mends the hull, and Power slots spends fuel to spin your systems for charge: pick how many lines to play.'},
-  relic:{el:'#relicCards',t:()=>'A ship system. It stays installed for the whole campaign, so choose what we will lean on. We only have three slots.'},
+  relic:{el:'#relicCards',t:()=>'A subsystem. It stays installed for the whole campaign, so choose what we will lean on. We only have three slots.'},
   trade:{el:'#commsBody',t:()=>'The sensor array reaches further now. We can buy Alloy from systems in range, straight from their cards.'},
 };
 const CO={q:[],open:null};
@@ -4444,8 +4444,8 @@ const ROOMS=[
   {k:'war',name:'War room',col:'#ff6a7a',max:3,cost:[null,[3,60],[6,130]],panel:'combos',open:'Combo loadout',
    desc:'Tactical command. Plan the combo perks your crew fires on big chains. From level 2, the tacticians read the opening board and pre-charge whichever system has the most tiles on it.',
    eff:L=>L>1?`Combo loadout · top system on the board +${(L-1)*2} charge`:'Combo loadout'},
-  {k:'refinery',name:'Refinery',col:'#ff9640',max:3,cost:[[2,40],[4,90],[7,160]],panel:'refinery',open:'Tach & ship systems',
-   desc:'Smelts the salvage from every system you clear into Alloy for building and upgrading rooms. The foundry also distils Tach, a scarce vial that slows Terraform and the Overdrive mini-games when you need it most, and keeps the ledger of your installed ship systems.',
+  {k:'refinery',name:'Refinery',col:'#ff9640',max:3,cost:[[2,40],[4,90],[7,160]],panel:'refinery',open:'Tach, alloy & subsystems',
+   desc:'Smelts the salvage from every system you clear into Alloy for building and upgrading rooms. The foundry also distils Tach, a scarce vial that slows Terraform and the Overdrive mini-games when you need it most, and keeps the ledger of your installed subsystems.',
    eff:L=>L?`+${L/2} Alloy per clear · holds ${L} Tach`:'Offline'},
   {k:'habitat',name:'Habitat',col:'#ffb547',max:4,cost:[null,[3,50],[6,110],[9,180]],panel:'crew',open:'Crew deck',
    desc:'Living decks and the captain’s quarters. Pick your pilot and call sign and review your service record. Survivors and migrants will need the room as the ship grows.',
@@ -4572,7 +4572,7 @@ const RM={sel:'comms',badges:{},pc:null,t:0,flash:{},rects:[],people:Array.from(
   stars:Array.from({length:60},()=>({x:Math.random(),y:Math.random(),z:Math.random()})),ore:Array.from({length:5},(_,i)=>i/5)};
 function goStation(){ensureStation();ensureGalaxy();scene='station';renderStation();only('#station');}
 const ROOM_ICO={comms:'signal',shipyard:'wrench',war:'cross',habitat:'person',refinery:'hexa',drone:'drone',tach:'tach'};
-const ROOM_NAV={comms:['radar','Terra-reel calibration'],shipyard:['launch','Ship systems & paint'],war:['bolt','Combo loadout'],habitat:['person','Crew deck · staffing'],drone:['drone','Drone payloads'],tach:['tach','Core tuning'],refinery:['hexa','Tach, alloy & ship systems']};
+const ROOM_NAV={comms:['radar','Terra-reel calibration'],shipyard:['launch','Ship systems & paint'],war:['bolt','Combo loadout'],habitat:['person','Crew deck · staffing'],drone:['drone','Drone payloads'],tach:['tach','Core tuning'],refinery:['hexa','Tach, alloy & subsystems']};
 function habArrivals(L){
   const g=S.gal,stn=S.station,room=Math.max(0,HAB_CAP[L]-stn.pop),here=g.stars[g.at];
   const rows=here.links.map(i=>g.stars[i]).map(st=>{const fresh=!g.visited.includes(st.id);
@@ -4655,9 +4655,9 @@ function renderCrew(){const stn=ensureStation();crewSync();const rooms=CREWED.fi
     sl.oninput=()=>{const cur=stn.crew[k]||0,max=cur+crewIdle();let v=Math.min(+sl.value,max);sl.value=v;if(v!==cur){stn.crew[k]=v;if(v>cur)tone(600+v*25,.03,'triangle',.02);}paint();};sl.onchange=()=>{persist();};});
   $('#cdAuto').onclick=()=>{autoCrew();persist();sfx.buy();renderCrew();};$('#cdQ').onclick=()=>{H.tab='quarters';sfx.tick();renderHangar();};paint();}
 function renderRefinery(){const stn=ensureStation(),own=S.relics||[];
-  $('#refBody').innerHTML=modBlock()+`<div class="hg-label">Installed ship systems · ${own.length} / ${RELIC_SLOTS}</div>`+
-   (own.length?`<div class="rl-list">${own.map(id=>{const r=relicOf(id);return`<div class="rl-row" style="--rc:${r.c}"><i>${r.g}</i><div><b>${r.name}</b><span>${r.d}</span></div></div>`;}).join('')}</div>`:'<p class="hg-note">None yet. Terraform worlds well and the crew finds ship systems to install.</p>')+
-   `<p class="hg-note">Ship systems stay installed for the whole campaign.</p>`+exchangeBlock();
+  $('#refBody').innerHTML=modBlock()+`<div class="hg-label">Installed subsystems · ${own.length} / ${RELIC_SLOTS}</div>`+
+   (own.length?`<div class="rl-list">${own.map(id=>{const r=relicOf(id);return`<div class="rl-row" style="--rc:${r.c}"><i>${r.g}</i><div><b>${r.name}</b><span>${r.d}</span></div></div>`;}).join('')}</div>`:'<p class="hg-note">None yet. Terraform worlds well and the crew finds subsystems to install.</p>')+
+   `<p class="hg-note">SubSystems stay installed for the whole campaign.</p>`+exchangeBlock();
   {const xb=$('#xchBuy');if(xb)xb.onclick=()=>{if(buyAlloyHere()){renderHangar();H.flash=1;}};}
   {const mc=$('#modCraft');if(mc)mc.onclick=()=>{const stn=ensureStation();if(modHave()>=modCap()||stn.alloy<MOD_COST){sfx.bad();return;}stn.alloy-=MOD_COST;stn.mod=modHave()+1;H.forgeT0=H.t;tone(110,1.4,'sawtooth',.06,6);noise(.9,.05);setTimeout(()=>{sfx.win();},1500);persist();sfx.buy();renderHangar();H.flash=1;};}
 }
@@ -5214,6 +5214,9 @@ const PERKS=[
   {k:'lock',name:'Target lock',cost:160,icon:()=>CROSS,v:[0,2,3,4],
     desc:(p,t)=>`The next ${p.v[t]===1?'contact clears':p.v[t]+' contacts clear'} perfectly, whatever your charge.`,
     apply:(p,t)=>{G.autoClear+=p.v[t];vpPop('TARGET LOCK','#ff5c6c');}},
+  {k:'echo',name:'Chain echo',cost:140,icon:()=>CHAIN_X,v:[0,1,2,3],
+     desc:(p,t)=>`Your next chain starts ${p.v[t]} higher: more charge, and a faster path to the next combo.`,
+     apply:(p,t)=>{G.echo=Math.max(G.echo||0,p.v[t]);vpPop(`CHAIN ECHO · NEXT CHAIN +${p.v[t]}`,'#c792ff');}},
   {k:'barrage',name:'Strafing run',cost:300,icon:()=>BARR_IC,v:[0,6,10,15],
     desc:(p,t)=>`Your guns pick off ${p.v[t]} tiles one by one. They clear like a match and charge your systems.`,
     apply:(p,t)=>{G.barrQ=(G.barrQ||0)+p.v[t];vpPop('STRAFING RUN','#7ff3ff');}},
@@ -5447,7 +5450,7 @@ const PERK_SHORT={burn:(q,t)=>`+${q.v[t]} AU · +${q.g[t]} GAP`,surge:(q,t)=>`+$
 PERKS.forEach(p=>{p.short=(q,t)=>PERK_SHORT[q.k](q,t);});
 const DEFAULT_SLOTS=['surge','burn','repair'];
 function fixSlots(){if(!S.slots)S.slots=DEFAULT_SLOTS.slice();S.slots=S.slots.map(k=>PERKS.some(p=>p.k===k)?k:'repair');
-  const seen=new Set();S.slots=S.slots.map(k=>{if(!seen.has(k)){seen.add(k);return k;}const alt=['surge','burn','repair','control','decoy','lock','mega','barrage'].find(x=>!seen.has(x)&&(PERKS.find(p=>p.k===x).cost===0||S.perks[x]));seen.add(alt);return alt;});}
+  const seen=new Set();S.slots=S.slots.map(k=>{if(!seen.has(k)){seen.add(k);return k;}const alt=['surge','burn','repair','control','decoy','lock','mega','barrage','echo'].find(x=>!seen.has(x)&&(PERKS.find(p=>p.k===x).cost===0||S.perks[x]));seen.add(alt);return alt;});}
 const CHAIN_X=(()=>{const c=document.createElement('canvas');c.width=c.height=16;const x=c.getContext('2d');x.strokeStyle='#7a5a00';x.lineWidth=5;x.lineCap='square';x.beginPath();x.moveTo(3,3);x.lineTo(13,13);x.moveTo(13,3);x.lineTo(3,13);x.stroke();x.strokeStyle='#ffd84a';x.lineWidth=3;x.beginPath();x.moveTo(3,3);x.lineTo(13,13);x.moveTo(13,3);x.lineTo(3,13);x.stroke();return c;})();
 const chainLv=()=>(S&&S.chainLv)||0,chainCost=()=>Math.round(120*Math.pow(1.35,chainLv()));
 function chainScale(p){if(!['burn','surge','repair','decoy'].includes(p.k))return p;const m=(1+.1*chainLv())*(1+.07*Math.max(0,((G&&G.T)||1)-1)+.1*Math.max(0,((S.gal&&S.gal.num)||1)-1));if(m===1)return p;const sc=a=>a?a.map(x=>x%1?Math.round(x*m*10)/10:Math.round(x*m)):a;return Object.assign({},p,{v:sc(p.v),g:sc(p.g),f:sc(p.f)});}
@@ -5545,7 +5548,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v116';
+const BUILD='v117';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5822,7 +5825,7 @@ async function runDebrief(d,ctrEls,rows){
   if(d.win){const rs=S.gal&&S.gal.stars[CHOICE.starId];if(canResearch(rs)){const b=iconBtn(row,'flask','Research','hot',()=>openResearch(rs.id));b.id='dbResBtn';}
     iconBtn(row,'map','Galaxy map',canResearch(rs)?'':'hot',goMap);iconBtn(row,'station','Ship','',goStation);}
   else{iconBtn(row,'map','Galaxy map','hot',goMap);iconBtn(row,'station','Ship','',goStation);}
-  if(d.win&&(S.pendRelics||[]).length){const b=iconBtn(row,'hexa','Ship system','hot',openRelicOffer);b.id='dbRelicBtn';setTimeout(()=>{if(scene==='debrief'&&(S.pendRelics||[]).length)openRelicOffer();},800);}
+  if(d.win&&(S.pendRelics||[]).length){const b=iconBtn(row,'hexa','SubSystem','hot',openRelicOffer);b.id='dbRelicBtn';setTimeout(()=>{if(scene==='debrief'&&(S.pendRelics||[]).length)openRelicOffer();},800);}
   if(d.win&&CHOICE.gate&&S.gal&&S.gal.cons){iconBtn(row,'tach','Jump on','hot',gateJump);const mp=row.querySelector('.ibtn.hot');}
   const small=document.createElement('div');small.className='db-small';bx.append(small);
   addBtn(small,'Flight report','linkbtn',renderReport);if(!d.win)confirmBtn(small,'Restart campaign','Tap again to wipe all progress',restartCampaign,'linkbtn danger');
@@ -6049,7 +6052,7 @@ const TRAIN_CH=[
   {say:'Fuel drains as you fly. The tank is low now. Match yellow fuel cells to refill it. If it empties, the run ends.',next:'swap',allow:[[[3,3],[3,4]]],ring:'pairs',board:trLay(TR_YEL),
     enter(){G.fuel=ST.tank*.35;},leave(){G.fuel=ST.tank;}},
   {say:'Back to a full tank. In the campaign you win a system by reaching its gate with hull and fuel to spare. A deeper survey adds a pursuer, but the drill ends here.',next:'end'}]},
- {k:'special',t:'Special tiles',d:'Line tiles, nova cores, credits and crates.',feats:['line','nova','loot'],steps:[
+ {k:'special',t:'Tile systems',d:'Line tiles, nova cores, credits, crates and flares.',feats:['line','nova','loot'],steps:[
   {say:'Some matches forge special tiles. Make a match of four to forge a line tile.',next:'swap',allow:[[[2,2],[3,2]]],ring:'pairs',board:trLay(trLayLineMake)},
   {say:'That arrow tile is a line tile. The next time it is part of a match, it fires along its whole row or column.',next:'tap'},
   {say:'Try it. Match the line tile with the two reds above it.',next:'swap',allow:[[[3,3],[3,4]]],ring:'pairs',board:trLay([[1,3,0],[2,3,0],[3,3,1],[3,4,'a']])},
