@@ -518,6 +518,11 @@ button:disabled{cursor:default}
 .vbar .track{width:12px;background:#060a14}
 .vbar .track::after{display:none}
 #fuelBar .track{border-radius:8px;background:rgba(160,190,255,.05);border-color:rgba(180,200,255,.35)}
+.terra-note{display:none}
+body.terra{--bezel:var(--tfb,#8a5236)}
+body.terra #game{background:radial-gradient(ellipse at 50% 0%,var(--tfa,#241008) 0%,var(--tfc,#0c0608) 80%)}
+body.terra .viewport{box-shadow:inset 0 0 0 2px var(--tfb,#8a5236),0 0 0 4px var(--tfc,#0c0608),0 0 22px var(--tfg,transparent);transition:box-shadow .3s}
+body.terra .engineering{box-shadow:inset 0 0 36px var(--tfg,transparent),0 0 0 1px var(--tfc,#0c0608);transition:box-shadow .3s}
 .gcv{position:absolute;inset:0;width:100%;height:100%;display:block}
 .vbar.pulse .track{filter:brightness(1.6)}
 .seg{display:inline-flex;border:1px solid var(--bezel);border-radius:999px;overflow:hidden}
@@ -1037,6 +1042,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
       <div class="srow dbg"><span>Difficulty</span><div class="seg" id="difSeg"><button type="button" data-d="0.7">Easy</button><button type="button" data-d="1">Normal</button><button type="button" data-d="1.3">Hard</button></div></div>
       <div class="srow dbg"><span>Debug</span><div class="seg" id="dbgSeg"><button data-k="cr">+500 CR</button><button data-k="al">+10 Alloy</button></div></div>
       <div class="srow dbg"><span>Test Overdrive</span><div class="seg" id="dbgOd"><button type="button" data-m="counter">Counter</button><button type="button" data-m="pipe">Fuel</button><button type="button" data-m="repair">Repair</button><button type="button" data-m="storm">Slots</button><button type="button" data-m="burn">Burn</button><button type="button" data-m="rail">Rail</button></div></div>
+      <div class="srow dbg"><span>Terraform Run (prototype)</span><div class="seg" id="dbgTRun"><button type="button" data-t="1">Easy</button><button type="button" data-t="3">Mid</button><button type="button" data-t="6">Hard</button></div></div>
       <div class="srow dbg"><span>Test Terraform</span><div class="seg" id="dbgTf"><button type="button" data-t="0">Easy</button><button type="button" data-t="9">Mid</button><button type="button" data-t="16">Hard</button></div></div>
       <button class="btn ghost" id="optTips">Replay tutorial &amp; tips</button>
       <button class="btn ghost" id="optQA">Tester report</button>
@@ -1193,6 +1199,128 @@ const ICONS=ICON_ROWS.map((rows,i)=>i<5?bitmap(rows,{'#':TYPES[i].color,'+':TYPE
   :bitmap(rows,{'#':BUCKS_DEF.color,'+':BUCKS_DEF.light}));
 ICONS[BURN]=bitmap(["....#....","...###...","..#+++#..",".#+###+#.",".#+#o#+#.","#+#ooo#+#","#+#o+o#+#",".#.#+#.#.","....#...."],{'#':'#ff7a1a','o':'#ffd84a','+':'#fff3d6'});
 ICONS[CRATE]=bitmap([".#######.","#+++++++#","#o#ooo#o#","#oo#o#oo#","#+++#+++#","#oo#o#oo#","#o#ooo#o#","#+++++++#",".#######."],{'#':'#8a5410','o':'#d99a32','+':'#ffe066'});
+/* ================= TERRAFORM RUN (prototype) =================
+   Same engine as a ship run, reskinned: five tile families (Radiation, Pressure, Water, Temperature, Oxygen),
+   Oxygen drains like Fuel, Gravity is the Hull gauge, hazards arrive from the right like contacts. */
+const TERRA_SKIN=[
+ {key:'rad', name:'Radiation',  color:'#ff6b7a',light:'#ffc9cf',dark:'#3a1520',handles:'Shrug off radiation storms'},
+ {key:'pres',name:'Pressure',   color:'#4da6ff',light:'#c4e2ff',dark:'#112a4b',handles:'Burn up falling comets'},
+ {key:'h2o', name:'Water',      color:'#3fd8d0',light:'#c2f6f2',dark:'#0d3a38',handles:'Hold the oceans in place'},
+ {key:'temp',name:'Temperature',color:'#ff9640',light:'#ffd6b3',dark:'#3e2211',handles:'Cool eruptions and fire'},
+ {key:'oxy', name:'Oxygen',     color:'#38e09b',light:'#bdf7dc',dark:'#0f3a2d',handles:'Breathable air, drains constantly'}];
+const TERRA_ROWS=[
+ ["#...#...#",".#..#..#.","..#.#.#..","...#+#...","###+++###","...#+#...","..#.#.#..",".#..#..#.","#...#...#"],
+ ["..#####..",".#.....#.","#.....+.#","#....+..#","#...+...#","#..+....#",".#.....#.","..#####..","....#...."],
+ ["....#....","...###...","..#####..","..#+###..",".#+#####.",".#######.",".#######.","..#####..","...###..."],
+ ["...###...","...#+#...","...#+#...","...#+#...","...#+#...","..#####..",".###+###.",".###+###.","..#####.."],
+ ["..#####..",".#######.","##.....##","##..+..##","##.+++.##","##..+..##",".#######.","..#####..","........."]];
+const TERRA_ICONS=TERRA_SKIN.map((ty,i)=>bitmap(TERRA_ROWS[i],{'#':ty.color,'+':ty.light}));
+const GRAV_ICON=bitmap(["....#....","....#....","....#....","..#.#.#..","...###...","....#....",".........","#########","........."],{'#':'#b48cff','+':'#e6d6ff'});
+const SHIP_SKIN=TYPES.map(o=>Object.assign({},o)),SHIP_ICONS=ICONS.slice(0,5),TERRA_BLANK=bitmap(["."],{});
+let TERRA_PENDING=false;
+const TL_KEYS=['rad','pres','h2o','temp'];
+function setBarIcons(terra){const hi=$('#hullIc'),fi=$('#fuelIc');
+  if(terra){hi.width=9;hi.height=9;const x=hi.getContext('2d');x.clearRect(0,0,9,9);x.drawImage(GRAV_ICON,0,0);}
+  else{hi.width=SHIP_BW;hi.height=SHIP_BH;hi.getContext('2d').drawImage(bitmap(SHIP_ROWS,{'#':'#e1e9f7','o':'#56658a','+':'#7ff3ff','e':'#4a5878'}),0,0);}
+  fi.width=9;fi.height=9;const y=fi.getContext('2d');y.clearRect(0,0,9,9);y.drawImage(ICONS[4],0,0);
+  $('#hullBar').setAttribute('aria-label',terra?'Gravity':'Hull');$('#fuelBar').setAttribute('aria-label',terra?'Oxygen':'Fuel');}
+function skinTerra(on){
+  for(let i=0;i<5;i++){Object.assign(TYPES[i],on?TERRA_SKIN[i]:SHIP_SKIN[i]);ICONS[i]=on?TERRA_ICONS[i]:SHIP_ICONS[i];}
+  gEls.forEach((el,m)=>{const ty=TYPES[m];el.fill.style.background=ty.color;el.fill.style.boxShadow=`0 0 8px ${ty.color}80`;
+    const top=el.g.querySelector('.g-top'),old=top.querySelector('canvas');top.replaceChild(iconCanvas(m,'g-ico'),old);const sp=top.querySelector('span');sp.style.color=ty.color;sp.textContent=ty.name.toUpperCase();});
+  setBarIcons(on);document.body.classList.toggle('terra',on);
+  if(!on){const st=document.body.style;['--tfb','--tfg','--tfa','--tfc'].forEach(k=>st.removeProperty(k));}
+}
+const mixC=(a,b,u)=>{const A=hexRGB(a),B2=hexRGB(b);return A.map((v,i)=>Math.round(v+(B2[i]-v)*u));};
+const rgbaC=(c,a)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const rgbHex=c=>'#'+c.map(v=>v.toString(16).padStart(2,'0')).join('');
+// how alive the world looks: progress plus whatever you have been matching lately
+const terraLife=()=>clamp(G.prog*.5+((G.tl.h2o+G.tl.temp+G.tl.pres+G.tl.oxy+G.tl.rad)/5)*.7,0,1);
+const terraStress=()=>clamp(1-Math.min(G.hull/ST.hullMax,G.fuel/ST.tank)/.5,0,1);
+function terraInit(){
+  G.terra=true;G.len=9;G.tl={rad:0,pres:0,h2o:0,temp:0,oxy:0};G.tut=false;G.strayPod=false;
+  for(const k of ['comet','eruption','surge','storm','swarm','seed']){G.R.spawn[k]=0;G.R.out[k]=[0,0,0];}
+  skinTerra(true);
+}
+function terraCharge(gains,fn,chain){const T=G.tl,m=1+.15*Math.max(0,chain-1);
+  TL_KEYS.forEach((k,i)=>{if(gains[i])T[k]=Math.min(1,T[k]+.03*gains[i]*m);});if(fn)T.oxy=Math.min(1,T.oxy+.03*fn*m);}
+function terraTick(dt){for(const k in G.tl)G.tl[k]=Math.max(0,G.tl[k]-.01*dt);}
+let _tfT=0;
+function terraFrame(){const now=performance.now();if(now-_tfT<120)return;_tfT=now;
+  const life=terraLife(),st=terraStress(),blink=st>.55&&Math.sin(now/110)>0,bz=blink?'#ff4d5e':rgbHex(mixC('#8a5236','#2fb89c',life)),
+    glow=rgbaC(mixC('#a0522d','#38e09b',life),.1+.2*life+(st>.55?.12:0)),a=rgbHex(mixC('#241008','#07261f',life)),c2=rgbHex(mixC('#0c0608','#041310',life)),sb=document.body.style;
+  sb.setProperty('--tfb',bz);sb.setProperty('--tfg',blink?'rgba(255,77,94,.3)':glow);sb.setProperty('--tfa',a);sb.setProperty('--tfc',c2);}
+const TERRA_PICK=[['comet',3],['eruption',3],['surge',2],['storm',2],['swarm',2]];
+function terraPickHazard(){if(G.sincePlanet>=5)return'seed';const sw=G.prog>.3?1:0.001;const w=TERRA_PICK.map(([k,v])=>[k,k==='swarm'?v*sw:v]),tot=w.reduce((a,b2)=>a+b2[1],0);let r=Math.random()*tot;for(const[k,v]of w){r-=v;if(r<=0)return k;}return'comet';}
+function resolveTerra(e){
+  e.resolved=true;let need=0,got=0;
+  for(const q of e.reqs){const used=Math.min(G.meters[q.m],q.c);G.meters[q.m]-=used;need+=q.c;got+=used;}
+  const ratio=got/need,short=1-ratio,perfect=ratio>=1,extra=Math.floor(G.T/3);
+  G.contacts++;rOutcome(e.type,ratio,need,got);
+  const ex=evX(1),ey=e.y;
+  if(perfect){G.cleared++;odGain(1);G.bounty+=1;}
+  G.fx.push({k:'tshield',t:0,d:.6});
+  if(e.type==='seed'){
+    const gain=Math.round(EVENTS.seed.amt*ratio);e.dead=true;
+    if(gain>0){G.R.fuel.planets+=gain;G.fuel=Math.min(ST.tank,G.fuel+gain);vpPop(`+${gain} OXYGEN`,'#38e09b');sfx.good();pulseFuel();G.tl.oxy=Math.min(1,G.tl.oxy+.15);}else vpPop('SEEDS LOST','#7f8fb2');
+    return;
+  }
+  const cols={comet:['#e6f4ff','#4da6ff','#ffffff'],swarm:['#e6f4ff','#4da6ff','#ffffff'],eruption:['#ff9640','#ff5a1e','#ffe08a'],surge:['#3fd8d0','#c2f6f2','#ffffff'],storm:['#b46cff','#ffe66a','#ffffff']}[e.type]||['#ffffff'];
+  boom(ex,ey,cols,perfect?16:22);e.dead=true;
+  if(perfect){vpPop({comet:'COMET BURNED UP',swarm:'SWARM BURNED UP',eruption:'ERUPTION COOLED',surge:'SURGE HELD',storm:'STORM SHIELDED'}[e.type],'#4da6ff');sfx.good();return;}
+  const dmg=Math.max(1,Math.round(EVENTS[e.type].amt*short));
+  if(e.type==='comet'||e.type==='swarm'||e.type==='eruption'){damage(dmg,e.type);vpPop(`GRAVITY -${dmg}`,'#b48cff');queueHazard(e.type==='eruption'?'fire':'debris',Math.max(1,Math.round(short*(3+extra))));}
+  else{G.R.fuel.wells+=dmg;G.fuel=Math.max(0,G.fuel-dmg);G.wobble=1;G.shake=.35;G.flash=.4;vpPop(`OXYGEN -${dmg}`,'#38e09b');sfx.bad();queueHazard('lock',2+Math.round(short*3)+extra);}
+}
+function terraEnd(win,reason){if(!G.running)return;G.running=false;const nm=(CHOICE&&CHOICE.name)||'World';
+  toast(win?`<b>${nm} TERRAFORMED</b><span>Hazards handled ${G.cleared}/${G.contacts} · best chain ×${G.bestChain} · ${Math.round(G.time)}s</span>`:`<b>${nm} LOST</b><span>${reason==='hull'?'Gravity failed: the world tore itself apart.':'Oxygen failed: the air ran out.'} Hazards handled ${G.cleared}/${G.contacts}.</span>`,win?'#5ef0d0':'#ff4d5e');
+  setTimeout(()=>{G.terra=false;skinTerra(false);goMap();},1700);}
+function drawTerraBG(b,W,H,t){
+  const life=terraLife(),st=terraStress(),cx=shipBaseX()+8;
+  const g=b.createRadialGradient(cx,H/2,3,cx,H/2,W*.8);g.addColorStop(0,rgbaC(mixC('#4a2410','#10665e',life),.7));g.addColorStop(.55,rgbaC(mixC('#1e0d09','#06241f',life),.55));g.addColorStop(1,'rgba(4,6,13,0)');
+  b.fillStyle=g;b.fillRect(0,0,W,H);
+  if(st>0){const v=b.createRadialGradient(W/2,H/2,H*.4,W/2,H/2,W*.62);v.addColorStop(0,'rgba(255,60,80,0)');v.addColorStop(1,`rgba(255,60,80,${.3*st})`);b.fillStyle=v;b.fillRect(0,0,W,H);}
+}
+let _tpc=null,_tpImg=null,_tpT=-9;
+function terraPlanetPaint(N,t,I,hp,ox){
+  const d=_tpImg.data,rot=t*.35;
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=(y*N+x)*4,dx=(x+.5-N/2)/(N/2),dy=(y+.5-N/2)/(N/2),r2=dx*dx+dy*dy;
+    if(r2>1){d[i+3]=0;continue;}
+    const nz=Math.sqrt(1-r2),lon=Math.atan2(dx,nz)+rot,lat=Math.asin(dy),tv=_f(lon*2.4+3,lat*2.4+7),sea=-1+1.5*I.h2o,lush=.5*I.oxy+.25*I.temp+.25*I.h2o;let pr,pg,pb;
+    if(tv<sea){pr=30;pg=90+tv*80;pb=170+tv*60;}
+    else{const sh=.75+tv*.5;pr=(150-70*lush)*sh;pg=(95+60*lush)*sh;pb=(62+10*lush)*sh;if(I.temp<.55&&Math.abs(lat)>1.05-.6*I.temp){pr=pg=pb=215;}}
+    if(I.pres>.05){const thr=1-.4*I.pres,cl=_f(lon*3.2+11+t*.15,lat*3.2);if(cl>thr){const k=Math.min(1,(cl-thr)*5)*.8;pr+=(235-pr)*k;pg+=(240-pg)*k;pb+=(245-pb)*k;}}
+    const lt=Math.max(.18,dx*-.55+dy*-.4+nz*.75);pr*=lt;pg*=lt;pb*=lt;
+    const rim=Math.pow(1-nz,2.2),atm=I.pres*.7+I.oxy*.3,od=.35+.65*ox;
+    pr+=(40+20*atm)*rim*od;pg+=(50+90*atm)*rim*od;pb+=(70+185*atm)*rim*od;
+    if(I.rad<1){const fl=.5+.5*Math.sin(t*6+x*.3),k=(1-I.rad)*rim;pr+=140*fl*k;pg-=20*k;pb-=30*k;}
+    if(hp<.5){const cr=Math.abs(_f(lon*5+1,lat*5)-.5);if(cr<.03+(.5-hp)*.14){pr=255;pg=170-(.5-hp)*160;pb=40;}}
+    d[i]=Math.max(0,Math.min(255,pr));d[i+1]=Math.max(0,Math.min(255,pg));d[i+2]=Math.max(0,Math.min(255,pb));d[i+3]=255;}
+}
+function drawTerraVP(b,W,H,t){
+  const R=Math.max(14,Math.round(H*.4)),N=R*2,base=clamp(G.prog*.5,0,.5),I={};for(const k of ['rad','pres','h2o','temp','oxy'])I[k]=clamp(base+G.tl[k]*.7,0,1);
+  const hp=clamp(G.hull/ST.hullMax,0,1),ox=clamp(G.fuel/ST.tank,0,1),endU=G.ending?clamp(G.endT/(G.ending==='gate'?1.7:2.3),0,1):0,lose=G.ending&&G.ending!=='gate',win=G.ending==='gate';
+  const sc=lose?Math.max(.04,1-Math.pow(endU,2.2)):win?1+.3*(1-Math.pow(1-endU,3)):1;
+  const wob=(1-hp)*2.2*Math.sin(t*5)+(lose?(Math.random()-.5)*endU*5:0),cx=shipBaseX()+24-R+4+wob,cy=H/2;
+  if(!_tpc||_tpc.width!==N){_tpc=document.createElement('canvas');_tpc.width=_tpc.height=N;_tpImg=_tpc.getContext('2d').createImageData(N,N);_tpT=-9;}
+  if(t-_tpT>.06){_tpT=t;terraPlanetPaint(N,t,I,lose?Math.min(hp,.2):hp,ox);_tpc.getContext('2d').putImageData(_tpImg,0,0);}
+  const atm=I.pres*.7+I.oxy*.3,ag=b.createRadialGradient(cx,cy,R*.9,cx,cy,R*1.45);ag.addColorStop(0,rgbaC(mixC('#ff7a4a','#6fd0ff',atm),.18+.3*atm*ox));ag.addColorStop(1,'rgba(0,0,0,0)');b.fillStyle=ag;b.beginPath();b.arc(cx,cy,R*1.45,0,6.283);b.fill();
+  b.imageSmoothingEnabled=false;b.drawImage(_tpc,Math.round(cx-R*sc),Math.round(cy-R*sc),Math.round(N*sc),Math.round(N*sc));
+  if(win){b.fillStyle=`rgba(200,255,230,${.35*Math.sin(Math.min(1,endU)*Math.PI)})`;b.fillRect(0,0,W,H);}
+  const sh=G.fx.find(f=>f.k==='tshield');if(sh){const u=sh.t/sh.d;b.strokeStyle=`rgba(127,190,255,${1-u})`;b.lineWidth=1.5;b.beginPath();b.arc(cx,cy,R+2+u*4,-.9,.9);b.stroke();}
+  for(const e of G.events){if(e.resolved||!e.ided)continue;const x=evX(e.p),y=e.y,sd=e.seed;
+    if(e.type==='comet'||e.type==='swarm'){const n=e.type==='swarm'?4:1;for(let i=0;i<n;i++){const hx=x+(i?(i*5)%9-3:0),hy=y+(i?((i*7)%11-5):0);
+      for(let k=1;k<=11;k++){b.fillStyle=`rgba(190,225,255,${.5*(1-k/12)})`;b.fillRect(Math.round(hx+k*1.3),Math.round(hy+Math.sin(k*.9+t*8+i)*.6),1,1);}
+      b.fillStyle='#e6f4ff';b.fillRect(Math.round(hx)-1,Math.round(hy)-1,3,3);b.fillStyle='#fff';b.fillRect(Math.round(hx),Math.round(hy),1,1);}}
+    else if(e.type==='eruption'){const r=3+Math.sin(t*6+sd)*.6;b.fillStyle='rgba(255,90,30,.35)';b.beginPath();b.arc(x,y,r+3,0,6.28);b.fill();b.fillStyle='#ff9640';b.beginPath();b.arc(x,y,r,0,6.28);b.fill();b.fillStyle='#ffe08a';b.fillRect(Math.round(x)-1,Math.round(y)-1,2,2);
+      for(let i=0;i<5;i++){const a=i*1.3+t*3+sd;b.fillStyle='#ff5a1e';b.fillRect(Math.round(x+Math.cos(a)*(r+3)),Math.round(y+Math.sin(a)*(r+3)),1,1);}}
+    else if(e.type==='surge'){for(let i=0;i<3;i++){b.strokeStyle=`rgba(63,216,208,${.8-i*.22})`;b.lineWidth=1;b.beginPath();b.arc(x+i*3-1,y,5+i*2,Math.PI*.62,Math.PI*1.38);b.stroke();}}
+    else if(e.type==='storm'){for(let i=0;i<4;i++){b.fillStyle='rgba(150,80,200,.3)';b.beginPath();b.arc(x+Math.cos(i*1.7+sd)*3,y+Math.sin(i*2.3+sd)*3,4,0,6.28);b.fill();}
+      if(Math.sin(t*14+sd)>.2){b.strokeStyle='#ffe66a';b.lineWidth=1;b.beginPath();b.moveTo(x-1,y-4);b.lineTo(x+1,y);b.lineTo(x-1,y+1);b.lineTo(x+1,y+5);b.stroke();}}
+    else if(e.type==='seed'){const pp=(Math.sin(t*5+sd)+1)/2;b.strokeStyle=`rgba(56,224,155,${.35+.4*pp})`;b.lineWidth=1;b.beginPath();b.arc(x,y,5+pp*3,0,6.28);b.stroke();
+      for(let i=0;i<6;i++){const a=i*1.05+t*1.5;b.fillStyle='#bdf7dc';b.fillRect(Math.round(x+Math.cos(a)*5),Math.round(y+Math.sin(a)*5),1,1);}b.fillStyle='#38e09b';b.fillRect(Math.round(x)-1,Math.round(y)-1,3,3);}
+  }
+}
 const PAINTS=[{n:'Standard',c:'#c9d4ea'},{n:'Amber',c:'#ffc46b'},{n:'Crimson',c:'#ff7a86'},{n:'Mint',c:'#7ae8b4'},{n:'Cobalt',c:'#8fb3ff'},{n:'Orchid',c:'#dcb0ff'}];
 // Hull: 20×13, nose to the right, engines on the left. Upgrades bolt onto real hull edges.
 const SHIP_ROWS=[
@@ -1315,6 +1443,12 @@ const EVENTS={
   well:    {reqs:[[3,5]],amt:20},
   gunship: {reqs:[[0,5],[1,3]],amt:36},
   pod:     {reqs:[[2,3]],amt:0},
+  comet:   {reqs:[[1,5]],amt:22},
+  eruption:{reqs:[[3,5]],amt:24},
+  surge:   {reqs:[[2,5]],amt:22},
+  storm:   {reqs:[[0,6]],amt:30},
+  swarm:   {reqs:[[1,5],[0,3]],amt:34},
+  seed:    {reqs:[[2,4]],amt:24},
 };
 
 /* systems: theme + pursuer + twist + bonus */
@@ -1606,7 +1740,7 @@ const G={};
 function resetGame(){
   ST=stats();
   const T=CHOICE?CHOICE.threat:0;
-  Object.assign(G,{running:true,flare:null,T,time:0,dist:0,len:gateLen(T),prog:0,vel:1,fuel:ST.tank,hull:ST.hullMax,meters:[0,0,0,0],
+  Object.assign(G,{running:true,terra:false,flare:null,T,time:0,dist:0,len:gateLen(T),prog:0,vel:1,fuel:ST.tank,hull:ST.hullMax,meters:[0,0,0,0],
     events:[],spawnT:1.6,sincePlanet:0,contacts:0,cleared:0,bestChain:1,ending:null,endT:0,speedMul:1,
     shipY:null,shipDead:false,warpX:0,warpIn:0,catchT:-99,shake:0,flash:0,wobble:0,fx:[],pops:[],nebX:0,gap:ST.gapStart,
     runBucks:0,bounty:0,decayT:0,intT:14,skimT:5,alarmT:0,milestones:{half:false,sight:false},
@@ -1671,6 +1805,7 @@ function makePlanet(rad,palIn){
 function spawnEvent(force,opts={}){
   if(G.tut)setTimeout(()=>coach('run_contact'),1300);
   let type=force;
+  if(!type&&G.terra)type=terraPickHazard();
   if(!type){
     if(G.sincePlanet>=5)type='planet';
     else{const w=Object.assign({},SYS.w);w.gunship=(w.gunship||0)*Math.min(1,G.T/2);
@@ -1678,7 +1813,7 @@ function spawnEvent(force,opts={}){
       for(const k of keys){r-=w[k];if(r<=0){type=k;break;}}type=type||'asteroid';}
     if(G.T===0&&G.contacts+G.events.length<2&&type==='enemy')type='asteroid';
   }
-  G.sincePlanet=type==='planet'?0:G.sincePlanet+1;if(G.R)G.R.spawn[type]++;
+  G.sincePlanet=(type==='planet'||type==='seed')?0:G.sincePlanet+1;if(G.R)G.R.spawn[type]=(G.R.spawn[type]||0)+1;
   const add=Math.floor(G.T*.42*dif())+Math.floor(G.prog*2);
   const reqs=EVENTS[type].reqs.map(([m,c],i)=>({m,c:Math.min(ST.cap[m]-1,Math.max(2,c+add+(Math.random()<.45?1:0)-(opts.light?1:0)-(i?1:0)-easeNeed()-(!TR&&rd()===1&&type==='enemy'?1:0)))}));
   const e={type,reqs,p:0,y:Math.round(V.H*(.28+Math.random()*.44)),ided:false,resolved:false,passing:false,dead:false,seed:Math.random()*10,interceptor:!!opts.interceptor};
@@ -1687,6 +1822,7 @@ function spawnEvent(force,opts={}){
   if(type==='enemy')e.spr=ENEMY;
   if(type==='gunship')e.spr=GUNSHIP;
   if(type==='pod')e.spr=POD;
+  if(G.terra)e.spr=TERRA_BLANK;
   G.events.push(e);
 }
 
@@ -1704,6 +1840,7 @@ function damage(n,src='other'){
 }
 function addBucks(n,label,snd){if(n<=0)return;G.runBucks+=n;if(snd!==false)sfx.coin();const el=$('#runBucksEl');el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);if(label)vpPop(`+${n} ${label}`,'#ff7ad9');}
 function resolve(e){
+  if(G.terra)return resolveTerra(e);
   if(e.type==='pod')return resolvePod(e);
   if(G.autoClear>0){G.autoClear--;for(const q of e.reqs)G.meters[q.m]=Math.max(G.meters[q.m],q.c);vpPop('LOCKED ON','#ff5c6c');{const x1=shipX()+14,y1=G.shipY,x2=evX(e.p),y2=e.y;G.fx.push({k:'laser',t:0,d:.5,x1,y1,x2,y2,c:'#ff5c6c',w:3},{k:'laser',t:0,d:.35,x1,y1,x2,y2,c:'#ffffff',w:1});boom(x2,y2,['#ff5c6c','#fff3bf','#ffb547'],14);sfx.laser();}}
   e.resolved=true;let need=0,got=0;
@@ -1743,7 +1880,7 @@ function resolve(e){
 
 function updateGame(dt){
   if(!G.running)return;
-  G.time+=dt;
+  G.time+=dt;if(G.terra)terraTick(dt);
   if(G.warpIn>0){G.warpIn=Math.max(0,G.warpIn-dt);G.warpX=-V.W*.35*Math.pow(G.warpIn/.8,2);}
   if(G.shipY==null)G.shipY=V.H/2;
   if(G.ending){
@@ -1782,7 +1919,7 @@ function updateGame(dt){
     if(!G.milestones.half&&G.prog>=.5){G.milestones.half=true;showBanner(G.hold?'Gate 50%':'Halfway',G.hold?'THE GATE PUSHES BACK':'KEEP THE SHIP TOGETHER');sfx.milestone();}
     if(!G.milestones.sight&&G.prog>=.88){G.milestones.sight=true;showBanner('Gate in sight','HOLD ON');sfx.milestone();}
     if(G.prog>=1&&RUNX&&RUNX.gate&&!TR&&!G.exoDone){G.exoDone=true;G.runTime=G.time;startCine('exodus',{c:'#5ef0d0'},4.8);CINE.next=()=>{G.ending='gate';G.endT=1;G.warpX=V.W+70;sfx.win();showBanner('Exodus','THROUGH THE GATE');};}
-    else if(G.prog>=1&&!G.exoDone){G.runTime=G.time;G.ending='gate';G.endT=0;sfx.win();showBanner(G.hold?'Gate open':'Jump gate',G.hold?'ALL HANDS · SLIP THROUGH':'SYSTEM CLEARED');}
+    else if(G.prog>=1&&!G.exoDone){G.runTime=G.time;G.ending='gate';G.endT=0;sfx.win();showBanner(G.terra?'Terraformed':G.hold?'Gate open':'Jump gate',G.terra?'THE WORLD LIVES':G.hold?'ALL HANDS · SLIP THROUGH':'SYSTEM CLEARED');}
     if(G.prog<.92){G.spawnT-=dt*sm;if(G.spawnT<=0){spawnEvent();G.spawnT=interval();}}
   }
   const T=travel(),pxs=((V.W+14)-(shipBaseX()+24))/T;
@@ -1843,8 +1980,8 @@ function drawPursuer(b,W,H,t){
 }
 function drawViewport(){
   if(!V.W)return;const b=V.b,W=V.W,H=V.H,t=G.time||0,v=(G.vel||1)*(G.speedMul||1);
-  b.fillStyle='#04060d';b.fillRect(0,0,W,H);
-  for(let i=0;i<2;i++){
+  b.fillStyle='#04060d';b.fillRect(0,0,W,H);if(G.terra)drawTerraBG(b,W,H,t);
+  for(let i=0;i<(G.terra?0:2);i++){
     const nx=((G.nebX*(i?.6:1)+i*W*.9)%(W*1.8)+W*1.8)%(W*1.8)-W*.4,ny=H*(i?.75:.3);
     const gr=b.createRadialGradient(nx,ny,0,nx,ny,H*.9);gr.addColorStop(0,SYS.tint);gr.addColorStop(1,'rgba(4,6,13,0)');
     b.globalAlpha=SYS.pursuer==='leviathan'?.85:.55;b.fillStyle=gr;b.fillRect(0,0,W,H);b.globalAlpha=1;
@@ -1853,11 +1990,12 @@ function drawViewport(){
   const sxr=Math.round(evX(G.sensor));
   b.fillStyle='rgba(56,224,155,.28)';for(let y=2;y<H;y+=4)b.fillRect(sxr,y,1,2);
   // jump gate
-  if(G.prog>.82){
+  if(G.prog>.82&&!G.terra){
     const gp=clamp((G.prog-.82)/.18,0,1),gx=Math.round((W+20)+((shipBaseX()+20)-(W+20))*gp),gy=H/2,ry=H*.34;
     for(let a=0;a<6.28;a+=.06){const lit=((a+t*3)%1.2)<.5;b.fillStyle=lit?'#7ff3ff':'#2f5d8a';b.fillRect(Math.round(gx+Math.cos(a)*5),Math.round(gy+Math.sin(a)*ry),1,1);}
     b.fillStyle='rgba(127,243,255,.12)';b.beginPath();b.ellipse(gx,gy,4,ry,0,0,6.28);b.fill();
   }
+  if(G.terra)drawTerraVP(b,W,H,t);
   if(feat('survey'))drawStormEnv(b,W,H,t);
   if(feat('pursuer'))drawPursuer(b,W,H,t);
   for(const e of G.events){
@@ -1893,7 +2031,7 @@ function drawViewport(){
     }
     if(f.parts){for(const p of f.parts){b.globalAlpha=1-u;b.fillStyle=p.c;b.fillRect(Math.round(p.x),Math.round(p.y),u<.4?2:1,u<.4?2:1);}b.globalAlpha=1;}
   }
-  if(!G.shipDead){
+  if(!G.shipDead&&!G.terra){
     const abn=G.fx.find(f=>f.k==='abn'),abu=abn?abn.t/abn.d:0,lunge=abn?Math.round(Math.sin(Math.min(1,abu*1.15)*Math.PI)*24):0;
     const sx=shipX()+lunge,sy=Math.round(G.shipY+Math.sin(t*2)*.8+Math.sin(t*30)*G.wobble*2)-6;
     const lowFuel=G.fuel<15,thrust=G.ending==='fuel'?Math.max(0,1-G.endT):(lowFuel&&Math.random()<.3?0:1);
@@ -2078,6 +2216,7 @@ async function clearCells(set,chain,makes=[],wild=new Map()){
   if(burns.length)afterburnTiles(burns);
   let lit=null;
   for(let m=0;m<4;m++)if(gains[m]){gains[m]+=ST.eff[m]+Math.max(0,chain-1);G.meters[m]=Math.min(ST.cap[m],G.meters[m]+gains[m]);lit=TYPES[m].color;const el=gEls[m].g;el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);setTimeout(()=>{el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),300);},430);}
+  if(G.terra)terraCharge(gains,fn,chain);
   if(fuel){const amt=fuel+(chain>1?2+(relicHas('chainfuel')?3:0):0);G.R.fuel.tiles+=amt;G.fuel=Math.min(ST.tank,G.fuel+amt);pulseFuel();if(fn)boardPop(`+${amt} FUEL`,fc/fn+.5,fr/fn+.5,'#ffd84a');lit=lit||'#ffd84a';}
   if(bucks){const n=bucks/2;addBucks(bucks,null,false);sfx.cash();boardPop(`+${bucks} CR`,bc0/n+.5,br0/n+.5,'#ff7ad9');lit=lit||'#ff7ad9';}
   if(lit)B.glow={color:lit,t:0};
@@ -2481,12 +2620,13 @@ function updateUI(){
     }else{el.need.style.display='none';el.note.textContent='Idle';el.g.style.borderColor='';el.note.style.color='';}
     el.g.classList.toggle('short',cls==='short');el.g.classList.toggle('urgent',cls==='urgent');
   }
+  if(G.terra)terraFrame();
   const f=$('#fuelBar'),h=$('#hullBar');
   $('#fuelNum').textContent=Math.ceil(G.fuel);$('#hullNum').textContent=Math.ceil(G.hull);
   {const L=G.danger||{fuel:0,hull:0};f.classList.toggle('warn',L.fuel===1);f.classList.toggle('crit',L.fuel===2);h.classList.toggle('warn',L.hull===1);h.classList.toggle('crit',L.hull===2);}
   $('#runBucks').textContent=G.runBucks;
   {const braced=G.braceT>0&&!G.ending;engEl.classList.toggle('braced',braced);}
-  $('#loc').innerHTML=G.hold?`<b>EXODUS GATE</b> · OPEN ${Math.floor(G.dist/G.len*100)}%`:`<b>${CHOICE?CHOICE.name:''}</b> · ${G.dist.toFixed(1)}/${G.len.toFixed(0)} AU`;
+  $('#loc').innerHTML=G.terra?`<b>TERRAFORM</b> · ${CHOICE?CHOICE.name:''} · ${Math.floor(G.prog*100)}%`:G.hold?`<b>EXODUS GATE</b> · OPEN ${Math.floor(G.dist/G.len*100)}%`:`<b>${CHOICE?CHOICE.name:''}</b> · ${G.dist.toFixed(1)}/${G.len.toFixed(0)} AU`;
 }
 let bannerTimer=0;
 function showBanner(a,b){$('#b1').textContent=a;$('#b2').textContent=b;$('#banner').classList.add('show');clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>$('#banner').classList.remove('show'),1900);}
@@ -3646,7 +3786,7 @@ const FIXED_LOAD={0:['line','nova','loot'],1:['line','nova','burner'],2:['line',
 const loadFor=d=>FIXED_LOAD[d]||FIXED_LOAD[1];
 const rx=()=>TR?null:BRIEF?{depth:depthNow(),load:loadFor(depthNow()),forced:FORCED[depthNow()]}:(RUNX&&RUNX.gate&&scene!=='game'?null:RUNX);
 const rd=()=>TR?0:(RUNX&&scene==='game'?RUNX.depth:depthNow());
-const feat=k=>{if(TR)return TR.feats.includes(k);if(k==='burst'&&!rl('tach'))return false;const x=rx();if(k in UNL&&!unl(k)&&!(x&&x.forced===k))return false;if(!x)return true;
+const feat=k=>{if(TR)return TR.feats.includes(k);if(k==='burst'&&(!rl('tach')||(G&&G.terra)))return false;const x=rx();if(k in UNL&&!unl(k)&&!(x&&x.forced===k))return false;if(!x)return true;
   if(k in DEPTH_FEAT)return x.f?(x.f.includes(k)&&(!DEPTH_LATE.includes(k)||prog()>=3)):depthOn(k,x.depth);if(SPECIALS.includes(k))return x.load.includes(k);return true;};
 const RELICS=[
  {id:'plating',name:'Hull plating',g:'▣',c:'#9fb6d9',d:'+15 maximum hull.'},
@@ -5851,7 +5991,7 @@ function drawDangerHUD(c,CW,CH,t){
   let y=G.strike?86:30;
   for(const k of order){
     const lv=L[k],col=DANGER_COL[k],flash=lv===2&&Math.sin(t*10)>0;
-    const txt=k==='hull'?`HULL ${lv===2?'CRITICAL':'LOW'} ${Math.ceil(G.hull)}`:k==='fuel'?`FUEL ${lv===2?'CRITICAL':'LOW'} ${Math.ceil(G.fuel)}`:(lv===2?'PURSUER ON YOU':'PURSUER CLOSE');
+    const txt=k==='hull'?`${G.terra?'GRAVITY':'HULL'} ${lv===2?'CRITICAL':'LOW'} ${Math.ceil(G.hull)}`:k==='fuel'?`${G.terra?'OXYGEN':'FUEL'} ${lv===2?'CRITICAL':'LOW'} ${Math.ceil(G.fuel)}`:(lv===2?'PURSUER ON YOU':'PURSUER CLOSE');
     c.font='10px Silkscreen, monospace';const w=c.measureText(txt).width+34,x=8;
     c.fillStyle=flash?col:'rgba(20,6,12,.88)';rr(c,x,y,w,20,6);c.fill();c.strokeStyle=col;c.lineWidth=1.5;c.stroke();
     const ic=k==='hull'?SHIP:k==='fuel'?ICONS[4]:(PMINI[SYS.pursuer]||CRUISER),ih=12,iw=Math.min(20,ic.width*ih/ic.height);
@@ -5862,7 +6002,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v136';
+const BUILD='v137-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -5905,7 +6045,7 @@ function drawGauges(t){
   const L=G.danger||{hull:0,fuel:0};
   let g=gaugeCanvas('#hullBar');
   if(g){const{c,W,H}=g,n=10,gap=2,ph=(H-gap*(n+1))/n,lit=clamp(G.hull/ST.hullMax,0,1)*n;
-    const base=L.hull===2?['#ffb3ba','#d8394a','#6a1420']:L.hull===1?['#ffe2b0','#d89238','#6a4214']:['#f2f6fc','#a6b6d0','#4a5878'];
+    const base=L.hull===2?['#ffb3ba','#d8394a','#6a1420']:L.hull===1?['#ffe2b0','#d89238','#6a4214']:(G.terra?['#e6d6ff','#b48cff','#5a3d99']:['#f2f6fc','#a6b6d0','#4a5878']);
     const blink=L.hull===2&&Math.sin(t*14)>0;
     for(let k=0;k<n;k++){
       const y=H-gap-(k+1)*ph-k*gap,x=1,w=W-2,f=clamp(lit-k,0,1);
@@ -5921,7 +6061,7 @@ function drawGauges(t){
   }
   g=gaugeCanvas('#fuelBar');
   if(g){const{c,W,H}=g,frac=clamp(G.fuel/ST.tank,0,1),lvl=H*(1-frac);
-    const col=L.fuel===2?['#ffb3ba','#c8303f']:L.fuel===1?['#ffd27a','#d07a20']:['#fff39a','#e09a18'];
+    const col=L.fuel===2?['#ffb3ba','#c8303f']:L.fuel===1?['#ffd27a','#d07a20']:(G.terra?['#b6ffd9','#27c283']:['#fff39a','#e09a18']);
     const wave=x=>lvl+Math.sin(x*.9+t*4)*1.2+Math.sin(x*.45-t*2.3)*.8;
     if(frac>0){
       const gr=c.createLinearGradient(0,lvl,0,H);gr.addColorStop(0,col[0]);gr.addColorStop(1,col[1]);
@@ -5991,7 +6131,7 @@ function drawBoardClearFX(c){
 /* ================= FLOW ================= */
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function goSplash(){scene='splash';SP.shipX=-innerWidth*.6;renderSplash();renderInstall();only('#splash');}
-function goMap(){if($('#chartBox'))$('#chartBox').classList.remove('big'),$('#zBig').textContent='⤢',MAP.z=1,MAP.panX=MAP.panY=0;scene='map';renderMap();only('#map');}
+function goMap(){if(document.body.classList.contains('terra')){G.terra=false;skinTerra(false);}if($('#chartBox'))$('#chartBox').classList.remove('big'),$('#zBig').textContent='⤢',MAP.z=1,MAP.panX=MAP.panY=0;scene='map';renderMap();only('#map');}
 function goHangar(){scene='hangar';renderHangar();only('#hangar');}
 function openQuarters(){ensureStation();H.tab='quarters';H.room='habitat';H.intro=false;sfx.tick();goHangar();const b=$('#hangar .hg-body');if(b)b.scrollTop=0;}
 function openPilotIntro(){H.tab='quarters';H.room='habitat';H.intro=true;goHangar();}
@@ -5999,18 +6139,20 @@ function pilotDone(){H.intro=false;sfx.tick();goMap();}
 function applyWarBoost(){if(!G.warPend)return;G.warPend=false;{const ls=TR||!CHOICE?0:((S.loss||{})[CHOICE.starId]||0);if(ls){for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2*ls);setTimeout(()=>{if(scene==='game'&&G.running)vpPop(`LESSONS LEARNED · ALL SYSTEMS +${2*ls}`,'#ffd84a');},700);}}const w=Math.max(0,rle('war')-1)*2+(peak('war')?2:0);if(!w)return;const n=[0,0,0,0];for(const row of B.grid)for(const x of row)if(x&&x.t<4)n[x.t]++;const m=n.indexOf(Math.max(...n));
   G.meters[m]=Math.min(ST.cap[m],G.meters[m]+w);G.warBoost={m,w};const el=gEls[m].g;el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),600);vpPop(`WAR ROOM · ${TYPES[m].name.toUpperCase()} CHARGED +${w}`,TYPES[m].color);}
 function startRun(){
+  const TP=TERRA_PENDING;TERRA_PENDING=false;if(!TP&&document.body.classList.contains('terra')){G.terra=false;skinTerra(false);}
   CINE=null;RUNX=TR?null:{depth:depthNow(),load:loadFor(depthNow()),forced:FORCED[depthNow()]};const gx=!TR&&CHOICE&&CHOICE.gate&&S.gal&&S.gal.cons;if(gx){RUNX.depth=0;RUNX.f=[];RUNX.gate=true;RUNX.stage=0;RUNX.forced='loot';RUNX.load=loadFor(0);}
-  SYS=sysView(CHOICE.key);resetGame();{const e=$('#tileCtr b');if(e)e.textContent='0';}G.hold=false;G.depth=gx?1:(RUNX?RUNX.depth:1);G.aegis=0;if(gx){G.sayT=3;setTimeout(()=>{if(scene==='game'&&G.running)pilotSay('Steady!');},1400);}G.od=0;IL=null;setTimeout(odSync,60);if(peak('shipyard'))for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2);sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
+  if(TP)RUNX={depth:1,load:['line','nova','loot'],forced:null,f:[],terra:true};
+  SYS=sysView(CHOICE.key);resetGame();{const e=$('#tileCtr b');if(e)e.textContent='0';}G.hold=false;G.depth=gx?1:(RUNX?RUNX.depth:1);G.aegis=0;if(TP)terraInit();if(gx){G.sayT=3;setTimeout(()=>{if(scene==='game'&&G.running)pilotSay('Steady!');},1400);}G.od=0;IL=null;setTimeout(odSync,60);if(peak('shipyard'))for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2);sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
   for(let m=0;m<4;m++)gEls[m].bar.style.setProperty('--n',ST.cap[m]);
   B.waiters.length=0;B.dying=[];B.beams=[];B.bomb=null;B.barr=null;B.pops=[];B.hazards=[];B.sel=null;B.hint=null;B.idle=0;B.glow=null;
   fillBoard();B.busy=true;settle().then(()=>{B.busy=false;});
   G.warPend=true;
   scene='game';paused=false;only('#game');
-  G.patched=false;G.droneT=ST.droneT*.5;G.drone=null;B.droneAim=null;B.droneDrag=false;G.rescued=0;G.goodsRun={};G.podsSpawned=0;G.strayPod=CHOICE.sig!=='sos'&&Math.random()<.2;
-  if(S.tutRunDone==null)S.tutRunDone=career().runs>0;G.tut=!S.tutRunDone;
+  G.patched=false;G.droneT=ST.droneT*.5;G.drone=null;B.droneAim=null;B.droneDrag=false;G.rescued=0;G.goodsRun={};G.podsSpawned=0;G.strayPod=CHOICE.sig!=='sos'&&Math.random()<.2&&!TP;
+  if(S.tutRunDone==null)S.tutRunDone=career().runs>0;G.tut=!S.tutRunDone&&!TP;
   G.cdTotal=G.countdown=AUD.cd??3;G.cdArrived=false;G.cdBoost=0;if(!G.countdown)applyWarBoost();
   if(G.tut&&!G.countdown)setTimeout(()=>coach('run_start'),700);
-  if(!G.countdown)showBanner(`${CHOICE.name} · ${SYS.type}`,`${SYS.pName.toUpperCase()} ON SCOPE`);
+  if(!G.countdown)showBanner(TP?'Terraform':`${CHOICE.name} · ${SYS.type}`,TP?`${CHOICE.name.toUpperCase()} · HOLD THE WORLD TOGETHER`:`${SYS.pName.toUpperCase()} ON SCOPE`);
 }
 async function launch(choice){
   audio();if(AUD.brief!==false&&choice&&!choice.hold&&choice.key){if(!(await showBrief(choice)))return;}
@@ -6040,8 +6182,8 @@ function rankOf(d){
   const perf=d.contacts?d.cleared/d.contacts:1,tim=clamp(d.par/Math.max(1,d.time),0,1),sc=.45*perf+.3*d.hullPct+.25*tim;
   return sc>=.9?'S':sc>=.78?'A':sc>=.64?'B':sc>=.5?'C':'D';
 }
-function systemCleared(){if(!G.running)return;G.running=false;buildDebrief(true,'gate');}
-function systemFailed(reason){if(!G.running)return;G.running=false;buildDebrief(false,reason);}
+function systemCleared(){if(!G.running)return;if(G.terra)return terraEnd(true);G.running=false;buildDebrief(true,'gate');}
+function systemFailed(reason){if(!G.running)return;if(G.terra)return terraEnd(false,reason);G.running=false;buildDebrief(false,reason);}
 function buildDebrief(win,reason){
   const T=G.T,hullPct=G.hull/ST.hullMax,time=win?(G.runTime||G.time):G.time;
   const par=G.len/(.09*(1.275+.07*T))*.95;
@@ -6305,6 +6447,12 @@ $('#dbgSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(
 $('#dbgOd').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||IL||TF||TR)return;
   show('#sound',false);IL_WAS=paused;paused=true;$('#brstRes').hidden=true;$('#brstPick').hidden=true;show('#burst',true);startBurst(b.dataset.m);IL.test=true;});
 /* Debug: Terraform test with a dummy world. Nothing is saved or paid out. */
+async function launchTerraRun(threat){
+  ensureGalaxy();ensureStation();audio();CHOICE={key:'asteroid',name:'Test World',threat,hold:false,starId:S.gal?S.gal.at:0};TERRA_PENDING=true;
+  sfx.launch();SP.shipX=0;SP.launching=true;SP.warpTarget=1;only();await sleep(850);startRun();SP.warpTarget=0;SP.launching=false;}
+$('#dbgTRun').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||TF||TR)return;
+  if(!(scene==='map'||scene==='station'||scene==='hangar')){toast('<b>Terraform run</b><span>Open it from the map or the ship.</span>','#ff8a95');return;}
+  show('#sound',false);launchTerraRun(+b.dataset.t);});
 $('#dbgTf').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||TF||TR)return;
   if(!(scene==='map'||scene==='station'||scene==='hangar')){toast('<b>Terraform test</b><span>Open it from the map or the ship.</span>','#ff8a95');return;}
   show('#sound',false);openTerra({id:-1,name:'Test World',threat:+b.dataset.t,clears:1,terra:false},true);});
