@@ -3783,7 +3783,7 @@ const DEPTH_FEAT={pursuer:[1],gap:[1,2],strike:[1],own:[1],intercept:[1],mods:[2
 const SPECIAL_NAME={line:'Line tiles',nova:'Nova core',loot:'Credits & crates',flare:'Solar flare',burner:'Afterburner tile'};
 let RUNX=null;
 const FORCED={0:'loot',2:'flare'};
-const surveyVeil=ch=>!TR&&ch&&!ch.gate&&ch.starId!=null&&depthMax()>=2&&!(S.gal&&S.gal.stars[ch.starId]&&S.gal.stars[ch.starId].surv);
+const surveyVeil=ch=>false;   // v138: surveys will earn Data, not reveal details, so every system's details are always shown
 const depthNow=()=>Math.min(S.depth==null?1:S.depth,depthMax());
 const loadSlots=()=>2+(S.station&&rle('refinery')>=1?1:0);
 const availSpecials=()=>SPECIALS.filter(unl);
@@ -6010,7 +6010,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v138b-terra';
+const BUILD='v138c-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6163,7 +6163,7 @@ function startRun(){
   if(!G.countdown)showBanner(TP?'Terraform':`${CHOICE.name} · ${SYS.type}`,TP?`${CHOICE.name.toUpperCase()} · HOLD THE WORLD TOGETHER`:`${SYS.pName.toUpperCase()} ON SCOPE`);
 }
 async function launch(choice){
-  audio();if(AUD.brief!==false&&choice&&!choice.hold&&choice.key){if(!(await showBrief(choice)))return;}
+  audio();if(AUD.brief!==false&&choice&&!choice.hold&&choice.key){if(!(await showBrief(choice)))return;}else if(choice){const o=terraOpt(choice);BRIEF_T=!!o&&!o.lk&&MAP.tSel===choice.starId;}
   CHOICE=choice;if(BRIEF_T){TERRA_PENDING=true;BRIEF_T=false;}sfx.launch();
   SP.shipX=0;SP.launching=true;SP.warpTarget=1;only();
   await sleep(850);
@@ -6428,7 +6428,7 @@ async function launchChoice(ch){if(TR){toast('<b>Launching is turned off in trai
   launch(ch);}
 $('#jumpBtn').onclick=()=>{if(MAP.anim||WARP||TC)return;audio();launchChoice(S.choices[carIdx]);};
 $('#moveBtn').onclick=()=>{audio();moveStation();};
-$('#resBtn').onclick=()=>{audio();if(S.gal&&S.gal.cons){const h=S.gal.stars[S.gal.at];if(canTerra(h))openTerra(h);else if(h.terra)toast('<b>Already terraformed</b>','#5ef0d0');else toast('<b>Terraform unavailable</b><span>Clear a run at this star first. Then its world can be terraformed.</span>','#5ef0d0');}else openResearch();};
+$('#resBtn').onclick=()=>{audio();if(S.gal&&S.gal.cons){const h=S.gal.stars[S.gal.at];if(canTerra(h)){if(!popOk(h)){toast(`<b>Not enough colonists</b><span>${h.name} needs ${terraPop(h)+1} people aboard to settle it.</span>`,'#ff8a95');return;}MAP.tSel=h.id;const ch=S.choices.find(c=>c.starId===h.id)||{key:h.key,name:h.name,threat:h.threat,hold:false,starId:h.id};launchChoice(ch);}else if(h.terra)toast('<b>Already terraformed</b>','#5ef0d0');else toast('<b>Terraform unavailable</b><span>Clear a run at this star first. Then its world can be terraformed.</span>','#5ef0d0');}else openResearch();};
 $('#commsBtn').onclick=()=>{audio();ensureStation();openRoom('comms');};
 document.querySelectorAll('.bucks.w4').forEach(b=>b.onclick=()=>{sfx.tick();toast(`<b>Credits ${S.bucks} · Alloy ${S.station?S.station.alloy:0}</b><span>★ Legend ${legendOf()} comes from how well you fly. ◆ Ship rating ${rating()} is people aboard plus Legend.</span>`,'#ffd84a');});
 $('#chartCv').addEventListener('click',e=>{if(MAP.dragged){MAP.dragged=false;return;}chartTap(e);});
