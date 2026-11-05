@@ -926,6 +926,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
       <div class="hpane" data-p="ship" hidden>
         <div class="hg-label">Ship systems</div>
         <div class="upgrades" id="upgrades"></div>
+        <div id="shipSubs"></div>
         <div class="hg-label">Hull paint</div>
         <div class="picks" id="swatches"></div>
       </div>
@@ -1164,7 +1165,7 @@ const TYPES=[
 const NOVA=5, DEBRIS=6, BUCKS=7, CRATE=8, BURN=9;
 const GAME_NAME='Tach 9';   // working title: change here (plus manifest/sw/icons, see README) to rename
 const BUCKS_DEF={name:'Credits',color:'#ff7ad9',light:'#ffd1f1',dark:'#3d1433'};
-const BURN_DEF={name:'Afterburner',color:'#ff9640',light:'#ffe0b8',dark:'#3a1706'};
+const BURN_DEF={name:'Afterburner',color:'#ffd35a',light:'#fff6d0',dark:'#2a1204'};
 const CRATE_DEF={name:'Salvage crate',color:'#ffd84a',light:'#fff3bf',dark:'#3a2606'};
 const ICON_ROWS=[
  ["....#....","..#####..",".#..#..#.",".#.....#.","####+####",".#.....#.",".#..#..#.","..#####..","....#...."],
@@ -1533,6 +1534,8 @@ const sfx={
   engage(){tone(110,.7,'sawtooth',.045,8);noise(.7,.07);tone(880,.25,'triangle',.04,1.5,.15);},
   arrive(){tone(1400,.6,'sawtooth',.03,.08);noise(.5,.06);tone(220,.4,'sine',.06,.5,.05);},
   klaxon(){tone(560,.18,'square',.045,.75);tone(380,.18,'square',.04,1,.2);},
+  cash(){noise(.05,.018);tone(2100,.09,'square',.014,0,.04);tone(2800,.22,'sine',.016,0,.1);},
+  chest(){tone(140,.28,'sawtooth',.03,2.6);noise(.12,.03);tone(1175,.12,'triangle',.03,0,.28);tone(1568,.14,'triangle',.03,0,.36);tone(2093,.2,'triangle',.025,0,.44);},
   buy(){tone(660,.08,'square',.04);tone(990,.12,'square',.04,0,.08);tone(1320,.16,'triangle',.04,0,.16)},
 };
 function renderSound(){
@@ -1699,7 +1702,7 @@ function damage(n,src='other'){
   if(n>0)n=Math.max(1,Math.round(n*easeDmg()));if(TR&&G.hull-n<ST.hullMax*.3)n=Math.max(0,G.hull-ST.hullMax*.3);if(n<=0||G.ending)return;if(relicHas('aegis')&&!G.aegis){G.aegis=1;vpPop('AEGIS HELD','#4da6ff');sfx.good();return;}if(G.R)G.R.hullBy[src]=(G.R.hullBy[src]||0)+Math.min(n,G.hull);G.hull=Math.max(0,G.hull-n);G.shake=.45;G.flash=.5;sfx.hit();
   if(G.hull<=0){G.ending='hull';G.endT=0;G.shipDead=true;boom(shipX()+10,G.shipY,['#ffb547','#ff5c6c','#fff3bf','#c9d4ea'],46);sfx.boom();}
 }
-function addBucks(n,label){if(n<=0)return;G.runBucks+=n;sfx.coin();const el=$('#runBucksEl');el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);if(label)vpPop(`+${n} ${label}`,'#ff7ad9');}
+function addBucks(n,label,snd){if(n<=0)return;G.runBucks+=n;if(snd!==false)sfx.coin();const el=$('#runBucksEl');el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);if(label)vpPop(`+${n} ${label}`,'#ff7ad9');}
 function resolve(e){
   if(e.type==='pod')return resolvePod(e);
   if(G.autoClear>0){G.autoClear--;for(const q of e.reqs)G.meters[q.m]=Math.max(G.meters[q.m],q.c);vpPop('LOCKED ON','#ff5c6c');{const x1=shipX()+14,y1=G.shipY,x2=evX(e.p),y2=e.y;G.fx.push({k:'laser',t:0,d:.5,x1,y1,x2,y2,c:'#ff5c6c',w:3},{k:'laser',t:0,d:.35,x1,y1,x2,y2,c:'#ffffff',w:1});boom(x2,y2,['#ff5c6c','#fff3bf','#ffb547'],14);sfx.laser();}}
@@ -1878,6 +1881,7 @@ function drawViewport(){
   }
   for(const f of G.fx){
     if(f.t<0)continue;const u=f.t/f.d;
+    if(f.k==='abn'){const a=Math.sin(Math.min(1,u*1.1)*Math.PI);b.save();for(let i=0;i<16;i++){const ly=((i*37+11)%V.H),sp=1.4+((i*13)%7)*.35,lx=((V.W+60)-((u*sp*V.W*1.6+i*53)%(V.W+120))),ll=24+(i%5)*14;b.globalAlpha=a*.5;b.fillStyle=i%3?'#ffd89a':'#ffffff';b.fillRect(Math.round(lx),ly,ll,1);}b.globalAlpha=a*.12;b.fillStyle='#ff9640';b.fillRect(0,0,V.W,V.H);b.restore();}
     if(f.k==='scan'){
       b.fillStyle=f.ok?`rgba(56,224,155,${.3*(1-u)})`:`rgba(127,143,178,${.2*(1-u)})`;
       b.beginPath();b.moveTo(shipX()+20,G.shipY);b.lineTo(f.x2,f.y2-f.r);b.lineTo(f.x2,f.y2+f.r);b.closePath();b.fill();
@@ -1890,10 +1894,11 @@ function drawViewport(){
     if(f.parts){for(const p of f.parts){b.globalAlpha=1-u;b.fillStyle=p.c;b.fillRect(Math.round(p.x),Math.round(p.y),u<.4?2:1,u<.4?2:1);}b.globalAlpha=1;}
   }
   if(!G.shipDead){
-    const sx=shipX(),sy=Math.round(G.shipY+Math.sin(t*2)*.8+Math.sin(t*30)*G.wobble*2)-6;
+    const abn=G.fx.find(f=>f.k==='abn'),abu=abn?abn.t/abn.d:0,lunge=abn?Math.round(Math.sin(Math.min(1,abu*1.15)*Math.PI)*24):0;
+    const sx=shipX()+lunge,sy=Math.round(G.shipY+Math.sin(t*2)*.8+Math.sin(t*30)*G.wobble*2)-6;
     const lowFuel=G.fuel<15,thrust=G.ending==='fuel'?Math.max(0,1-G.endT):(lowFuel&&Math.random()<.3?0:1);
     const burst=G.fx.find(f=>f.k==='burst');
-    const boost=(v-1)*3+(burst?14*(1-burst.t/burst.d):0)+(G.ending==='gate'?12:0)+(CINE&&CINE.kind==='afterburn'?24*Math.min(1,CINE.t/.4):0)+(CINE&&CINE.kind==='exodus'?28*Math.min(1,CINE.t/(CINE.dur*.5)):0)+(G.countdown>0?(G.cdBoost||0):0);
+    const boost=(v-1)*3+(abn?30*Math.sin(Math.min(1,abu*1.1)*Math.PI):0)+(burst?14*(1-burst.t/burst.d):0)+(G.ending==='gate'?12:0)+(CINE&&CINE.kind==='afterburn'?24*Math.min(1,CINE.t/.4):0)+(CINE&&CINE.kind==='exodus'?28*Math.min(1,CINE.t/(CINE.dur*.5)):0)+(G.countdown>0?(G.cdBoost||0):0);
     drawShipFX(b,sx,sy,1,t,{up:S.up,thrust,boost,layer:'back'});
     b.drawImage(SHIP,sx-SHIP_OX,sy-SHIP_OY);
     drawShipFX(b,sx,sy,1,t,{up:S.up,layer:'front'});
@@ -2074,7 +2079,7 @@ async function clearCells(set,chain,makes=[],wild=new Map()){
   let lit=null;
   for(let m=0;m<4;m++)if(gains[m]){gains[m]+=ST.eff[m]+Math.max(0,chain-1);G.meters[m]=Math.min(ST.cap[m],G.meters[m]+gains[m]);lit=TYPES[m].color;const el=gEls[m].g;el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);setTimeout(()=>{el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),300);},430);}
   if(fuel){const amt=fuel+(chain>1?2+(relicHas('chainfuel')?3:0):0);G.R.fuel.tiles+=amt;G.fuel=Math.min(ST.tank,G.fuel+amt);pulseFuel();if(fn)boardPop(`+${amt} FUEL`,fc/fn+.5,fr/fn+.5,'#ffd84a');lit=lit||'#ffd84a';}
-  if(bucks){const n=bucks/2;addBucks(bucks);boardPop(`+${bucks} CR`,bc0/n+.5,br0/n+.5,'#ff7ad9');lit=lit||'#ff7ad9';}
+  if(bucks){const n=bucks/2;addBucks(bucks,null,false);sfx.cash();boardPop(`+${bucks} CR`,bc0/n+.5,br0/n+.5,'#ff7ad9');lit=lit||'#ff7ad9';}
   if(lit)B.glow={color:lit,t:0};
   sfx.match(chain);
   G.log.firesOut+=fires;G.log.debris+=broke;G.R.broken+=broke;
@@ -2095,7 +2100,7 @@ function afterburnTiles(burns){
   B.chainBonus=(B.chainBonus||0)+2*n;
   if(!TR&&G.running){
     G.dist=Math.min(G.len-.2,G.dist+.35*n);G.gap=Math.min(100,G.gap+4*n);
-    G.fx.push({k:'burst',t:0,d:.9});vpPop(n>1?`AFTERBURN ×${n}`:'AFTERBURN','#ff9640');
+    G.fx.push({k:'burst',t:0,d:.9},{k:'abn',t:0,d:1.5});G.flash=Math.max(G.flash||0,.18);vpPop(n>1?`AFTERBURN ×${n}`:'AFTERBURN','#ff9640');
   }
   burns.forEach(([r,c],i)=>{
     boardPop('AFTERBURN +2',c+.5,r+.5,'#ff9640');
@@ -2286,20 +2291,24 @@ function updateBoard(dt){
 function drawTile(c,t,T){
   const cx=(t.x+.5)*T,cy=(t.y+.5)*T,size=T*.86*t.scale;if(size<1)return;
   const x=cx-size/2,y=cy-size/2,rad=size*.22;c.globalAlpha=t.alpha;
+  // special tiles: no border, a pulsing radiated glow instead
+  const glowCol=t.t===NOVA?(a=>`hsla(${Math.round((B.t*140)%360)},90%,66%,${a})`):t.t===BURN?(a=>`rgba(255,170,50,${a})`):t.sp===4?(a=>`rgba(255,140,50,${a})`):null;
+  if(glowCol&&size>6){const p=.5+.5*Math.sin(B.t*4.2+t.id*1.7),gr=size*(.78+.1*p);c.save();const g2=c.createRadialGradient(cx,cy,size*.12,cx,cy,gr);g2.addColorStop(0,glowCol(.55+.2*p));g2.addColorStop(1,glowCol(0));c.fillStyle=g2;c.beginPath();c.arc(cx,cy,gr,0,6.283);c.fill();c.restore();}
   if(t.t===NOVA){
-    c.fillStyle='#24123d';rr(c,x,y,size,size,rad);c.fill();
-    c.strokeStyle=`hsl(${(B.t*140)%360} 90% 72%)`;c.lineWidth=2;c.stroke();
+    c.fillStyle='rgba(36,18,61,.88)';rr(c,x+size*.08,y+size*.08,size*.84,size*.84,rad);c.fill();
   }else if(t.t===DEBRIS){
     c.fillStyle='#1d1814';rr(c,x,y,size,size,size*.12);c.fill();
     c.strokeStyle='#4a3f37';c.lineWidth=1.25;c.setLineDash([3,3]);c.stroke();c.setLineDash([]);
   }else{
     const ty=tdef(t.t);
-    c.fillStyle=ty.dark;rr(c,x,y,size,size,t.t===BUCKS?size*.5:rad);c.fill();
-    c.strokeStyle=ty.color+(t.t===BUCKS?'d0':'80');c.lineWidth=t.t===BUCKS?2:1.25;c.stroke();
+    const glowy=t.t===BURN||t.sp===4;
+    if(glowy){c.fillStyle=ty.dark+'e6';rr(c,x+size*.08,y+size*.08,size*.84,size*.84,rad);c.fill();}else{c.fillStyle=ty.dark;rr(c,x,y,size,size,t.t===BUCKS?size*.5:rad);c.fill();
+    c.strokeStyle=ty.color+(t.t===BUCKS?'d0':'80');c.lineWidth=t.t===BUCKS?2:1.25;c.stroke();}
+    if(t.t===BURN){for(let i=0;i<4;i++){const ph=(B.t*1.3+i*.25+t.id*.13)%1,ex=cx+Math.sin(B.t*3+i*2)*size*.18,ey=cy+size*.34-ph*size*.7,es=Math.max(1,size*.07*(1-ph));c.globalAlpha=t.alpha*(1-ph);c.fillStyle=ph<.5?'#fff3bf':'#ff8a2a';c.fillRect(Math.round(ex),Math.round(ey),es,es*1.6);}c.globalAlpha=t.alpha;}
     if(t.t===CRATE){const p=(Math.sin(B.t*4+t.id)+1)/2;      for(let i=0;i<2;i++){const a=B.t*1.7+t.id+i*3.1,sx=cx+Math.cos(a)*size*.42,sy=cy+Math.sin(a*1.3)*size*.42,ss=Math.max(1,size*.05);c.fillStyle=`rgba(255,250,220,${.5+.5*Math.sin(B.t*6+i)})`;c.fillRect(sx-ss,sy,ss*3,ss*.8);c.fillRect(sx,sy-ss,ss*.8,ss*3);}}
     if(t.t===BUCKS&&size>10){c.strokeStyle=`rgba(255,209,241,${.25+Math.sin(B.t*4+t.id)*.2})`;c.lineWidth=1;rr(c,x+3,y+3,size-6,size-6,size*.5-3);c.stroke();}
     else{c.fillStyle='rgba(255,255,255,.05)';rr(c,x+2,y+2,size-4,size*.42,size*.18);c.fill();}
-    if(t.sp===4){const a=.55+Math.sin(B.t*8)*.35;c.strokeStyle=`rgba(255,181,71,${a})`;c.lineWidth=2;for(let i=0;i<8;i++){const an=i*.7854+B.t*1.5;c.beginPath();c.moveTo(cx+Math.cos(an)*size*.3,cy+Math.sin(an)*size*.3);c.lineTo(cx+Math.cos(an)*size*.44,cy+Math.sin(an)*size*.44);c.stroke();}c.strokeStyle=`rgba(255,150,64,${a})`;rr(c,x,y,size,size,rad);c.stroke();c.fillStyle=`rgba(255,240,200,${a})`;const fm=t.fm||0;if(fm===0)c.fillRect(x+size*.2,cy-1,size*.6,2);else if(fm===1)c.fillRect(cx-1,y+size*.2,2,size*.6);else c.strokeRect(cx-size*.12,cy-size*.12,size*.24,size*.24);}
+    if(t.sp===4){const a=.55+Math.sin(B.t*8)*.35;c.strokeStyle=`rgba(255,181,71,${a})`;c.lineWidth=2;for(let i=0;i<8;i++){const an=i*.7854+B.t*1.5;c.beginPath();c.moveTo(cx+Math.cos(an)*size*.3,cy+Math.sin(an)*size*.3);c.lineTo(cx+Math.cos(an)*size*.44,cy+Math.sin(an)*size*.44);c.stroke();}c.fillStyle=`rgba(255,240,200,${a})`;const fm=t.fm||0;if(fm===0)c.fillRect(x+size*.2,cy-1,size*.6,2);else if(fm===1)c.fillRect(cx-1,y+size*.2,2,size*.6);else c.strokeRect(cx-size*.12,cy-size*.12,size*.24,size*.24);}
     if(t.sp===1||t.sp===2){
       const a=.55+Math.sin(B.t*8)*.35,h=t.sp===1,e=size*.42;
       c.strokeStyle=`rgba(255,255,255,${a*.5})`;c.lineWidth=2;c.beginPath();
@@ -3417,10 +3426,10 @@ function openCrate(r,c){
   if(!TR&&rd()===0&&S.station&&CHOICE){const gs=rollGoods(CHOICE.key,1+(Math.random()<.35?1:0)+(Math.random()<.1?1:0));let cr=0,best=0;G.goodsRun=G.goodsRun||{};
     for(const k of gs){const r2=addGood(k,1);if(r2.take){G.goodsRun[k]=(G.goodsRun[k]||0)+1;best=Math.max(best,GOOD(k).t);}cr+=r2.cr;}
     if(cr)G.runBucks+=cr;persist();G.log.crates=(G.log.crates||0)+1;
-    const lbl=gs.length===1?GOOD(gs[0]).name.toUpperCase():`${gs.length} TRADE GOODS`;boardPop(lbl+(cr?' · HOLD FULL':''),c+.5,r+.5,GOOD_COL[best]);sfx.special();
+    const lbl=gs.length===1?GOOD(gs[0]).name.toUpperCase():`${gs.length} TRADE GOODS`;boardPop(lbl+(cr?' · HOLD FULL':''),c+.5,r+.5,GOOD_COL[best]);sfx.chest();
     B.beams.push({h:true,i:r,t:0,color:GOOD_COL[best]});rEvent(`crate goods: ${gs.join(',')}`);return;}
   const p=rollPrize(false);applyPrize(p,true);G.log.crates=(G.log.crates||0)+1;
-  boardPop(p.label,c+.5,r+.5,p.col);sfx.special();if(p.jack)sfx.coin();
+  boardPop(p.label,c+.5,r+.5,p.col);sfx.chest();if(p.jack)sfx.coin();
   B.beams.push({h:true,i:r,t:0,color:'#ffd84a'});rEvent(`crate: ${p.label}`);
 }
 /* ---- legend ---- */
@@ -4204,7 +4213,7 @@ const STAGES=[null,
  {short:'Nova cores, credits, crates',obj:'The board is getting richer.',
   news:['Match 5 to forge a NOVA core. Swap it with any tile to clear every tile of that colour','Credits tiles (pink) pay straight into your wallet','Salvage crates join a match of 4+ and crack open for a prize','Each run type flies its own Tile systems: Trade Runs bring credits and crates, Survey Runs add solar flares','Clear a system and the crew offers a relic: a permanent ship upgrade']},
  {short:'A pursuer, and its attacks',obj:'Something has picked up our trail.',
-  news:['An Empire cruiser now chases us. Watch the GAP bar, top-left of the viewport','Missed contacts close the gap. Perfect clears push it back. At zero we are caught','It launches attacks too. Have enough charge banked in the system it names before the timer ends','RUN TYPE is yours to set in the briefing. A Trade Run is quiet and pays less, but crates hold goods to sell. An Attack Run has a pursuer and pays Legend. A Survey Run is fast with far sensors and pays more']},
+  news:['An Empire cruiser now chases us. Watch the GAP bar, top-left of the viewport','Missed contacts close the gap. Perfect clears push it back. At zero we are caught','It launches attacks too. Have enough charge banked in the system it names before the timer ends','RUN TYPE is yours to set in the briefing. Trade Run: crates full of goods to sell. Attack Run: a pursuer, and Legend. Survey Run: fast, far sensors, bigger pay']},
  {short:'Ship rooms unlock',obj:'Time to build out the ship.',
   news:['Credits and Alloy can now build and upgrade rooms: Sensors, Shipyard, War room, Refinery, Habitat, Drone bay and Tach drive','Open the Ship from the map to spend','OVERDRIVE: build the Overdrive core in the Ship first. Then perfect clears charge the Overdrive bar above the gauges. When it fills, tap the bolt tile for Counterfire, a repair, a fuel snake, Power slots, Afterburn or the Rail loader. Most burn fuel, so watch the tank']},
  {short:'Combo perks',obj:'Big chains pay off now.',
@@ -4498,12 +4507,12 @@ const COACH_TIPS={
   research:{el:'.rv-opts',t:()=>'Science team, pick one project. Each one strengthens a reel of the Tach drive for every jump attempt in this galaxy. One project per planet.'},
   move:{el:'#chartCv',t:()=>'Helm, tap a star one jump away and Move. Jumps cost credits. New stars bring migrants, Alloy markets and sometimes something strange.'},
   part:{el:'#chartCv',t:()=>'See the teal crystal? A gate part. Win the system that holds it and the part calibrates our Luxometer. Four makes for a clean Tach jump.'},
-  station:{el:'#stCv',t:()=>feat('rooms')?'Our ship. Rooms run on Alloy, credits and crew. The Shipyard rebuilds our systems, and the Tach drive will push us past light.':'Our ship. Room upgrades unlock at Tach 5. For now the Shipyard can still rebuild our ship systems.'},
+  station:{el:'#stCv',t:()=>feat('rooms')?'Our ship. Rooms run on Alloy, credits and crew. The Shipyard rebuilds our systems, and the Tach drive will push us past light.':'Our ship. Rooms open once we have cleared two systems. For now the Shipyard can still rebuild our ship systems.'},
   anomaly:{el:'#anBody',t:()=>'An anomaly. Every choice out here is a trade or a gamble. Read the odds and make the call.'},
   gate:{el:'#chartCv',t:()=>'The Exodus Gate is in reach. It is the last system in this constellation. Clear it and we jump on to the next. Tap it to see what is waiting.'},
   tach:{el:'.tc-tot',t:()=>'Five reels, one per system, and all five must hold. The chances multiply, so one weak reel drags the whole jump down. Shore up the weakest first.'},
   tach_fail:{el:'.tc-res',t:()=>'We lost a level on every system that failed. Hard lesson. Rebuild at the planets, research what broke, and we go again.'},
-  depth:{el:'#brDepth',t:()=>'Your call on the kind of run. A Trade Run is quiet and pays less, but crates hold trade goods to sell. An Attack Run brings a pursuer and pays Legend. A Survey Run is fast, sees further and pays more, with a better subsystem offer. Choose before you give the order.'},
+  depth:{el:'#brDepth',t:()=>'Your call on the kind of run. Trade Run: crates full of goods to sell. Attack Run: a pursuer, and Legend. Survey Run: fast, far sensors, bigger pay. Choose before you give the order.'},
   load:{el:'#brLoad',t:()=>'We only have room for so many Tile systems. Each run type brings its own.'},
   burst:{el:'#board',t:()=>'Overdrive is charged. Tap the glowing bolt tile on the board. Clear it in a match and you lose charge. Counterfire pushes the pursuer back, the Fuel snake tops up the tank, Repair is a plate-welding game that mends the hull, and Power slots spends fuel to spin your systems for charge: pick how many lines to play. Most Overdrives burn about a tenth of your tank.'},
   relic:{el:'#relicCards',t:()=>'A subsystem. It stays installed for the whole campaign, so choose what we will lean on. We only have three slots.'},
@@ -4657,14 +4666,14 @@ const ROOMS=[
   {k:'comms',name:'Sensors',col:'#4da6ff',max:3,cost:[null,[3,60],[6,130]],panel:'comms',open:'Terra-reel calibration',
    desc:'The ship\'s sensor array. You calibrate it to each Terra-reel in a Terraform, and until you do the ideal and danger zones are barely visible. It also trades Alloy at the star you are parked at.',
    eff:L=>`Calibrate Terra-reels up to rank ${Math.max(0,L-1)}${L>1?` · trade Alloy ${L-1} jump${L>2?'s':''} away`:''}`},
-  {k:'shipyard',name:'Shipyard',col:'#7ff3ff',max:4,cost:[null,[2,40],[4,90],[7,160]],panel:'ship',open:'Ship systems & paint',
-   desc:'The mechanics bay. Your crew rebuilds the ship’s weapons, shields, sensors and engines here and repaints the hull. Its level caps how far each system can be upgraded.',
+  {k:'shipyard',name:'Shipyard',col:'#7ff3ff',max:4,cost:[null,[2,40],[4,90],[7,160]],panel:'ship',open:'Systems, subsystems & paint',
+   desc:'The mechanics bay. Your crew rebuilds the ship’s weapons, shields, sensors and engines here, repaints the hull and keeps the ledger of your installed subsystems. Its level caps how far each system can be upgraded.',
    eff:L=>`Ship systems up to level ${L}`},
   {k:'war',name:'War room',col:'#ff6a7a',max:3,cost:[null,[3,60],[6,130]],panel:'combos',open:'Combo loadout',
    desc:'Tactical command. Plan the combo perks your crew fires on big chains. From level 2, the tacticians read the opening board and pre-charge whichever system has the most tiles on it.',
    eff:L=>L>1?`Combo loadout · top system on the board +${(L-1)*2} charge`:'Combo loadout'},
-  {k:'refinery',name:'Refinery',col:'#ff9640',max:3,cost:[[2,40],[4,90],[7,160]],panel:'refinery',open:'Tach, alloy & subsystems',
-   desc:'Smelts the salvage from every system you clear into Alloy for building and upgrading rooms. The foundry also has a forge that turns credits into Alloy, and distils Tach, a scarce vial that slows Terraform and the Overdrive mini-games when you need it most, and keeps the ledger of your installed subsystems.',
+  {k:'refinery',name:'Refinery',col:'#ff9640',max:3,cost:[[2,40],[4,90],[7,160]],panel:'refinery',open:'Tach & alloy',
+   desc:'Smelts the salvage from every system you clear into Alloy for building and upgrading rooms. The foundry also has a forge that turns credits into Alloy, and distils Tach, a scarce vial that slows Terraform and the Overdrive mini-games when you need it most.',
    eff:L=>L?`+${L/2} Alloy per clear · holds ${L} Tach`:'Offline'},
   {k:'habitat',name:'Habitat',col:'#ffb547',max:4,cost:[null,[3,50],[6,110],[9,180]],panel:'crew',open:'Crew deck',
    desc:'Living decks and the captain’s quarters. Pick your pilot and call sign and review your service record. Survivors and migrants will need the room as the ship grows.',
@@ -4794,7 +4803,7 @@ const RM={sel:'comms',badges:{},pc:null,t:0,flash:{},rects:[],people:Array.from(
   stars:Array.from({length:60},()=>({x:Math.random(),y:Math.random(),z:Math.random()})),ore:Array.from({length:5},(_,i)=>i/5)};
 function goStation(){ensureStation();ensureGalaxy();scene='station';renderStation();only('#station');}
 const ROOM_ICO={cargo:'station',comms:'signal',shipyard:'wrench',war:'cross',habitat:'person',refinery:'hexa',drone:'drone',tach:'tach'};
-const ROOM_NAV={comms:['radar','Terra-reel calibration'],shipyard:['launch','Ship systems & paint'],war:['bolt','Combo loadout'],habitat:['person','Crew deck · staffing'],drone:['drone','Drone payloads'],tach:['tach','Core tuning'],refinery:['hexa','Tach, alloy & subsystems']};
+const ROOM_NAV={comms:['radar','Terra-reel calibration'],shipyard:['launch','Systems, subsystems & paint'],war:['bolt','Combo loadout'],habitat:['person','Crew deck · staffing'],drone:['drone','Drone payloads'],tach:['tach','Core tuning'],refinery:['hexa','Tach & alloy']};
 function habArrivals(L){
   const g=S.gal,stn=S.station,room=Math.max(0,HAB_CAP[L]-stn.pop),here=g.stars[g.at];
   const rows=here.links.map(i=>g.stars[i]).map(st=>{const fresh=!g.visited.includes(st.id);
@@ -4877,11 +4886,13 @@ function renderCrew(){const stn=ensureStation();crewSync();const rooms=CREWED.fi
   $('#crewBody').querySelectorAll('.crew[data-k]').forEach(el=>{const k=el.dataset.k,sl=el.querySelector('input');
     sl.oninput=()=>{const cur=stn.crew[k]||0,max=cur+crewIdle();let v=Math.min(+sl.value,max);sl.value=v;if(v!==cur){stn.crew[k]=v;if(v>cur)tone(600+v*25,.03,'triangle',.02);}paint();};sl.onchange=()=>{persist();};});
   $('#cdAuto').onclick=()=>{autoCrew();persist();sfx.buy();renderCrew();};$('#cdQ').onclick=()=>{H.tab='quarters';sfx.tick();renderHangar();};paint();}
-function renderRefinery(){const stn=ensureStation(),own=S.relics||[];
-  $('#refBody').innerHTML=modBlock()+`<div class="hg-label">Installed subsystems · ${own.length} / ${RELIC_SLOTS}</div>`+
+function renderSubs(){const own=S.relics||[],el=$('#shipSubs');if(!el)return;
+  el.innerHTML=`<div class="hg-label">Installed subsystems · ${own.length} / ${RELIC_SLOTS}</div>`+
    (own.length?`<div class="rl-list">${own.map(id=>{const r=relicOf(id);return`<div class="rl-row" style="--rc:${r.c}"><i>${r.g}</i><div><b>${r.name}</b><span>${r.d}</span></div></div>`;}).join('')}</div>`:'<p class="hg-note">None yet. Terraform worlds well and the crew finds subsystems to install.</p>')+
-   `<p class="hg-note">SubSystems stay installed for the whole campaign.</p>`+exchangeBlock()+forgeBlock();
-  [1,5].forEach(n=>{const fb=$('#forge'+n);if(fb)fb.onclick=()=>{const c=forgeRate()*n;if(S.bucks<c){sfx.bad();return;}S.bucks-=c;ensureStation().alloy+=n;persist();sfx.buy();renderHangar();H.flash=1;};});
+   `<p class="hg-note">Subsystems stay installed for the whole campaign.</p>`;}
+function renderRefinery(){const stn=ensureStation();
+  $('#refBody').innerHTML=modBlock()+exchangeBlock()+forgeBlock();
+  [1,5].forEach(n=>{const fb=$('#forge'+n);if(fb)fb.onclick=()=>{const c=forgeRate()*n;if(S.bucks<c){sfx.bad();return;}S.bucks-=c;ensureStation().alloy+=n;H.alloyT0=H.t;H.alloyN=n;tone(130,1.6,'sawtooth',.04,5);noise(.8,.04);setTimeout(()=>tone(1000,.3,'triangle',.04,.5),1500);persist();sfx.buy();renderHangar();H.flash=1;};});
   {const xb=$('#xchBuy');if(xb)xb.onclick=()=>{if(buyAlloyHere()){renderHangar();H.flash=1;}};}
   {const mc=$('#modCraft');if(mc)mc.onclick=()=>{const stn=ensureStation();if(modHave()>=modCap()||stn.alloy<MOD_COST){sfx.bad();return;}stn.alloy-=MOD_COST;stn.mod=modHave()+1;H.forgeT0=H.t;tone(110,1.4,'sawtooth',.06,6);noise(.9,.05);setTimeout(()=>{sfx.win();},1500);persist();sfx.buy();renderHangar();H.flash=1;};}
 }
@@ -4928,7 +4939,7 @@ function drawHabDeck(c,W,Hh,t,dt){const L=Math.max(1,rl('habitat')),decks=4,top=
   const kx=W-cabW-12,ky=top,kh=Hh-top-6;c.fillStyle='#1d1830';c.fillRect(kx,ky,cabW,kh);c.strokeStyle='#ffb54766';c.lineWidth=1;c.strokeRect(kx+.5,ky+.5,cabW-1,kh-1);
   c.fillStyle='rgba(255,210,122,.15)';c.fillRect(kx+4,ky+kh*.2,cabW-8,kh*.35);
   c.font='8px Silkscreen, monospace';c.textAlign='left';c.fillStyle='rgba(225,233,247,.7)';c.fillText(`ABOARD ${pop}/${HAB_CAP[rl('habitat')]}`,12,14);}
-function drawForge(c,W,Hh,t){const cx=W/2,cy=Hh*.64,k=H.forgeT0!=null?t-H.forgeT0:99,act=k<2.4,gl=.45+.12*Math.sin(t*2.1)+(act?.45:0);
+function drawForge(c,W,Hh,t){const cx=W/2,cy=Hh*.64,k=H.forgeT0!=null?t-H.forgeT0:99,act=k<2.4,ak=H.alloyT0!=null?t-H.alloyT0:99,aact=ak<2.6,gl=.45+.12*Math.sin(t*2.1)+(act?.45:0)+(aact?.5*Math.min(1,ak*1.4)*(1-Math.max(0,ak-1.9)):0);
   const g=c.createRadialGradient(cx,cy,4,cx,cy,Hh*.7);g.addColorStop(0,`rgba(255,150,64,${.45*gl})`);g.addColorStop(1,'rgba(255,150,64,0)');c.fillStyle=g;c.fillRect(0,0,W,Hh);
   for(let i=0;i<22;i++){const u=((t*.16+i*.137)%1),x=cx+Math.sin(i*7.3+t*.8)*W*.16*(1-u*.4),y=cy-u*Hh*.62;c.fillStyle=`rgba(255,${150+i*3},64,${(1-u)*.7})`;c.fillRect(Math.round(x),Math.round(y),2,2);}
   c.fillStyle='#232a40';c.beginPath();c.moveTo(cx-46,cy-8);c.lineTo(cx+46,cy-8);c.lineTo(cx+30,cy+34);c.lineTo(cx-30,cy+34);c.closePath();c.fill();c.strokeStyle='#4a5878';c.lineWidth=2;c.stroke();
@@ -4936,6 +4947,13 @@ function drawForge(c,W,Hh,t){const cx=W/2,cy=Hh*.64,k=H.forgeT0!=null?t-H.forgeT
   if(act){const u=Math.min(1,k/1.6),y=cy-8-u*Hh*.34,len=14+u*34;c.save();c.shadowColor='#7ff3ff';c.shadowBlur=14;c.fillStyle='#7ff3ff';c.fillRect(cx-5,y-len,10,len);c.fillStyle='#e1f9ff';c.fillRect(cx-2,y-len,4,len);c.restore();
     if(k>1.6){const a=(k-1.6)/.8;c.strokeStyle=`rgba(127,243,255,${1-a})`;c.lineWidth=3;c.beginPath();c.arc(cx,y-len/2,12+a*60,0,6.283);c.stroke();c.fillStyle=`rgba(230,255,255,${.5*(1-a)})`;c.fillRect(0,0,W,Hh);}
     c.textAlign='center';c.fillStyle='#7ff3ff';c.font='9px Silkscreen, monospace';c.fillText(k<1.6?'DISTILLING TACH':'TACH READY',cx,Hh-12);}
+  if(aact){const nc=Math.min(10,(H.alloyN||1)*2);
+    for(let i=0;i<nc;i++){const t0=i*(1.1/nc),u=(ak-t0)/.55;if(u<0||u>1)continue;const x=cx+Math.sin(i*5.1)*W*.1*(1-u*.7),y=cy-Hh*.55+u*(Hh*.55-10),r=5*(1-u*.55);
+      c.fillStyle='#ffd84a';c.beginPath();c.arc(x,y,r,0,6.283);c.fill();c.fillStyle='#fff3bf';c.fillRect(Math.round(x-1),Math.round(y-r*.6),2,2);
+      if(u>.85){c.fillStyle='rgba(255,230,160,.8)';for(let j=0;j<3;j++)c.fillRect(Math.round(x+(j-1)*6),Math.round(cy-14-j%2*4),2,2);}}
+    if(ak>1.2){const u=Math.min(1,(ak-1.2)/.9);c.fillStyle=`rgba(255,${180+60*u|0},${90+100*u|0},${.9*(1-Math.max(0,ak-2.2)*2.5)})`;c.fillRect(cx-3,cy-8,6,Hh*.18*u);
+      const iw=30*Math.min(1,u*1.2),iy=cy+40;c.fillStyle=ak<2.2?'#e8c070':'#9fb8d8';c.beginPath();c.moveTo(cx-iw/2,iy);c.lineTo(cx+iw/2,iy);c.lineTo(cx+iw/2-5,iy-10);c.lineTo(cx-iw/2+5,iy-10);c.closePath();c.fill();c.strokeStyle='#e1e9f7';c.lineWidth=1;c.stroke();}
+    c.textAlign='center';c.fillStyle='#ffd84a';c.font='9px Silkscreen, monospace';c.fillText(ak<1.5?'MELTING CREDITS':'ALLOY POURED',cx,Hh-12);}
   const n=modHave();for(let i=0;i<Math.min(6,n);i++){c.fillStyle='#7ff3ff';c.shadowColor='#7ff3ff';c.shadowBlur=6;c.fillRect(W*.12+i*10,Hh-36,5,24);c.shadowBlur=0;}
   c.textAlign='left';c.fillStyle='rgba(225,233,247,.6)';c.font='8px Silkscreen, monospace';c.fillText('FOUNDRY',12,16);}
 let _spc=null;
@@ -5164,7 +5182,7 @@ function renderHangar(){
   const pc=blankCanvas(10,10);drawPortrait(pc,S.pilot);
   [pc,SHIP,ICONS[NOVA]].forEach((img,i)=>{ti[i].width=img.width;ti[i].height=img.height;const x=ti[i].getContext('2d');x.clearRect(0,0,img.width,img.height);x.drawImage(img,0,0);});
   $('#bayLabel').textContent={crew:'Habitat',quarters:"Captain's quarters",ship:'Ship bay',combos:'Combo loadout',comms:'Long-range scan',refinery:'Foundry',core:'Core tuning',crew:'Crew deck',drones:'Drone payloads'}[H.tab].toUpperCase();
-  if(H.tab==='comms')renderComms();if(H.tab==='refinery')renderRefinery();if(H.tab==='core')renderCore();if(H.tab==='crew')renderCrew();if(H.tab==='drones')renderDrones();
+  if(H.tab==='comms')renderComms();if(H.tab==='ship')renderSubs();if(H.tab==='refinery')renderRefinery();if(H.tab==='core')renderCore();if(H.tab==='crew')renderCrew();if(H.tab==='drones')renderDrones();
   // --- quarters ---
   if(document.activeElement!==$('#cmdIn'))$('#cmdIn').value=S.cmd||'';[1,2].forEach(i=>{const e=$('#phr'+i);if(document.activeElement!==e)e.value=(S.phrases||[])[i-1]||'';});
   $('#cmdChips').innerHTML=CMD_PRESETS.map(p=>`<button type="button" aria-pressed="${cmdText()===p}">${p}</button>`).join('');
@@ -5844,7 +5862,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v135';
+const BUILD='v136';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
