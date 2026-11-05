@@ -126,8 +126,13 @@ button:disabled{cursor:default}
 .alloy{display:inline-block;width:.78em;height:.86em;background:linear-gradient(135deg,#e6f0ff,#9fb8d8 45%,#56708f);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);vertical-align:-.08em;margin-right:.3em}
 .wsep{display:inline-block;width:1px;height:.9em;background:#5a2550;margin:0 8px;vertical-align:-.1em}
 .bucks .alloy+*{color:#cfe0f5}
-.stbay{height:clamp(290px,46vh,390px)}
+.stbay{height:clamp(330px,52vh,440px)}
 .stbay canvas{cursor:pointer}
+.cg{display:flex;flex-direction:column;gap:6px}.cg-h{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--f-display);font-size:9px;letter-spacing:.12em;color:var(--dim)}.cg-h b{font-weight:400;color:#e6b86a}
+.cg-r{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;background:#0b1324;border:1px solid #1e2c4a;border-left:3px solid var(--tc);border-radius:8px;padding:7px 9px;font-size:12.5px}
+.cg-n b{display:block;font-weight:600}.cg-n em{font-style:normal;font-family:var(--f-display);font-size:8px;letter-spacing:.08em;color:var(--tc)}
+.cg-t{font-style:normal;margin-left:4px;padding:1px 4px;border-radius:4px;border:1px solid currentColor}.cg-t.hi{color:#38e09b}.cg-t.lo{color:#ff9aa6}
+.cg-p{font-weight:700;color:var(--bucks);white-space:nowrap}.cg-bs{display:flex;gap:4px}.cg-b{font-family:var(--f-display);font-size:9px;padding:7px 8px;border-radius:7px;border:0;background:var(--amber);color:#1b1206}
 .rtabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:10px 0 8px;flex:none}
 .rtab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 1px 7px;border-radius:9px;border:1px solid var(--bezel);background:#0d1528;font-family:var(--f-display);font-size:9px;letter-spacing:.04em;color:var(--dim);min-width:0}
 .rtab i{width:8px;height:8px;border-radius:2px;background:var(--rc)}
@@ -2829,7 +2834,7 @@ function moveStation(){
   S.bucks-=cost;glog().jumps++;persist();
   startWarp(st,()=>{
     const prev=g.stars[g.at],seen0=new Set(g.stars.filter(x=>x.seen).map(x=>x.id));
-    g.at=st.id;const fresh=!g.visited.includes(st.id);if(fresh){g.visited.push(st.id);rollAnomaly(g,st);}revealAround(g);
+    g.at=st.id;for(const q of g.stars)if(q.sold)for(const k in q.sold)q.sold[k]=Math.max(0,q.sold[k]-2);const fresh=!g.visited.includes(st.id);if(fresh){g.visited.push(st.id);rollAnomaly(g,st);}revealAround(g);
     const lmRows=[];if(fresh&&lmActive(st)&&!st.lmDone){
       if(st.lm==='yard'){st.lmDone=true;if(rl('shipyard')<4){S.station.rooms.shipyard++;lmRows.push(['Ancient Shipyard','Shipyard +1 level','#7ff3ff','lm:yard']);}else{S.station.alloy+=3;lmRows.push(['Ancient Shipyard','+6 Alloy','#cfe0f5','lm:yard']);}}
       if(st.lm==='relay'){st.lmDone=true;S.legend=legendOf()+6;lmRows.push(['Relay Beacon','+6 ★ Legend','#c792ff','lm:relay']);}}
@@ -3303,6 +3308,11 @@ function applyPrize(p,inRun){
   else if(p.k==='charge'){if(inRun)for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+p.n);else S.bucks+=15;}
 }
 function openCrate(r,c){
+  if(!TR&&depthNow()===0&&S.station&&CHOICE){const gs=rollGoods(CHOICE.key,1+(Math.random()<.35?1:0)+(Math.random()<.1?1:0));let cr=0,best=0;G.goodsRun=G.goodsRun||{};
+    for(const k of gs){const r2=addGood(k,1);if(r2.take){G.goodsRun[k]=(G.goodsRun[k]||0)+1;best=Math.max(best,GOOD(k).t);}cr+=r2.cr;}
+    if(cr)G.runBucks+=cr;persist();G.log.crates=(G.log.crates||0)+1;
+    const lbl=gs.length===1?GOOD(gs[0]).name.toUpperCase():`${gs.length} TRADE GOODS`;boardPop(lbl+(cr?' · HOLD FULL':''),c+.5,r+.5,GOOD_COL[best]);sfx.special();
+    B.beams.push({h:true,i:r,t:0,color:GOOD_COL[best]});rEvent(`crate goods: ${gs.join(',')}`);return;}
   const p=rollPrize(false);applyPrize(p,true);G.log.crates=(G.log.crates||0)+1;
   boardPop(p.label,c+.5,r+.5,p.col);sfx.special();if(p.jack)sfx.coin();
   B.beams.push({h:true,i:r,t:0,color:'#ffd84a'});rEvent(`crate: ${p.label}`);
@@ -3314,6 +3324,49 @@ function legendFor(d){
   return LEG_RANK[d.rank]+2*G.T+3*Math.max(0,(d.chain||0)-3)+10*(G.log.boardClears||0);
 }
 
+/* ================= CARGO: trade goods won on Trade runs, sold at the star you are parked at ================= */
+const GOODS=[
+ {k:'grain',name:'Hydroponic Grains',t:0,b:8},{k:'fiber',name:'Biofiber Textiles',t:0,b:9},{k:'thermal',name:'Thermal Fibers',t:0,b:9},{k:'sweet',name:'Synthesized Sweeteners',t:0,b:10},
+ {k:'hide',name:'Xenofauna Hides',t:1,b:20},{k:'leaf',name:'Nebula Leaf',t:1,b:22},{k:'stim',name:'Stimulant Extracts',t:1,b:22},{k:'spirit',name:'Stellar Spirits',t:1,b:24},
+ {k:'botan',name:'Alien Botanicals',t:1,b:24},{k:'nano',name:'Nanoweave Fabric',t:1,b:28},{k:'exotic',name:'Exotic Compounds',t:1,b:30},
+ {k:'arms',name:'Plasma Armaments',t:2,b:55},{k:'neural',name:'Neural Stimulants',t:2,b:60},{k:'xeno',name:'Fossilized Xenobiomass',t:2,b:70},{k:'quantum',name:'Quantum Crystals',t:2,b:80},{k:'gems',name:'Rare Gemstones',t:2,b:95}];
+const GOOD=k=>GOODS.find(g=>g.k===k);
+const GOOD_TIER=['BULK','TRADE','LUXURY'],GOOD_COL=['#9fb8d8','#ffd84a','#ff7ad9'],CARGO_CAP=[6,14,26,42];
+// what each kind of system makes cheaply, and what it pays a premium for
+const SYS_GOODS={
+  asteroid:{cheap:['quantum','gems','xeno'],dear:['grain','spirit','stim']},
+  imperial:{cheap:['arms','nano','sweet','stim'],dear:['leaf','neural','gems']},
+  horizon:{cheap:['quantum','exotic','neural'],dear:['fiber','spirit','botan']},
+  nebula:{cheap:['botan','leaf','grain','fiber'],dear:['arms','thermal']},
+  flare:{cheap:['spirit','sweet','hide','thermal'],dear:['fiber','nano']}};
+const cargoOf=()=>{const s=ensureStation();return s.cargo||(s.cargo={});};
+const holdCap=()=>CARGO_CAP[Math.min(3,rl('cargo'))];
+const cargoUsed=()=>Object.values(cargoOf()).reduce((a,n)=>a+n,0);
+const cargoLux=()=>Object.entries(cargoOf()).reduce((a,[k,n])=>a+(GOOD(k)&&GOOD(k).t===2?n:0),0);
+const goodsScale=()=>1+.15*(((S.gal&&S.gal.num)||1)-1);
+function goodMult(k,sysKey){const a=SYS_GOODS[sysKey]||{};return a.cheap&&a.cheap.includes(k)?.62:a.dear&&a.dear.includes(k)?1.65:1;}
+function goodPrice(k,st){const g=GOOD(k);let h=0;for(const ch of k+st.id)h=(h*31+ch.charCodeAt(0))>>>0;
+  const noise=.9+(h%21)/100,sat=Math.max(.6,1-.05*((st.sold&&st.sold[k])||0)),rep=1+Math.min(.3,legendOf()/800);
+  return Math.max(1,Math.round(g.b*goodsScale()*goodMult(k,st.key)*noise*sat*rep));}
+function addGood(k,n){const cg=cargoOf(),room=Math.max(0,holdCap()-cargoUsed()),take=Math.min(n,room),over=n-take;if(take)cg[k]=(cg[k]||0)+take;
+  const cr=over?Math.round(GOOD(k).b*goodsScale()*.3*over):0;return{take,over,cr};}
+function rollGoods(sysKey,n){const a=SYS_GOODS[sysKey]||{},w=GOODS.map(g=>(a.cheap&&a.cheap.includes(g.k)?4:a.dear&&a.dear.includes(g.k)?.5:1)*(g.t===2?.55:1)),tot=w.reduce((x,y)=>x+y,0),out=[];
+  for(let i=0;i<n;i++){let r=Math.random()*tot,j=0;while(j<w.length-1&&r>w[j]){r-=w[j];j++;}out.push(GOODS[j].k);}return out;}
+function sellGood(k,n){const st=S.gal.stars[S.gal.at],cg=cargoOf();n=Math.min(n,cg[k]||0);if(n<=0)return 0;let tot=0;st.sold=st.sold||{};
+  for(let i=0;i<n;i++){tot+=goodPrice(k,st);st.sold[k]=(st.sold[k]||0)+1;}cg[k]-=n;if(!cg[k])delete cg[k];S.bucks+=tot;return tot;}
+function gainGoods(n){const key=(S.gal&&S.gal.stars[S.gal.at]||{}).key,gs=rollGoods(key,n),got={};let cr=0;
+  for(const k of gs){const r=addGood(k,1);if(r.take)got[k]=(got[k]||0)+1;cr+=r.cr;}if(cr)S.bucks+=cr;
+  const txt=Object.entries(got).map(([k,c])=>`+${c} ${GOOD(k).name}`).join(', ');return(txt||'Your hold is full')+(cr?` · hold full, sold extras for ${cr} CR`:'');}
+function sellLux(mul){const st=S.gal.stars[S.gal.at],cg=cargoOf();let tot=0,n=0;for(const k of Object.keys(cg)){if(GOOD(k).t!==2)continue;for(let i=0;i<cg[k];i++){tot+=Math.round(goodPrice(k,st)*mul);n++;}delete cg[k];}S.bucks+=tot;return`Sold ${n} luxury goods. ${gainCR(0).replace('+0','+'+tot)}`;}
+function cargoPanel(){
+  const g=S.gal,st=g.stars[g.at],cg=cargoOf(),ks=GOODS.filter(x=>cg[x.k]>0),used=cargoUsed(),cap=holdCap();
+  const rows=ks.map(x=>{const pr=goodPrice(x.k,st),m=goodMult(x.k,st.key),tag=m>1.3?'<i class="cg-t hi">HIGH HERE</i>':m<.8?'<i class="cg-t lo">LOW HERE</i>':'';
+    return`<div class="cg-r" style="--tc:${GOOD_COL[x.t]}"><div class="cg-n"><b>${x.name}</b><em>${GOOD_TIER[x.t]} · ×${cg[x.k]} ${tag}</em></div><span class="cg-p">${coin(pr)}</span><span class="cg-bs"><button class="cg-b" data-sell="${x.k}:1">Sell 1</button>${cg[x.k]>1?`<button class="cg-b" data-sell="${x.k}:${cg[x.k]}">All</button>`:''}</span></div>`;}).join('');
+  return`<div class="cg"><div class="cg-h"><b>HOLD ${used} / ${cap}</b><span>${SYSTEMS[st.key].type} market${rl('cargo')?'':' · ship’s locker only'}</span></div>
+    ${rows||'<div class="ha-n">The hold is empty. Fly Trade runs and crack salvage crates to earn trade goods, then sell them at the star where they fetch the most. Cheap goods here are marked LOW, and a star that wants them pays HIGH.</div>'}
+    ${ks.length>1?'<button class="btn ghost" id="cgAll">Sell everything here</button>':''}</div>`;}
+function cargoBind(){document.querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>{const[k,n]=b.dataset.sell.split(':');const t=sellGood(k,+n);if(t){sfx.coin();persist();renderStation();}});
+  const a=$('#cgAll');if(a)a.onclick=()=>{let t=0;for(const k of Object.keys(cargoOf()))t+=sellGood(k,99);if(t){sfx.coin();persist();renderStation();}};}
 /* ================= ANOMALIES: small choice events found when surveying a new star ================= */
 // each option: label, a short hint of the odds, and run() -> outcome text (applies its own effects)
 const roll=p=>Math.random()<p;
@@ -3346,6 +3399,12 @@ const ANOMALIES={
   trader:{name:'Wandering trader',col:'#cfe0f5',txt:'A lone trader hails you, cargo bay open and prices negotiable.',
     opts:[{l:'Buy 2 Alloy',h:'−60 CR',ok:()=>S.bucks>=60,run:()=>`${gainCR(-60)}, ${gainAl(2)}.`},
           {l:'Sell 2 Alloy',h:'+70 CR',ok:()=>ensureStation().alloy>=2,run:()=>`${gainAl(-2)}, ${gainCR(70)}.`}]},
+  hauler:{name:'Stranded hauler',col:'#e6b86a',txt:'A cargo hauler with a dead drive. Its crew begs for a tow, and its hold is full.',
+    opts:[{l:'Salvage its cargo',h:'2–4 trade goods · 30% booby trap',run:()=>roll(.3)?`A trap in the cargo bay. ${gainCR(-25)} in damage.`:`${gainGoods(2+Math.floor(Math.random()*3))}.`},
+          {l:'Tow it to port',h:'+40 CR · +5 ★',run:()=>`The owner is grateful. ${gainCR(40)}, ${gainLeg(5)}.`}]},
+  festival:{name:'Trade festival',col:'#ff7ad9',txt:'A ring of markets is celebrating. Buyers are paying double for anything exotic.',
+    opts:[{l:'Sell your luxuries',h:'Luxury goods sell at +60% here',ok:()=>cargoLux()>0,run:()=>`${sellLux(1.6)}.`},
+          {l:'Browse the stalls',h:'+1 trade good · +2 ★',run:()=>`${gainGoods(1)}. ${gainLeg(2)}.`}]},
   ghost:{name:'Ghost fleet',col:'#a6b6d0',txt:'Silent hulls in perfect formation, crews long gone. Their weapons still track you.',
     opts:[{l:'Board the flagship',h:'+2 Alloy, or a hull scare (60/40)',run:()=>roll(.6)?`You strip its armour plating. ${gainAl(2)}.`:`Its point defence wakes up. ${gainCR(-25)} in damage.`},
           {l:'Salute and pass',h:'+4 ★',run:()=>`Your crew stands at attention as you pass. ${gainLeg(4)}.`}]},
@@ -3456,8 +3515,8 @@ const prog=()=>career().cleared||0,unl=k=>prog()>=(UNL[k]||0);
 const depthMax=()=>prog()>=DEPTH_UNL[2]?2:prog()>=DEPTH_UNL[1]?1:0;
 const stageNow=()=>9;
 /* ================= v71: SURVEY DEPTH, TILE LOADOUT, RELICS ================= */
-const DEPTH_NAME=['Fly-by','Survey','Deep survey'],DEPTH_PAY=[.6,1,1.6],DEPTH_SUB=['light pay','standard','+60% pay'];
-const DEPTH_NOTE=['Quiet space. No pursuer, no attacks. Pays 40% less and finds no subsystems.','Standard flight. A pursuer shadows us. SubSystem offer: choose 1 of 2.','Every threat the Tach allows is live. Pays 60% more. SubSystem offer: choose 1 of 3.'];
+const DEPTH_NAME=['Trade run','Survey','Deep survey'],DEPTH_PAY=[.6,1,1.6],DEPTH_SUB=['light pay','standard','+60% pay'];
+const DEPTH_NOTE=['Quiet space. No pursuer, no attacks. Pays 40% less and finds no subsystems, but salvage crates hold trade goods.','Standard flight. A pursuer shadows us. SubSystem offer: choose 1 of 2.','Every threat the Tach allows is live. Pays 60% more. SubSystem offer: choose 1 of 3.'];
 const DEPTH_MIN={pursuer:1,strike:2,own:2,mods:2,intercept:2},SPECIALS=['line','nova','loot','flare'];
 const SPECIAL_NAME={line:'Line tiles',nova:'Nova core',loot:'Credits & crates',flare:'Solar flare'};
 let RUNX=null;
@@ -4020,7 +4079,7 @@ const STAGES=[null,
  {short:'Nova cores, credits, crates',obj:'The board is getting richer.',
   news:['Match 5 to forge a NOVA core. Swap it with any tile to clear every tile of that colour','Credits tiles (pink) pay straight into your wallet','Salvage crates join a match of 4+ and crack open for a prize','Tile systems now ride in loadout slots. Pick which ones fly with us in the briefing','Clear a system and the crew offers a relic: a permanent ship upgrade']},
  {short:'A pursuer, and its attacks',obj:'Something has picked up our trail.',
-  news:['An Empire cruiser now chases us. Watch the GAP bar, top-left of the viewport','Missed contacts close the gap. Perfect clears push it back. At zero we are caught','It launches attacks too. Have enough charge banked in the system it names before the timer ends','SURVEY DEPTH is yours to set in the briefing. Fly-by is quiet and pays less. Deep survey brings every threat and pays more']},
+  news:['An Empire cruiser now chases us. Watch the GAP bar, top-left of the viewport','Missed contacts close the gap. Perfect clears push it back. At zero we are caught','It launches attacks too. Have enough charge banked in the system it names before the timer ends','SURVEY DEPTH is yours to set in the briefing. A Trade run is quiet and pays less in credits, but crates hold trade goods to sell. Deep survey brings every threat and pays more']},
  {short:'Ship rooms unlock',obj:'Time to build out the ship.',
   news:['Credits and Alloy can now build and upgrade rooms: Sensors, Shipyard, War room, Refinery, Habitat, Drone bay and Tach drive','Open the Ship from the map to spend','OVERDRIVE: build the Overdrive core in the Ship first. Then perfect clears charge the Overdrive bar above the gauges. When it fills, tap the bolt tile for Counterfire, a repair, a fuel snake, Power slots, Afterburn or the Rail loader. Most burn fuel, so watch the tank']},
  {short:'Combo perks',obj:'Big chains pay off now.',
@@ -4319,7 +4378,7 @@ const COACH_TIPS={
   gate:{el:'#chartCv',t:()=>'The Exodus Gate is in reach. It is the last system in this constellation. Clear it and we jump on to the next. Tap it to see what is waiting.'},
   tach:{el:'.tc-tot',t:()=>'Five reels, one per system, and all five must hold. The chances multiply, so one weak reel drags the whole jump down. Shore up the weakest first.'},
   tach_fail:{el:'.tc-res',t:()=>'We lost a level on every system that failed. Hard lesson. Rebuild at the planets, research what broke, and we go again.'},
-  depth:{el:'#brDepth',t:()=>'Your call on how deep we dive. Fly-by is quiet and pays less. Deep survey brings every threat, pays more, and offers better subsystems. The depth sets the stakes, so choose it before you give the order.'},
+  depth:{el:'#brDepth',t:()=>'Your call on how deep we dive. A Trade run is quiet and pays less in credits, but crates hold trade goods to sell. Deep survey brings every threat, pays more, and offers better subsystems. The depth sets the stakes, so choose it before you give the order.'},
   load:{el:'#brLoad',t:()=>'We only have room for so many Tile systems. Tap one to swap it in. Upgrading the Refinery adds a slot.'},
   burst:{el:'#board',t:()=>'Overdrive is charged. Tap the glowing bolt tile on the board. Clear it in a match and you lose charge. Counterfire pushes the pursuer back, the Fuel snake tops up the tank, Repair is a plate-welding game that mends the hull, and Power slots spends fuel to spin your systems for charge: pick how many lines to play. Most Overdrives burn about a tenth of your tank.'},
   relic:{el:'#relicCards',t:()=>'A subsystem. It stays installed for the whole campaign, so choose what we will lean on. We only have three slots.'},
@@ -4491,16 +4550,19 @@ const ROOMS=[
   {k:'tach',name:'Overdrive core',col:'#5ef0d0',max:3,cost:[[4,90],[6,150],[10,300]],panel:'core',open:'Core tuning',
    desc:'The reactor behind Overdrive. Overdrive stays offline until you build it. Perfect clears charge it, and a bigger core needs fewer of them. Engage it from under the systems for Counterfire, Fuel snake, Repair, Power slots, Afterburn or the Rail loader. The same drive carries the ship through the Exodus Gate.',
    eff:L=>`Overdrive charges in ${[0,5,4,3][L]} perfect clears · tuning up to rank ${L}`},
+  {k:'cargo',name:'Cargo hold',col:'#e6b86a',max:3,cost:[[2,40],[4,90],[7,170]],panel:null,open:'',
+   desc:'Holds the trade goods you win from salvage crates on Trade runs. Every star pays different prices, so carry goods to a system that wants them and sell here. Without a hold you only have a small ship’s locker.',
+   eff:L=>`Hold capacity ${CARGO_CAP[L]}`},
 ];
-{const ord=['comms','shipyard','war','habitat','refinery','drone','tach'];ROOMS.sort((a,b)=>ord.indexOf(a.k)-ord.indexOf(b.k));}
+{const ord=['comms','shipyard','war','habitat','refinery','drone','tach','cargo'];ROOMS.sort((a,b)=>ord.indexOf(a.k)-ord.indexOf(b.k));}
 const roomDef=k=>ROOMS.find(r=>r.k===k);
 const alloyTag=n=>`<i class="alloy"></i>${n}`;
 function ensureStation(){
   if(!S.station){
     const mx=Math.max(1,...Object.values(S.up||{}));
-    S.station={alloy:0,pop:12,rooms:{comms:1,war:1,shipyard:Math.min(4,mx),habitat:1,refinery:0,drone:0,tach:0},coreV:1};
+    S.station={alloy:0,pop:12,rooms:{comms:1,war:1,shipyard:Math.min(4,mx),habitat:1,refinery:0,drone:0,tach:0,cargo:0},coreV:1,cargo:{}};
   }
-  const rm=S.station.rooms;if(rm.comms==null){rm.comms=rm.war||1;rm.war=1;}for(const k of ['refinery','drone'])if(!(rm[k]>=0))rm[k]=0;if(!rm.war)rm.war=1;if(!S.station.coreV){S.station.coreV=1;if(!rm.tach)rm.tach=1;}if(!(rm.tach>=0))rm.tach=0;
+  const rm=S.station.rooms;if(rm.comms==null){rm.comms=rm.war||1;rm.war=1;}for(const k of ['refinery','drone'])if(!(rm[k]>=0))rm[k]=0;if(!rm.war)rm.war=1;if(!S.station.coreV){S.station.coreV=1;if(!rm.tach)rm.tach=1;}if(!(rm.tach>=0))rm.tach=0;if(!(rm.cargo>=0))rm.cargo=0;if(!S.station.cargo)S.station.cargo={};
   // v53: the Flight deck is gone; refund what was spent on it
   if(rm.flight!=null){const L=rm.flight||0;S.station.alloy+=[0,4,10,19][L]||0;S.bucks+=[0,80,220,440][L]||0;delete rm.flight;if(S.station.crew)delete S.station.crew.flight;}
   if(S.station.crew)crewSync();
@@ -4606,7 +4668,7 @@ function updateStationFX(dt){
 const RM={sel:'comms',badges:{},pc:null,t:0,flash:{},rects:[],people:Array.from({length:40},(_,i)=>({d:i%4,x:Math.random(),v:(.03+Math.random()*.05)*(Math.random()<.5?-1:1)})),
   stars:Array.from({length:60},()=>({x:Math.random(),y:Math.random(),z:Math.random()})),ore:Array.from({length:5},(_,i)=>i/5)};
 function goStation(){ensureStation();ensureGalaxy();scene='station';renderStation();only('#station');}
-const ROOM_ICO={comms:'signal',shipyard:'wrench',war:'cross',habitat:'person',refinery:'hexa',drone:'drone',tach:'tach'};
+const ROOM_ICO={cargo:'station',comms:'signal',shipyard:'wrench',war:'cross',habitat:'person',refinery:'hexa',drone:'drone',tach:'tach'};
 const ROOM_NAV={comms:['radar','Terra-reel calibration'],shipyard:['launch','Ship systems & paint'],war:['bolt','Combo loadout'],habitat:['person','Crew deck · staffing'],drone:['drone','Drone payloads'],tach:['tach','Core tuning'],refinery:['hexa','Tach, alloy & subsystems']};
 function habArrivals(L){
   const g=S.gal,stn=S.station,room=Math.max(0,HAB_CAP[L]-stn.pop),here=g.stars[g.at];
@@ -4623,7 +4685,7 @@ function renderStation(){
   const tabs=$('#rtabs');tabs.innerHTML='';
   for(const d of ROOMS){const L=rl(d.k),b=document.createElement('button');b.className='rtab';b.setAttribute('role','tab');
     b.setAttribute('aria-selected',RM.sel===d.k?'true':'false');b.style.setProperty('--rc',d.col);
-    b.innerHTML=`<i></i><span>${d.name.replace(' bay','').replace(' room','').replace(' deck','').replace('Refinery','Refine').replace('Shipyard','Yard').replace('Habitat','Hab').replace(' drive','').replace('Overdrive core','Core')}</span><em>${L?'L'+L:'—'}${CREWED.includes(d.k)&&L?`<u style="background:${CREW_COL[crewState(d.k)]}"></u>`:''}</em>`;
+    b.innerHTML=`<i></i><span>${d.name.replace(' bay','').replace(' room','').replace(' deck','').replace('Refinery','Refine').replace('Shipyard','Yard').replace('Habitat','Hab').replace(' drive','').replace('Overdrive core','Core').replace('Cargo hold','Cargo')}</span><em>${L?'L'+L:'—'}${CREWED.includes(d.k)&&L?`<u style="background:${CREW_COL[crewState(d.k)]}"></u>`:''}</em>`;
     b.onclick=()=>{RM.sel=d.k;sfx.tick();renderStation();};tabs.append(b);}
   // room card
   const d=roomDef(RM.sel),L=rl(d.k),max=L>=d.max,cost=max?null:d.cost[L];
@@ -4639,6 +4701,7 @@ function renderStation(){
   $('#roomCard').innerHTML=`<div class="rc-head"><span class="rc-name">${d.name.toUpperCase()}${d.k==='drone'?'<canvas class="rc-tile" id="rcTile" width="72" height="72" title="The drone tile you tap on the board"></canvas>':''}</span><span class="pips">${pips}</span></div>
     <p class="rc-desc">${d.desc}</p>
     ${d.k==='habitat'?`<div class="crew-idle">${ICO.person}<b>${crewIdle()}</b> unassigned · <button class="linkbtn" id="crewAuto">auto-assign crew</button></div>`:''}
+    ${d.k==='cargo'?cargoPanel():''}
     ${d.k==='habitat'?`<div class="rc-eff one"><div><span>Aboard</span><b>${stn.pop} / ${HAB_CAP[L]} people</b></div></div>${habArrivals(L)}`:''}
     <div class="rc-up">
       <div class="up-row"><span class="up-ic">${ICO[ROOM_ICO[d.k]]}</span>
@@ -4650,7 +4713,7 @@ function renderStation(){
   const bb=$('#rcBuild');if(bb)bb.onclick=()=>{const[a,cr]=d.cost[rl(d.k)],cw=crewCost(d,rl(d.k));if(stn.alloy<a||S.bucks<cr||stn.pop-cw<1)return;
     stn.alloy-=a;S.bucks-=cr;stn.pop-=cw;crewSync();stn.rooms[d.k]++;crewSync();if(CREWED.includes(d.k)){stn.crew[d.k]=Math.min(crewCap(d.k),(stn.crew[d.k]||0)+crewIdle());crewSync();}RM.flash[d.k]=1;if(d.k==='comms')revealAround(S.gal);persist();sfx.buy();renderStation();};
   {const tc=$('#rcTile');if(tc)drawDroneTile(tc);}
-  const ob=$('#rcOpen');if(ob)ob.onclick=()=>openRoom(d.k);
+  const ob=$('#rcOpen');if(ob)ob.onclick=()=>openRoom(d.k);if(d.k==='cargo')cargoBind();
   const sl=$('#crewSl');if(sl){sl.oninput=()=>{const k=d.k,cur=stn.crew[k]||0,max=cur+crewIdle();let v=Math.min(+sl.value,max);sl.value=v;if(v!==cur){stn.crew[k]=v;if(v>cur)tone(600+v*25,.03,'triangle',.02);}paintCrew(d);};
     sl.onchange=()=>{persist();renderStation();};}
   const ca=$('#crewAuto');if(ca)ca.onclick=()=>{autoCrew();persist();sfx.buy();renderStation();};
@@ -4797,13 +4860,14 @@ function drawStation(dt){
   const cx=R(W/2);
   const box=(k,x0,y0,x1,y1)=>({k,x:R(x0),y:R(y0),w:R(x1-x0),h:R(y1-y0)});
   const rooms={
-    comms:box('comms',cx-W*.3,H*.105,cx+W*.3,H*.255),
-    shipyard:box('shipyard',W*.03,H*.3,cx-12,H*.49),
-    war:box('war',cx+12,H*.3,W*.97,H*.49),
-    habitat:box('habitat',W*.03,H*.54,cx-12,H*.73),
-    refinery:box('refinery',cx+12,H*.54,W*.97,H*.73),
-    drone:box('drone',W*.07,H*.78,cx-12,H*.96),
-    tach:box('tach',cx+12,H*.78,W*.93,H*.96)};
+    comms:box('comms',cx-W*.3,H*.075,cx+W*.3,H*.228),
+    shipyard:box('shipyard',W*.03,H*.258,cx-12,H*.411),
+    war:box('war',cx+12,H*.258,W*.97,H*.411),
+    habitat:box('habitat',W*.03,H*.441,cx-12,H*.594),
+    refinery:box('refinery',cx+12,H*.441,W*.97,H*.594),
+    drone:box('drone',W*.07,H*.624,cx-12,H*.777),
+    tach:box('tach',cx+12,H*.624,W*.93,H*.777),
+    cargo:box('cargo',cx-W*.3,H*.807,cx+W*.3,H*.96)};
   RM.rects=Object.values(rooms);RM.badges={};
   // spine, antenna, corridors, solar wings
   c.fillStyle='#1b2846';c.fillRect(cx-6,R(H*.02),12,R(H*.96));
@@ -4937,6 +5001,10 @@ function drawStation(dt){
     c.fillStyle=Math.sin(t*5)>0?'#ffd84a':'#8a7a2a';c.fillRect(R(gx)-1,R(gy)-1,3,3);
     c.font='7px Silkscreen, monospace';c.textAlign='right';c.textBaseline='bottom';c.fillStyle='#5ef0d0';c.fillText(`TACH ${tachNow()}`,q.x+q.w-5,q.y+q.h-4);
     badge(q,d);flash(q);label(q,d,L);}}
+  {const q=rooms.cargo,L=rl('cargo'),d=roomDef('cargo');frame(q,d.col,L);if(L){
+    const cols=12,rows=3,cw=Math.floor((q.w-14)/cols),ch=Math.max(4,Math.floor((q.h-24)/rows)),cap=holdCap(),used=cargoUsed(),fill=Math.round(used/Math.max(1,cap)*cols*rows);
+    for(let i=0;i<cols*rows;i++){const x=q.x+7+(i%cols)*cw,y=q.y+q.h-5-(Math.floor(i/cols)+1)*ch;c.fillStyle=i<fill?'#e6b86a':'#16213d';c.fillRect(x,y,cw-2,ch-2);if(i<fill){c.fillStyle='rgba(255,255,255,.22)';c.fillRect(x,y,cw-2,1);}}
+    flash(q);label(q,d,L);}}
   for(let i=0;i<rl('drone');i++){const a=t*.5+i*2.1,x=cx+Math.cos(a)*W*.47,y=H*.5+Math.sin(a)*H*.46;
     c.fillStyle='#c792ff';c.fillRect(R(x)-2,R(y)-1,4,2);c.fillStyle=Math.sin(t*8+i)>0?'#ffffff':'#c792ff';c.fillRect(R(x),R(y)-2,1,1);}
   c.font='8px Silkscreen, monospace';c.textAlign='left';c.textBaseline='top';c.fillStyle='rgba(225,233,247,.75)';
@@ -5136,7 +5204,7 @@ const GUIDE=[
   {g:'TILES',title:'Engines',tile:{t:3},text:'Charges Engines. Slingshots you past gravity wells.'},
   {g:'TILES',title:'Fuel cells',tile:{t:4},text:'Pours straight into the fuel tank. Fuel drains all the time.'},
   {g:'TILES',title:'Credits',tile:{t:BUCKS},text:'Wild. Joins any color, but only in a match of 4 or more. Banks money and charges that color.'},
-  {g:'TILES',title:'Salvage crate',tile:{t:CRATE},text:'Rare wild, like Credits: joins any color in a match of 4 or more. Cracks open for a random prize: Credits, fuel, Alloy, a survivor, charge, or a jackpot.'},
+  {g:'TILES',title:'Salvage crate',tile:{t:CRATE},text:'Rare wild, like Credits: joins any color in a match of 4 or more. Cracks open for a random prize: Credits, fuel, Alloy, a survivor, charge, or a jackpot. On a Trade run it holds trade goods instead, which you sell from the Cargo hold.'},
   {g:'TILES',title:'Line blast',tile:{t:0,sp:1},text:'Made by matching 4. When it clears, it clears its whole row or column.'},
   {g:'TILES',title:'Solar flare',tile:{t:0,sp:4},text:'Forged where two runs of the same colour cross in an L, T or +. Match it and a fire burns a row, column or 3×3 square for a couple of seconds, rotating each time. Burned tiles pay a flat bonus and do not cascade.'},
   {g:'TILES',title:'Nova core',tile:{t:NOVA},text:'Made by matching 5. Swap it with any tile to clear every tile of that type.'},
@@ -5585,7 +5653,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v127';
+const BUILD='v128';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -5727,7 +5795,7 @@ function startRun(){
   fillBoard();B.busy=true;settle().then(()=>{B.busy=false;});
   G.warPend=true;
   scene='game';paused=false;only('#game');
-  G.patched=false;G.droneT=ST.droneT*.5;G.drone=null;B.droneAim=null;B.droneDrag=false;G.rescued=0;G.podsSpawned=0;G.strayPod=CHOICE.sig!=='sos'&&Math.random()<.2;
+  G.patched=false;G.droneT=ST.droneT*.5;G.drone=null;B.droneAim=null;B.droneDrag=false;G.rescued=0;G.goodsRun={};G.podsSpawned=0;G.strayPod=CHOICE.sig!=='sos'&&Math.random()<.2;
   if(S.tutRunDone==null)S.tutRunDone=career().runs>0;G.tut=!S.tutRunDone;
   G.cdTotal=G.countdown=AUD.cd??3;G.cdArrived=false;G.cdBoost=0;if(!G.countdown)applyWarBoost();
   if(G.tut&&!G.countdown)setTimeout(()=>coach('run_start'),700);
@@ -5787,6 +5855,7 @@ function buildDebrief(win,reason){
   {const st=S.gal&&S.gal.stars[CHOICE.starId];d.extra=[];
    const surv=win?G.rescued:Math.floor(G.rescued/2);
    if(win&&CHOICE.sig==='cache'&&st&&st.sig==='cache'){for(let i=0;i<3;i++){const p=rollPrize(true);applyPrize(p,false);d.extra.push(['Cache',`<em style="color:${p.col}">${p.label}</em>`]);}st.sig=null;}
+   if(!TR&&G.goodsRun&&Object.keys(G.goodsRun).length)d.extra.push(['Cargo loaded',Object.entries(G.goodsRun).map(([k,n])=>`<em style="color:${GOOD_COL[GOOD(k).t]}">${GOOD(k).name} ×${n}</em>`).join('<br>')]);
    if(win&&CHOICE.sig==='vein'){ensureStation().alloy+=1;d.extra.push(['Rich vein',alloyTag('+1')]);}
    if(surv||G.rescued){const[took,away]=addPop(surv);d.extra.push(['Survivors aboard',`<em style="color:#38e09b">+${took}</em>${away?` <small>${away} turned away</small>`:''}${!win&&G.rescued?` <small>${G.rescued-surv} lost</small>`:''}`]);}
    if(win&&CHOICE.sig==='sos'&&st&&st.sig==='sos')st.sig=null;
@@ -6134,7 +6203,7 @@ TRAIN_CH.push(
   {say:'Terraform enough worlds and the Exodus Gate unseals. Then Launch becomes the jump to the next constellation. That is the goal of every campaign.',next:'end'}]},
  {k:'station',t:'Ship upgrades',d:'Rooms, ship systems and crew.',sandbox:true,feats:['pursuer','strike','rooms','line','nova','loot','perks'],steps:[
   {say:'This is your ship. Rooms give it abilities, and you pay for them with Alloy and credits. This lesson runs on a practice save with some resources.',next:'tap',ring:'#stCv',enter(){goStation();}},
-  {say:'Each tab is a room: Sensors, Yard, War room, Refinery, Hab, Drone bay and Tach drive. Tap a couple of tabs to read what they do. The Core room powers Overdrive and has to be built before you can use it. Tap your portrait, top left, to name yourself and your ship.',next:'cond',cond:()=>RM.sel!==TR.sel0,ring:'#rtabs',delay:900,enter(){TR.sel0=RM.sel;}},
+  {say:'Each tab is a room: Sensors, Yard, War room, Refinery, Hab, Drone bay and Tach drive. Tap a couple of tabs to read what they do. The Core room powers Overdrive and has to be built before you can use it. The Cargo hold stores trade goods from Trade runs and sells them at the star you are parked at. Tap your portrait, top left, to name yourself and your ship.',next:'cond',cond:()=>RM.sel!==TR.sel0,ring:'#rtabs',delay:900,enter(){TR.sel0=RM.sel;}},
   {say:'Build the Refinery. It costs Alloy and credits (shown top right), adds a Tile systems slot and hosts the Alloy exchange.',next:'cond',cond:()=>S.station.rooms.refinery>=1,ring:['#rcBuild'],delay:1200,enter(){RM.sel='refinery';renderStation();}},
   {say:'Built. Rooms have levels, and they need crew to run at full strength. The card tells you when one is short. The Habitat holds your people.',next:'tap',ring:'#roomCard'},
   {say:'Now the Shipyard. Press Open to go to the ship bay.',next:'cond',cond:()=>scene==='hangar',ring:'#rcOpen',delay:700,enter(){RM.sel='shipyard';renderStation();}},
