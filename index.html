@@ -356,6 +356,10 @@ button:disabled{cursor:default}
 .pilotcall .pbub{position:relative;transform:none;animation:none;max-width:62vw;white-space:normal}
 .pilotcall .pbub::after{left:-6px;bottom:auto;top:50%;margin-top:-6px;border:6px solid transparent;border-right-color:#f4f7ff;border-left:0}
 .pilotcall .pbub.big::after{border-right-color:#ffd84a}
+@keyframes pcallBig{0%{opacity:0;transform:translateX(-30px) scale(.4) rotate(-8deg)}10%{opacity:1;transform:scale(1.18) rotate(3deg)}18%{transform:scale(1) rotate(-1deg)}86%{opacity:1}100%{opacity:0;transform:translateX(-14px) scale(.9)}}
+.viewport .pilotcall.huge{left:4px;top:26px;gap:10px;animation:pcallBig 3.2s ease forwards}
+.viewport .pilotcall.huge canvas{width:84px;height:84px;border-width:3px;border-radius:12px}
+.pilotcall.huge .pbub{font-size:24px;font-weight:900;font-style:italic;padding:11px 18px;border-radius:20px;max-width:64vw;line-height:1.05;border:3px solid #1a0a2e;box-shadow:3px 4px 0 #1a0a2e}
 @keyframes pcall{0%{opacity:0;transform:translateX(-16px)}8%{opacity:1;transform:none}86%{opacity:1}100%{opacity:0;transform:translateX(-10px)}}
 .pbub{position:absolute;z-index:3;max-width:78%;background:#f4f7ff;color:#0a1020;font-family:var(--f-display);font-size:12px;letter-spacing:.04em;padding:6px 10px;border-radius:10px;pointer-events:none;white-space:nowrap;transform:translate(-18%,-100%);animation:pbub 2.6s ease forwards;box-shadow:0 2px 0 rgba(0,0,0,.4)}
 .pbub::after{content:'';position:absolute;left:16%;bottom:-6px;border:6px solid transparent;border-top-color:#f4f7ff;border-bottom:0}
@@ -1664,10 +1668,10 @@ function spawnEvent(force,opts={}){
 
 let _sayT=0;
 function pilotSay(text,big){const vp=$('#viewport');if(!vp||!text)return;vp.querySelectorAll('.pilotcall').forEach(e=>e.remove());
-  const w=document.createElement('div');w.className='pilotcall';const cv=document.createElement('canvas');cv.width=10;cv.height=10;try{drawPortrait(cv,S.pilot);}catch(e){}
+  const w=document.createElement('div');w.className='pilotcall'+(big?' huge':'');const cv=document.createElement('canvas');cv.width=10;cv.height=10;try{drawPortrait(cv,S.pilot);}catch(e){}
   const bb=document.createElement('div');bb.className='pbub'+(big?' big':'');bb.textContent=text;w.append(cv,bb);vp.appendChild(w);setTimeout(()=>w.remove(),3000);}
-function pilotCatch(chain){if(TR||!G||!G.running||G.ending)return;const p=(S.phrases||[]).map(x=>(x||'').trim()).filter(Boolean);if(!p.length)return;
-  const now=G.time||0;if(now-(G.catchT||-99)<(chain>=6?9:16))return;if(chain<6&&Math.random()<.4)return;G.catchT=now;pilotSay(p[Math.floor(Math.random()*p.length)],chain>=6);}
+function pilotCatch(chain){if(TR||!G||!G.running||G.ending)return;let p=(S.phrases||[]).map(x=>(x||'').trim()).filter(Boolean);if(!p.length)p=['Nice one!','Got ’em!','Beautiful!','Yeah!'];
+  const now=G.time||0;if(now-(G.catchT||-99)<10)return;if(chain<5&&Math.random()<.5)return;G.catchT=now;pilotSay(p[Math.floor(Math.random()*p.length)],true);}
 function vpPop(text,color){G.pops.push({text,color,x:shipBaseX()+10,y:(G.shipY??V.H/2)-12-G.pops.filter(p=>p.t<.4).length*8,t:0});}
 function boom(x,y,cols,n=22){G.fx.push({k:'boom',t:0,d:.9,parts:Array.from({length:n},()=>{const a=Math.random()*6.28,s=8+Math.random()*30;return{x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,c:pick(cols)};})});}
 function damage(n,src='other'){
@@ -2826,7 +2830,7 @@ const depthOn=(k,d)=>DEPTH_FEAT[k].includes(d)&&(!DEPTH_LATE.includes(k)||prog()
 function depthOutline(d){const L=[];
   if(d===0)L.push('no pursuer','credits & crates required');
   else if(d===1){L.push(depthOn('strike',d)?'pursuer with attacks':'pursuer shadows us');if(depthOn('own',d))L.push('every pursuer type');L.push('Legend for a win');}
-  else L.push('storm closes in as the gap shrinks','faster flight','sensors reach further','Solar flares required','charts the system');
+  else L.push('storm fronts drain fuel','faster flight','sensors reach further','Solar flares required','charts the system');
   L.push(`pay ×${DEPTH_PAY[d]}`);
   if(unl('relics'))L.push(d===0?'no subsystem':d===1?'subsystem: 1 of 2':'subsystem: 1 of 3');
   return L.join(' · ');}
@@ -3500,7 +3504,7 @@ function showBrief(ch){return new Promise(res=>{
       <div><span>Gate bonus</span><b>${coin(pay)}</b></div>
       <div><span>Pursuer</span>${vl?'<b style="color:#7f8fb2">Unsurveyed</b>':feat('pursuer')?`<b style="color:#ff8a95">${sys.pName}${sys.gapRate>1?' · fast':''}</b>`:`<b style="color:#7f8fb2">${(ch.gate&&S.gal&&S.gal.cons)?'<span style="color:#ff8a95">joins at ⅓</span>':'Not on this run'}</b>`}</div></div></div>
     <div class="br-lab">Expect</div>
-    <div class="br-mix">${vl?'<p class="br-dn">Unsurveyed. Fly a Survey Run here to chart its contacts and twists.</p>':mix.map(m=>`<canvas class="pix" data-spr="${m.k}"></canvas><b>${CONTACT_NAME[m.k]}</b><i>→</i><canvas class="pix" data-ic="${m.m}"></canvas><em style="color:${TYPES[m.m].color}">${TYPES[m.m].name}</em>`).join('')}</div>
+    <div class="br-mix">${vl?'<div style="grid-column:1/-1;width:100%;box-sizing:border-box;text-align:center;border:1px dashed rgba(255,181,71,.55);border-radius:10px;padding:16px 12px;color:#9fb6d9;font-size:13px;line-height:1.4"><b style="display:block;font:10px Silkscreen,monospace;letter-spacing:.14em;color:#ffb547;margin-bottom:6px">UNSURVEYED</b>Fly a Survey Run here to chart its contacts and twists.</div>':mix.map(m=>`<canvas class="pix" data-spr="${m.k}"></canvas><b>${CONTACT_NAME[m.k]}</b><i>→</i><canvas class="pix" data-ic="${m.m}"></canvas><em style="color:${TYPES[m.m].color}">${TYPES[m.m].name}</em>`).join('')}</div>
     ${sys.twist&&!vl?`<ul class="br-ul"><li><i class="b-ok">＋</i>${sys.bonus}</li><li><i class="b-bad">！</i>${sys.twist}</li></ul>`:''}
     ${(ch.gate&&S.gal&&S.gal.cons)?`<div class="br-lab">Run type</div><p class="br-dn">The Exodus Gate run is all three in one. The first third is a quiet Trade Run. A pursuer joins us at one third. At two thirds the Tach goes fast, solar flares join, and the storm closes in, with the pursuer still on us. It gets harder as we go.</p>`:unl('depth')?`<div class="br-lab">Run type</div><div class="br-seg" id="brDepth">${DEPTH_NAME.map((n,i)=>{const lk=i>depthMax();return `<button type="button" data-d="${i}" class="${i===dp?'on':''}${lk?' lk':''}">${n}<small>${lk?'🔒 clear '+DEPTH_UNL[i]:DEPTH_SUB[i]}</small></button>`;}).join('')}</div><p class="br-dn">${DEPTH_NOTE[dp]}</p>`:''}
     ${pullRow('brLoad')}`;
@@ -3560,7 +3564,7 @@ const depthMax=()=>prog()>=DEPTH_UNL[2]?2:prog()>=DEPTH_UNL[1]?1:0;
 const stageNow=()=>9;
 /* ================= v71: SURVEY DEPTH, TILE LOADOUT, RELICS ================= */
 const DEPTH_NAME=['Trade Run','Attack Run','Survey Run'],DEPTH_PAY=[.6,1,1.3],DEPTH_SUB=['goods, light pay','pursuer, legend','storm, charts system'];
-const DEPTH_NOTE=['A quiet haul. Credits and crates are always in the mix. No pursuer, no attacks, and the contacts are gentle. Pays 40% less and finds no subsystems, but salvage crates hold trade goods.','A pursuer is on our tail, and from the third run it brings every trick it has. Standard pay, plus Legend for a win. SubSystem offer: choose 1 of 2.','There is no pursuer, but the Tach runs fast and the space itself closes in: storms, rocks and ships grow thicker as the gap shrinks. Solar flares are always in the mix. Our sensors reach further. Pays 30% more, SubSystem offer: choose 1 of 3. Charting a system this way reveals its details for good.'];
+const DEPTH_NOTE=['A quiet haul. Credits and crates are always in the mix. No pursuer, no attacks, and the contacts are gentle. Pays 40% less and finds no subsystems, but salvage crates hold trade goods.','A pursuer is on our tail, and from the third run it brings every trick it has. Standard pay, plus Legend for a win. SubSystem offer: choose 1 of 2.','There is no pursuer, but the Tach runs fast and the space itself closes in: storms, rocks and ships grow thicker as the gap shrinks. Storm fronts hit on a timer: charge Engines to burn through, or lose fuel. Solar flares are always in the mix. Our sensors reach further. Pays 30% more, SubSystem offer: choose 1 of 3. Charting a system this way reveals its details for good.'];
 const DEPTH_FEAT={pursuer:[1],gap:[1,2],strike:[1],own:[1],intercept:[1],mods:[2],survey:[2]},DEPTH_LATE=['strike','own','intercept'],SPECIALS=['line','nova','loot','flare'];
 const SPECIAL_NAME={line:'Line tiles',nova:'Nova core',loot:'Credits & crates',flare:'Solar flare'};
 let RUNX=null;
@@ -5588,13 +5592,13 @@ function drawCineHUD(c,CW,CH,t){
   }else if(C.kind==='strikeIn'){
     const s=C.data.s,a=letterbox(c,CW,CH,u,'#ff4d5e');
     c.fillStyle=`rgba(255,40,60,${(.12+.1*Math.sin(t*14))*a})`;c.fillRect(0,0,CW,CH);
-    titleCard(c,CW,CH,a,`${SYS.pName.toUpperCase()} ATTACKING`,s.name,`CHARGE ${TYPES[s.m].name.toUpperCase()} TO ${s.c}`,'#ff4d5e',easeOut(Math.min(1,u*3)));
+    titleCard(c,CW,CH,a,s.fuel?'SPACE IS CLOSING IN':`${SYS.pName.toUpperCase()} ATTACKING`,s.name,s.fuel?`CHARGE ENGINES TO ${s.c} OR LOSE UP TO ${s.fl} FUEL`:`CHARGE ${TYPES[s.m].name.toUpperCase()} TO ${s.c}`,'#ff4d5e',easeOut(Math.min(1,u*3)));
     c.globalAlpha=a;c.imageSmoothingEnabled=false;c.drawImage(ICONS[s.m],CW/2-11,CH*.66-58,22,22);c.globalAlpha=1;
   }else if(C.kind==='strikeOut'){
     const d=C.data,col=d.ok?'#38e09b':'#ff4d5e',a=letterbox(c,CW,CH,u,col);
     if(!d.ok){c.fillStyle=`rgba(255,40,60,${.12*(1-u)})`;c.fillRect(0,0,CW,CH);}
     const late=clamp((u-.25)/.2,0,1);
-    titleCard(c,CW,CH,a*(d.ok?1:late),d.s.name,d.ok?'REPELLED':'DIRECT HIT',d.ok?'+10 GAP · +3 BOUNTY':`HULL -${d.dmg} · GAP -${d.gapLoss}`,col,easeOut(d.ok?Math.min(1,u*4):late));
+    titleCard(c,CW,CH,a*(d.ok?1:late),d.s.name,d.ok?(d.s.fuel?'BURNED THROUGH':'REPELLED'):(d.s.fuel?'FUEL DRAINED':'DIRECT HIT'),d.ok?(d.s.fuel?'+0.6 AU · +3 BOUNTY':'+10 GAP · +3 BOUNTY'):(d.s.fuel?`FUEL -${d.fuelLoss}`:`HULL -${d.dmg} · GAP -${d.gapLoss}`),col,easeOut(d.ok?Math.min(1,u*4):late));
   }
 }
 // board: damage control sweeps a scan bar down engineering
@@ -5628,7 +5632,8 @@ const STRIKES={
   empire:{name:'BROADSIDE',m:1,hz:'fire'},pirates:{name:'BOARDING PARTY',m:0,hz:'fire'},
   blackhole:{name:'TIDAL SURGE',m:3,hz:'lock'},leviathan:{name:'LUNGE',m:3,hz:'debris'},shockwave:{name:'FLARE FRONT',m:1,hz:'debris'}};
 function updateStrike(dt){
-  if(!feat('strike')){G.strike=null;return;}
+  const sv=feat('survey'),stk=feat('strike');
+  if(!stk&&!sv){G.strike=null;return;}
   if(G.strike){
     const s=G.strike;s.t-=dt;s.klax-=dt;
     if(s.klax<=0){s.klax=s.t<3?.5:1;sfx.klaxon();}
@@ -5637,15 +5642,21 @@ function updateStrike(dt){
   if(G.prog<.08||G.prog>.9||CINE)return;
   G.strikeT-=dt;
   if(G.strikeT<=0){
-    const d=STRIKES[SYS.pursuer],dur=Math.max(6,10-.5*G.T);
-    G.strike={...d,c:Math.min(14,5+G.T+(Math.random()<.5?1:0)),t:dur,dur,klax:1};
-    G.strikeT=32+Math.random()*22;G.R.spawn.attack++;rEvent(`attack ${d.name} needs ${G.strike.c}`);
+    let d=STRIKES[SYS.pursuer],fuel=false;
+    if(sv&&(!stk||(G.altStrike=!G.altStrike))){fuel=true;d={name:'STORM FRONT',m:3,hz:'debris'};}
+    const dur=Math.max(6,10-.5*G.T);
+    G.strike={...d,c:Math.min(fuel?ST.cap[3]-1:14,5+G.T+(Math.random()<.5?1:0)),t:dur,dur,klax:1,fuel,fl:Math.round(ST.tank*clamp(.2+.02*G.T,.2,.4))};
+    G.strikeT=(fuel?28:32)+Math.random()*22;G.R.spawn.attack++;rEvent(`${fuel?'storm front':'attack '+d.name} needs ${G.strike.c}`);
     startCine('strikeIn',{s:G.strike},1.5);
   }
 }
 function resolveStrike(){
   const s=G.strike;G.strike=null;
   const used=Math.min(G.meters[s.m],s.c),ratio=used/s.c,short=1-ratio;G.meters[s.m]-=used;G.contacts++;rOutcome('attack',ratio,s.c,used);
+  if(s.fuel){
+    if(ratio>=1){G.cleared++;G.dist=Math.min(G.len-.2,G.dist+.6);G.bounty+=3;G.log.repelled=(G.log.repelled||0)+1;vpPop('BURNED THROUGH','#ffb547');startCine('strikeOut',{s,ok:true},1);}
+    else{const loss=Math.round(s.fl*short);G.fuel=Math.max(0,G.fuel-loss);G.R.fuel.drain+=loss;G.shake=.4;sfx.bad();vpPop(`FUEL −${loss}`,'#ffb547');rEvent(`storm hit (${used}/${s.c}) fuel -${loss}`);startCine('strikeOut',{s,ok:false,dmg:0,gapLoss:0,fuelLoss:loss},1.1);}
+    return;}
   if(ratio>=1){G.cleared++;G.gap=Math.min(100,G.gap+10);G.bounty+=3;G.log.repelled=(G.log.repelled||0)+1;if(s.m===1)G.fx.push({k:'shield',t:0,d:.9});
     startCine('strikeOut',{s,ok:true},1);}
   else{const dmg=Math.round(28*short),gl=Math.round(18*short);G.gap-=gl;queueHazard(s.hz,1+Math.round(short*3)+Math.floor(G.T/2));
@@ -5659,7 +5670,7 @@ function drawStrikeHUD(c,CW,CH,t){
   c.fillStyle='rgba(40,6,12,.9)';rr(c,x,y,w,h,8);c.fill();c.strokeStyle=ready?'#ffffff':'#ff4d5e';c.lineWidth=2;c.stroke();
   c.fillStyle='rgba(255,77,94,.25)';c.fillRect(x+3,y+h-6,w-6,3);c.fillStyle='#ff4d5e';c.fillRect(x+3,y+h-6,(w-6)*u,3);
   c.textBaseline='middle';c.textAlign='left';c.font='10px Silkscreen, monospace';c.fillStyle='#ff8a95';c.fillText(s.name,x+12,y+16);
-  c.font='9px Silkscreen, monospace';c.fillStyle=ready?col:'rgba(255,138,149,.8)';c.fillText(ready?'CHARGED · HOLD IT':'INCOMING',x+12,y+31);
+  c.font='9px Silkscreen, monospace';c.fillStyle=ready?col:'rgba(255,138,149,.8)';c.fillText(ready?'CHARGED · HOLD IT':(s.fuel?`-${s.fl} FUEL IF LATE`:'INCOMING'),x+12,y+31);
   c.imageSmoothingEnabled=false;const nx=x+w-128;
   if(ready){c.fillStyle=col+'40';rr(c,nx-4,y+10,58,26,5);c.fill();}
   c.drawImage(ICONS[s.m],nx,y+12,22,22);c.font='700 19px Oxanium, sans-serif';c.fillStyle=col;c.fillText(String(s.c),nx+27,y+24);
@@ -5711,7 +5722,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v130';
+const BUILD='v131';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
