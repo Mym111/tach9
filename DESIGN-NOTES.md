@@ -22,6 +22,13 @@ Terraform is greyed out until the system has at least one cleared run and enough
 - Overdrive "Slow time" now costs fuel (`SLOW_FUEL`, 8; Reserve cell relic: -4). Old vials are refunded as 4 Alloy each (`ensureStation`).
 - Dormant: Tach drive room still gates Overdrive; `Tach 9` is still the title/working name (`GAME_NAME`).
 
+## Planet upgrades, subsystems, events (v140)
+- Sensors room = planet side. Five rows (Radiation, Pressure, Water, Temperature, Oxygen), ranks 0-4 bought with Data (12/28/48/75), highest rank = Sensors level. Same engine as ship upgrades (`stats0` reads `S.pup` while `TERRA_STATS`): +2 capacity per rank, +1 charge per match at ranks 2 and 4; Pressure = max Gravity, Water = earlier hazard warning, Temperature = slower Oxygen drain, Oxygen = tank and Oxygen per tile.
+- The Shipyard (S.up) and ship subsystems no longer affect planet runs.
+- Planet subsystems (`PRELICS`, 3 slots, `S.prel`): Gravity bulwark, Aerators, Buffer banks, Scrubbers, Ablative shield, Cryo vents, Radiation baffles, Spillways, Seed beacon, Data uplink, Colony kit. Offered 3-of on Survey wins, 2-of on Terraform wins and by the Seed vault anomaly; picked in an offer screen (reopen from the Sensors room).
+- New anomalies: Survey archive, Drifting probe, Seed vault. Beacon, Flux, Rift and Signal options now also pay Data.
+- Old reel calibrations (`S.station.cal`) are no longer spent or shown; the three old-reel relics are retired from the offer pool.
+
 ## Known leftovers / candidates for removal (not yet done)
 - Old reels engine: `openTerra`, `tfPlan`, `TF`, `tfMod*`, Test Terraform debug row, `tfLog`, Terra-reel calibrations (`S.station.cal`) -> convert to Sensors upgrades bought with Data.
 - Relics tied to old reels: `ballast`, `seismic`, `dampener` (orphaned once the old screen goes).

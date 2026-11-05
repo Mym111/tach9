@@ -180,7 +180,7 @@ button:disabled{cursor:default}
 .sec-opt:disabled{opacity:.45}
 #secSkip{margin:0 14px;width:auto}
 .bucks.w4{display:grid;grid-template-columns:auto auto;gap:2px 10px;padding:5px 9px;font-size:12px;line-height:1.25;text-align:left;cursor:pointer}
-.wv{display:flex;align-items:center;gap:4px;color:var(--bucks)}.wv .coin,.wv .alloy{margin:0}.wv:nth-child(2){color:#cfe0f5}
+.wv{display:flex;align-items:center;gap:4px;color:var(--bucks)}.wv .coin,.wv .alloy{margin:0}.wv:nth-child(2){color:#cfe0f5}.wv.dt{color:#a6ef5a}.wv.dt i{font-style:normal}
 .wv.lg{color:#ffd84a}.wv.rt{color:#7ff3ff}.wv i{font-style:normal}
 .xch{position:relative;border:1px solid #2b4f86;border-radius:14px;padding:12px 14px 14px;background:linear-gradient(180deg,rgba(13,32,64,.95),rgba(6,12,26,.95));box-shadow:inset 0 0 30px rgba(77,166,255,.12),0 0 0 3px #0c1426;overflow:hidden}
 .xch::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
@@ -1228,6 +1228,7 @@ function setBarIcons(terra){const hi=$('#hullIc'),fi=$('#fuelIc');
   fi.width=9;fi.height=9;const y=fi.getContext('2d');y.clearRect(0,0,9,9);y.drawImage(ICONS[4],0,0);
   $('#hullBar').setAttribute('aria-label',terra?'Gravity':'Hull');$('#fuelBar').setAttribute('aria-label',terra?'Oxygen':'Fuel');}
 function skinTerra(on,survey){
+  if(!on&&TERRA_STATS){TERRA_STATS=false;ST=stats();}
   Object.assign(BUCKS_DEF,on&&survey?DATA_DEF:BUCKS_ORIG);ICONS[BUCKS]=on&&survey?DATA_ICON:BUCKS_ICON;document.body.classList.toggle('survey',!!(on&&survey));
   for(let i=0;i<5;i++){Object.assign(TYPES[i],on?TERRA_SKIN[i]:SHIP_SKIN[i]);ICONS[i]=on?TERRA_ICONS[i]:SHIP_ICONS[i];}
   gEls.forEach((el,m)=>{const ty=TYPES[m];el.fill.style.background=ty.color;el.fill.style.boxShadow=`0 0 8px ${ty.color}80`;
@@ -1255,7 +1256,7 @@ function terraFrame(){const now=performance.now();if(now-_tfT<120)return;_tfT=no
     glow=rgbaC(mixC(sv?'#2a5fa8':'#a0522d',sv?'#7fd0ff':'#38e09b',life),.1+.2*life+(st>.55?.12:0)),a=rgbHex(mixC(sv?'#0b1830':'#241008',sv?'#0a2440':'#07261f',life)),c2=rgbHex(mixC(sv?'#04070f':'#0c0608',sv?'#040c18':'#041310',life)),sb=document.body.style;
   sb.setProperty('--tfb',bz);sb.setProperty('--tfg',blink?'rgba(255,77,94,.3)':glow);sb.setProperty('--tfa',a);sb.setProperty('--tfc',c2);}
 const TERRA_PICK=[['comet',3],['eruption',3],['surge',2],['storm',2],['swarm',2]];
-function terraPickHazard(){if(G.sincePlanet>=5)return'seed';const sw=G.prog>.3?1:0.001;const w=TERRA_PICK.map(([k,v])=>[k,k==='swarm'?v*sw:v]),tot=w.reduce((a,b2)=>a+b2[1],0);let r=Math.random()*tot;for(const[k,v]of w){r-=v;if(r<=0)return k;}return'comet';}
+function terraPickHazard(){if(G.sincePlanet>=(prHas('beacon')?4:5))return'seed';const sw=G.prog>.3?1:0.001;const w=TERRA_PICK.map(([k,v])=>[k,k==='swarm'?v*sw:v]),tot=w.reduce((a,b2)=>a+b2[1],0);let r=Math.random()*tot;for(const[k,v]of w){r-=v;if(r<=0)return k;}return'comet';}
 function resolveTerra(e){
   e.resolved=true;let need=0,got=0;
   for(const q of e.reqs){const used=Math.min(G.meters[q.m],q.c);G.meters[q.m]-=used;need+=q.c;got+=used;}
@@ -1265,27 +1266,28 @@ function resolveTerra(e){
   if(perfect){G.cleared++;odGain(1);G.bounty+=1;}
   G.fx.push({k:'tshield',t:0,d:.6});
   if(e.type==='seed'){
-    const gain=Math.round(EVENTS.seed.amt*ratio);e.dead=true;
+    const gain=Math.round(EVENTS.seed.amt*ratio*(prHas('beacon')?1.5:1));e.dead=true;
     if(gain>0){G.R.fuel.planets+=gain;G.fuel=Math.min(ST.tank,G.fuel+gain);vpPop(`+${gain} OXYGEN`,'#d5dcea');sfx.good();pulseFuel();G.tl.oxy=Math.min(1,G.tl.oxy+.15);}else vpPop('SEEDS LOST','#7f8fb2');
     return;
   }
   const cols={comet:['#e6f4ff','#4da6ff','#ffffff'],swarm:['#e6f4ff','#4da6ff','#ffffff'],eruption:['#ff9640','#ff5a1e','#ffe08a'],surge:['#4da6ff','#c4e2ff','#ffffff'],storm:['#b46cff','#ffe66a','#ffffff']}[e.type]||['#ffffff'];
   boom(ex,ey,cols,perfect?16:22);e.dead=true;
   if(perfect){vpPop({comet:'COMET BURNED UP',swarm:'SWARM BURNED UP',eruption:'ERUPTION COOLED',surge:'SURGE HELD',storm:'STORM SHIELDED'}[e.type],'#4da6ff');sfx.good();return;}
-  const dmg=Math.max(1,Math.round(EVENTS[e.type].amt*short));
+  const hm={comet:prHas('ablative')?.75:1,swarm:prHas('ablative')?.75:1,eruption:prHas('cryo')?.65:1,storm:prHas('baffles')?.65:1,surge:prHas('spillway')?.65:1}[e.type]||1,dmg=Math.max(1,Math.round(EVENTS[e.type].amt*short*hm));
   if(e.type==='comet'||e.type==='swarm'||e.type==='eruption'){damage(dmg,e.type);vpPop(`GRAVITY -${dmg}`,'#b48cff');queueHazard(e.type==='eruption'?'fire':'debris',Math.max(1,Math.round(short*(3+extra))));}
   else{G.R.fuel.wells+=dmg;G.fuel=Math.max(0,G.fuel-dmg);G.wobble=1;G.shake=.35;G.flash=.4;vpPop(`OXYGEN -${dmg}`,'#d5dcea');sfx.bad();queueHazard('lock',2+Math.round(short*3)+extra);}
 }
 function terraEnd(win,reason){if(!G.running)return;G.running=false;const nm=(CHOICE&&CHOICE.name)||'World';let extra='';
   const g=S.gal,st=g&&CHOICE&&!CHOICE.test&&g.stars[CHOICE.starId];
-  if(G.survey){const f=surveyFactor(),thr=(CHOICE&&CHOICE.threat)||0,bonus=win?Math.round((8+5*thr)*f):0,tot=Math.round(G.data+bonus);
+  if(G.survey){const f=surveyFactor(),thr=(CHOICE&&CHOICE.threat)||0,bonus=win?Math.round((8+5*thr)*f*(prHas('uplink')?1.25:1)):0,tot=Math.round(G.data+bonus);
     if(!(CHOICE&&CHOICE.test)){S.data=(S.data||0)+tot;if(st){st.surveys=(st.surveys||0)+1;st.surv=true;}persist();}
     toast(win?`<b>${nm} SURVEYED</b><span>+${tot} Data${bonus?` (${bonus} completion)`:''} · repeat surveys here pay ${Math.round(Math.max(.25,f-.3)*100)}% · hazards handled ${G.cleared}/${G.contacts}</span>`:`<b>SURVEY ABORTED</b><span>${reason==='abandon'?'You pulled out.':reason==='hull'?'Gravity failed.':'Oxygen failed.'} You keep the ${tot} Data you gathered. Nothing is lost here.</span>`,win?'#a6ef5a':'#ff8a95');
-    setTimeout(()=>{G.terra=false;G.survey=false;skinTerra(false);goMap();},1700);return;}
-  if(st){if(win){const pl=tfPlan(st),cr=Math.round((40+25*pl.th+G.cleared*3)*pl.mul*.75),al=Math.floor(G.cleared/6),ppl=terraPop(st);S.bucks+=cr;if(S.station){S.station.alloy+=al;S.station.pop=Math.max(1,S.station.pop-ppl);crewSync();}st.terra=true;g.terra=terraDone(g)+1;extra=` · +${cr} cr${al?` +${al} alloy`:''} · ${ppl} settled`;}
-    else st.terraLost=true;persist();}
+    if(win&&!(CHOICE&&CHOICE.test)){const rr=rollRelics(3,'p');S.pendPRel=rr.map(x=>x.id);persist();}
+    setTimeout(()=>{G.terra=false;G.survey=false;skinTerra(false);goMap();if((S.pendPRel||[]).length)setTimeout(()=>openRelicOffer('p'),900);},1700);return;}
+  if(st){if(win){const pl=tfPlan(st),cr=Math.round((40+25*pl.th+G.cleared*3)*pl.mul*.75),al=Math.floor(G.cleared/6),ppl=Math.max(1,terraPop(st)-(prHas('kit')?1:0));S.bucks+=cr;if(S.station){S.station.alloy+=al;S.station.pop=Math.max(1,S.station.pop-ppl);crewSync();}st.terra=true;g.terra=terraDone(g)+1;extra=` · +${cr} cr${al?` +${al} alloy`:''} · ${ppl} settled`;}
+    else st.terraLost=true;if(win){const rr=rollRelics(2,'p');S.pendPRel=rr.map(x=>x.id);}persist();}
   toast(win?`<b>${nm} TERRAFORMED</b><span>Hazards handled ${G.cleared}/${G.contacts} · best chain ×${G.bestChain}${extra}</span>`:`<b>${nm} LOST</b><span>${reason==='abandon'?'The crew abandoned it, and the world is left to die.':reason==='hull'?'Gravity failed: the world tore itself apart.':'Oxygen failed: the air ran out.'} Hazards handled ${G.cleared}/${G.contacts}.</span>`,win?'#5ef0d0':'#ff4d5e');
-  setTimeout(()=>{G.terra=false;skinTerra(false);goMap();},1700);}
+  setTimeout(()=>{G.terra=false;skinTerra(false);goMap();if(win&&(S.pendPRel||[]).length)setTimeout(()=>openRelicOffer('p'),900);},1700);}
 function drawTerraBG(b,W,H,t){
   const sv=G.survey,life=sv?clamp(G.prog*.8,0,1):terraLife(),st=terraStress(),cx=shipBaseX()+8;
   const g=b.createRadialGradient(cx,H/2,3,cx,H/2,W*.8);g.addColorStop(0,rgbaC(mixC(sv?'#10315e':'#4a2410',sv?'#1a5f9a':'#10665e',life),.7));g.addColorStop(.55,rgbaC(mixC(sv?'#09162b':'#1e0d09',sv?'#0a2a4a':'#06241f',life),.55));g.addColorStop(1,'rgba(4,6,13,0)');
@@ -1493,6 +1495,7 @@ Object.assign(SYSTEMS.flare,{twistT:[['pursuer'],['fast'],['fast']],bonusT:[['ga
 const STAR_NAMES=['Kessler','Vey','Orun','Talis','Myrr','Castor','Ilos','Durn','Ashra','Pell','Corvo','Nadir','Rhee','Solace','Brann','Quell'];
 
 /* upgrades */
+let TERRA_STATS=false;   // true while a planet run's stats are being built/used
 const UP_KEYS=['wpn','shd','sns','eng','fuel'];
 const UP_COST=[40,90,150,240],UP_MAX=4;
 const HAB_CAP=[0,20,40,70,110],PATCH=[0,0,15,30],DRONE_T=[0,20,15,12],DRONE_AREA=['','1 tile','a plus','a 3×3 area'];
@@ -1541,8 +1544,8 @@ function migrate(s){let v=s.ver||1;while(v<SAVE_VER){if(MIGRATE[v])s=MIGRATE[v](
 try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));if(s&&s.up){S=Object.assign(defaultSave(),migrate(s));S.perks=S.perks||{};S.slots=S.slots||['surge','burn','burn'];hasSave=true;}}catch(e){}
 function persist(){if(TR)return;hasSave=true;try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
 SHIP=makeShip(S.paint,S.up);
-function stats(){const s=stats0();if(relicHas('plating'))s.hullMax+=15;if(relicHas('tanks'))s.tank+=20;if(relicHas('caps'))s.cap=s.cap.map(c=>c+2);return s;}
-function stats0(){const u=S.up,lv=l=>Math.min(l,4),ex=l=>Math.max(0,l-4);return{
+function stats(){const s=stats0();if(TERRA_STATS){if(prHas('bulwark'))s.hullMax+=20;if(prHas('aerators'))s.tank+=20;if(prHas('buffer'))s.cap=s.cap.map(c=>c+2);if(prHas('scrubbers'))s.drainMul=Math.max(.5,s.drainMul*.85);return s;}if(relicHas('plating'))s.hullMax+=15;if(relicHas('tanks'))s.tank+=20;if(relicHas('caps'))s.cap=s.cap.map(c=>c+2);return s;}
+function stats0(){const pu=S.pup||{},u=TERRA_STATS?{wpn:pu.rad|0,shd:pu.pres|0,sns:pu.h2o|0,eng:pu.temp|0,fuel:pu.oxy|0}:S.up,lv=l=>Math.min(l,4),ex=l=>Math.max(0,l-4);return{
   cap:[u.wpn,u.shd,u.sns,u.eng].map(l=>Math.round((10+2*lv(l))*(1+.06*ex(l)))),
   eff:[u.wpn,u.shd,u.sns,u.eng].map(l=>(l>=2?1:0)+(l>=4?1:0)),
   pointDef:u.wpn>=3,hullMax:Math.round((100+(u.shd>=3?25:0))*(1+.06*u.shd)),
@@ -2234,7 +2237,7 @@ async function clearCells(set,chain,makes=[],wild=new Map()){
   for(let m=0;m<4;m++)if(gains[m]){gains[m]+=ST.eff[m]+Math.max(0,chain-1);G.meters[m]=Math.min(ST.cap[m],G.meters[m]+gains[m]);lit=TYPES[m].color;const el=gEls[m].g;el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);setTimeout(()=>{el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),300);},430);}
   if(G.terra)terraCharge(gains,fn,chain);
   if(fuel){const amt=fuel+(chain>1?2+(relicHas('chainfuel')?3:0):0);G.R.fuel.tiles+=amt;G.fuel=Math.min(ST.tank,G.fuel+amt);pulseFuel();if(fn)boardPop(`+${amt} FUEL`,fc/fn+.5,fr/fn+.5,'#ffd84a');lit=lit||'#ffd84a';}
-  if(bucks&&G.survey){const n=bucks/2,amt=bucks*surveyFactor();G.data+=amt;G.runBucks=Math.round(G.data);const el=$('#runBucksEl');el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);sfx.cash();boardPop(`+${Math.max(1,Math.round(amt))} DATA`,bc0/n+.5,br0/n+.5,DATA_DEF.color);lit=lit||DATA_DEF.color;}
+  if(bucks&&G.survey){const n=bucks/2,amt=bucks*surveyFactor()*(prHas('uplink')?1.25:1);G.data+=amt;G.runBucks=Math.round(G.data);const el=$('#runBucksEl');el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);sfx.cash();boardPop(`+${Math.max(1,Math.round(amt))} DATA`,bc0/n+.5,br0/n+.5,DATA_DEF.color);lit=lit||DATA_DEF.color;}
   else if(bucks){const n=bucks/2;addBucks(bucks,null,false);sfx.cash();boardPop(`+${bucks} CR`,bc0/n+.5,br0/n+.5,'#ff7ad9');lit=lit||'#ff7ad9';}
   if(lit)B.glow={color:lit,t:0};
   sfx.match(chain);
@@ -3174,7 +3177,7 @@ const cmdText=()=>(S.cmd&&S.cmd.trim())||'Engage!';
 // each kind of marker gets its own shape; the diamond belongs to gate parts alone
 const LM_GLYPH={yard:'gear',ark:'pod',hub:'swap',relay:'mast'};
 const SIG_GLYPH={sos:'personPlus',cache:'box',storm:'bolt',derelict:'wreck',vein:'hex'};
-const ANOM_GLYPH={hulk:'wreck',signal:'waves',cache:'box',beacon:'tower',cryo:'pod',rift:'spiral',trader:'swap',ghost:'ships'};
+const ANOM_GLYPH={archive:'box',probe:'waves',seedvault:'pod',hulk:'wreck',signal:'waves',cache:'box',beacon:'tower',cryo:'pod',rift:'spiral',trader:'swap',ghost:'ships'};
 const GT_CACHE={};
 function glyphTag(k,col){const key=k+col;if(!GT_CACHE[key]){const cv=document.createElement('canvas');cv.width=cv.height=28;glyph(cv.getContext('2d'),k,14,14,22,col);GT_CACHE[key]=cv.toDataURL();}return`<img class="gtag" src="${GT_CACHE[key]}" alt="">`;}
 function glyph(c,k,x,y,s,col){
@@ -3647,28 +3650,29 @@ const gainCR=n=>{S.bucks=Math.max(0,S.bucks+n);return n>=0?`+${n} CR`:`${n} CR`;
 const gainAl=n=>{const s=ensureStation();s.alloy=Math.max(0,s.alloy+n);return n>=0?`+${n} Alloy`:`${n} Alloy`;};
 const gainPpl=n=>{if(n<0){S.station.pop=Math.max(1,S.station.pop+n);crewSync();return`${n} people`;}const[t]=addPop(n);return t?`+${t} people`:'no room aboard';};
 const gainLeg=n=>{S.legend=legendOf()+n;return`+${n} ★`;};
+const gainData=n=>{S.data=Math.max(0,(S.data||0)+n);return`${n>=0?'+':''}${n} Data`;};
 const ANOMALIES={
   hulk:{name:'Derelict hulk',col:'#9fb8d8',txt:'A dead warship drifts here, reactor still faintly warm.',
     opts:[{l:'Strip it for parts',h:'+2 Alloy · 30% reactor flare',run:()=>roll(.3)?`The reactor flared as you cut in. ${gainCR(-20)} in repairs, nothing salvaged.`:`Clean salvage. ${gainAl(2)}.`},
           {l:'Tow it to a scrapyard',h:'+50 CR · 30% it breaks up',run:()=>roll(.3)?`The hull breaks apart on the way. ${gainAl(1)} from the pieces.`:`A scrapyard pays well for a whole warship. ${gainCR(50)}.`}]},
   signal:{name:'Strange signal',col:'#c792ff',txt:'A looping distress call in an old human dialect. Something about it is wrong.',
     opts:[{l:'Answer it',h:'People, or pirates (50/50)',run:()=>roll(.5)?`Survivors of a lost colony ship. ${gainPpl(5)}.`:`A pirate lure. They board and grab what they can. ${gainCR(-30)}.`},
-          {l:'Record it and move on',h:'+5 ★',run:()=>`Your science officer logs it for the archives. ${gainLeg(5)}.`}]},
+          {l:'Record it and move on',h:'+3 ★ · +6 Data',run:()=>`Your science officer logs it for the archives. ${gainLeg(3)}, ${gainData(6)}.`}]},
   cache:{name:'Smuggler’s cache',col:'#ffd84a',txt:'A hidden cargo pod tucked into an asteroid, sealed with a cartel lock.',
     opts:[{l:'Crack it open',h:'+60 CR',run:()=>`Contraband credits, untraceable. ${gainCR(60)}.`},
           {l:'Hand it to the authorities',h:'+8 ★ · +2 people',run:()=>`The local patrol is grateful and sends you volunteers. ${gainLeg(8)}, ${gainPpl(2)}.`}]},
   beacon:{name:'Old war beacon',col:'#ff8a95',txt:'A military beacon from a forgotten war, still broadcasting jamming codes.',
-    opts:[{l:'Reactivate it',h:'+6 ★',run:()=>`Its old archive still answers. ${gainLeg(6)}.`},
+    opts:[{l:'Reactivate it',h:'+4 ★ · +8 Data',run:()=>`Its old archive still answers. ${gainLeg(4)}, ${gainData(8)}.`},
           {l:'Strip its power core',h:'+1 Alloy',run:()=>`A solid core. ${gainAl(1)}.`}]},
   cryo:{name:'Cryo pod cluster',col:'#7ff3ff',txt:'Dozens of cryo pods tethered together, frost still on the glass.',
     opts:[{l:'Thaw them',h:'+6 people · 25% sickness',run:()=>roll(.25)?`A dormant virus wakes with them. ${gainPpl(4)}, then ${gainPpl(-2)} lost to quarantine.`:`They wake disoriented but grateful. ${gainPpl(6)}.`},
           {l:'Send them to a colony',h:'+6 ★',run:()=>`A colony ship will take them home. ${gainLeg(6)}.`}]},
   rift:{name:'Spatial rift',col:'#c792ff',txt:'Space folds here. Your sensors keep reporting stars that should be far away.',
-    opts:[{l:'Send a probe in',h:'+10 ★, or lose the probe',run:()=>{if(roll(.5))return`The probe records the fold before it collapses. ${gainLeg(10)}.`;return`The probe vanishes. ${gainCR(-20)} in lost equipment.`;}},
+    opts:[{l:'Send a probe in',h:'+10 ★ · +8 Data, or lose the probe',run:()=>{if(roll(.5))return`The probe records the fold before it collapses. ${gainLeg(10)}, ${gainData(8)}.`;return`The probe vanishes. ${gainCR(-20)} in lost equipment.`;}},
           {l:'Steer clear',h:'Nothing happens',run:()=>'You plot a course well around it.'}]},
   flux:{name:'Tach flux',col:'#4da6ff',txt:'A pocket of raw field, humming at the engine\u2019s own frequency.',
     opts:[{l:'Siphon the field',h:'+Alloy · 40% overload, lose 2 people',run:()=>{const st=ensureStation();if(roll(.4))return`The siphon overloads. ${gainPpl(-2)} in the blast.`;st.alloy+=3;return'A clean draw, condensed into 3 Alloy.';}},
-          {l:'Chart it',h:'+6 ★',run:()=>`The field maps beautifully. ${gainLeg(6)}.`}]},
+          {l:'Chart it',h:'+4 ★ · +6 Data',run:()=>`The field maps beautifully. ${gainLeg(4)}, ${gainData(6)}.`}]},
   trader:{name:'Wandering trader',col:'#cfe0f5',txt:'A lone trader hails you, cargo bay open and prices negotiable.',
     opts:[{l:'Buy 2 Alloy',h:'−60 CR',ok:()=>S.bucks>=60,run:()=>`${gainCR(-60)}, ${gainAl(2)}.`},
           {l:'Sell 2 Alloy',h:'+70 CR',ok:()=>ensureStation().alloy>=2,run:()=>`${gainAl(-2)}, ${gainCR(70)}.`}]},
@@ -3678,6 +3682,15 @@ const ANOMALIES={
   festival:{name:'Trade festival',col:'#ff7ad9',txt:'A ring of markets is celebrating. Buyers are paying double for anything exotic.',
     opts:[{l:'Sell your luxuries',h:'Luxury goods sell at +60% here',ok:()=>cargoLux()>0,run:()=>`${sellLux(1.6)}.`},
           {l:'Browse the stalls',h:'+1 trade good · +2 ★',run:()=>`${gainGoods(1)}. ${gainLeg(2)}.`}]},
+  archive:{name:'Survey archive',col:'#a6ef5a',txt:'A dead survey vessel, its data core still spinning. Years of planetary scans are in there somewhere.',
+    opts:[{l:'Decrypt it',h:'+25 Data · 30% corrupted',run:()=>roll(.3)?`Half the archive is corrupt. ${gainData(8)}.`:`A clean decrypt. ${gainData(25)}.`},
+          {l:'Sell it to a broker',h:'+50 CR',run:()=>`The broker does not ask questions. ${gainCR(50)}.`}]},
+  probe:{name:'Drifting probe',col:'#7ff3ff',txt:'An autonomous terraforming probe, thrusters dead, its seed canisters still sealed.',
+    opts:[{l:'Reprogram it',h:'+12 Data · 25% it self-destructs',run:()=>roll(.25)?`It wipes its own memory. ${gainData(3)} from the wreckage.`:`It wakes and shares its scans. ${gainData(12)}.`},
+          {l:'Salvage the canisters',h:'+2 Alloy',run:()=>`${gainAl(2)}.`}]},
+  seedvault:{name:'Seed vault',col:'#bdf7dc',txt:'A sealed vault of engineered organisms from a lost colony, every canister labelled for world-building.',
+    opts:[{l:'Take the graft kits',h:'A planet subsystem · 30% contamination',run:()=>{if(roll(.3))return`Contamination in the vault. ${gainPpl(-1)} quarantined, nothing usable.`;const rr=rollRelics(2,'p');S.pendPRel=rr.map(x=>x.id);return rr.length?'Usable grafts. A planet subsystem offer is waiting in the Sensors room.':'Nothing new to install.';}},
+          {l:'Log it for the archives',h:'+3 ★ · +5 Data',run:()=>`${gainLeg(3)}, ${gainData(5)}.`}]},
   ghost:{name:'Ghost fleet',col:'#a6b6d0',txt:'Silent hulls in perfect formation, crews long gone. Their weapons still track you.',
     opts:[{l:'Board the flagship',h:'+2 Alloy, or a hull scare (60/40)',run:()=>roll(.6)?`You strip its armour plating. ${gainAl(2)}.`:`Its point defence wakes up. ${gainCR(-25)} in damage.`},
           {l:'Salute and pass',h:'+4 ★',run:()=>`Your crew stands at attention as you pass. ${gainLeg(4)}.`}]},
@@ -3824,31 +3837,45 @@ const RELICS=[
  {id:'steady',name:'Steady hands',g:'◈',c:'#7ff3ff',d:'The pursuer closes 15% slower.'},
  {id:'aegis',name:'Aegis',g:'⬡',c:'#4da6ff',d:'The first hit each run is absorbed.'},
  {id:'salvager',name:'Salvager',g:'◆',c:'#ff7ad9',d:'+20% credits from every cleared system.'},
- {id:'ballast',name:'Tidal ballast',g:'≋',c:'#4da6ff',d:'Terraform: the first hazard tap each world is forgiven.'},
- {id:'seismic',name:'Seismic ear',g:'◉',c:'#7ff3ff',d:'Terraform: every Terra-reel reads one calibration rank clearer, and louder.'},
- {id:'dampener',name:'Instability dampener',g:'⌬',c:'#d5dcea',d:'Terraform: the planet tolerates 1 more instability.'},
+ {id:'ballast',old:1,name:'Tidal ballast',g:'≋',c:'#4da6ff',d:'Retired: belonged to the old Terra-reels.'},
+ {id:'seismic',old:1,name:'Seismic ear',g:'◉',c:'#7ff3ff',d:'Retired: belonged to the old Terra-reels.'},
+ {id:'dampener',old:1,name:'Instability dampener',g:'⌬',c:'#d5dcea',d:'Retired: belonged to the old Terra-reels.'},
  {id:'capacitor',name:'Core capacitor',g:'▥',c:'#5ef0d0',d:'Overdrive: every mini-game acts as if its Core rank were 1 higher (max 3).'},
  {id:'reserve',name:'Reserve cell',g:'◐',c:'#ff9640',d:'Overdrive slow-time costs 4 less fuel.'}];
-const RELIC_SLOTS=3;
-const relicOf=id=>RELICS.find(r=>r.id===id);
+const PRELICS=[
+ {id:'bulwark',name:'Gravity bulwark',g:'▣',c:'#b48cff',d:'Planet runs: +20 maximum Gravity.'},
+ {id:'aerators',name:'Aerators',g:'◍',c:'#d5dcea',d:'Planet runs: +20 Oxygen capacity.'},
+ {id:'buffer',name:'Buffer banks',g:'▤',c:'#c792ff',d:'Planet runs: every system holds 2 more charge.'},
+ {id:'scrubbers',name:'Scrubbers',g:'≈',c:'#9fb6d9',d:'Planet runs: Oxygen drains 15% slower.'},
+ {id:'ablative',name:'Ablative shield',g:'⬡',c:'#4da6ff',d:'Comets and swarms hit Gravity 25% softer.'},
+ {id:'cryo',name:'Cryo vents',g:'❄',c:'#ffd6b3',d:'Eruptions burn Gravity 35% less.'},
+ {id:'baffles',name:'Radiation baffles',g:'☢',c:'#ff6b7a',d:'Radiation storms drain 35% less Oxygen.'},
+ {id:'spillway',name:'Spillways',g:'≋',c:'#4da6ff',d:'Water surges drain 35% less Oxygen.'},
+ {id:'beacon',name:'Seed beacon',g:'✺',c:'#e3ffbf',d:'Seed clouds arrive sooner and refill 50% more Oxygen.'},
+ {id:'uplink',name:'Data uplink',g:'◈',c:'#a6ef5a',d:'+25% Data from Survey Runs.'},
+ {id:'kit',name:'Colony kit',g:'⌂',c:'#ffd27a',d:'Settling a world costs 1 fewer person.'}];
+const RELIC_SLOTS=3,PREL_SLOTS=3;
+const relicOf=id=>RELICS.find(r=>r.id===id)||PRELICS.find(r=>r.id===id);
+function prHas(id){return !TR&&!!S&&(S.prel||[]).includes(id);}
+const RK=sc=>sc==='p'?{own:'prel',pend:'pendPRel',slots:PREL_SLOTS}:{own:'relics',pend:'pendRelics',slots:RELIC_SLOTS};
 function relicHas(id){return !TR&&!!S&&(S.relics||[]).includes(id);}
-function rollRelics(n){const have=S.relics||[],pool=RELICS.filter(r=>!have.includes(r.id));
+function rollRelics(n,sc){const have=S[RK(sc).own]||[],pool=(sc==='p'?PRELICS:RELICS).filter(r=>!have.includes(r.id)&&!r.old);
   for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}return pool.slice(0,n);}
 let RL=null;
-function openRelicOffer(){const ids=(S.pendRelics||[]).filter(id=>relicOf(id));if(!ids.length||TR)return;RL={sel:null};paintRelic();show('#relic',true);sfx.tick();setTimeout(()=>coach('relic'),500);}
-function paintRelic(){const ids=S.pendRelics||[],own=S.relics||[],full=own.length>=RELIC_SLOTS;
+function openRelicOffer(sc){const k=RK(sc),ids=(S[k.pend]||[]).filter(id=>relicOf(id));if(!ids.length||TR)return;RL={sel:null,sc:sc||'s'};paintRelic();show('#relic',true);sfx.tick();setTimeout(()=>coach('relic'),500);}
+function paintRelic(){const K=RK(RL.sc),ids=S[K.pend]||[],own=S[K.own]||[],full=own.length>=K.slots,RELIC_SLOTS=K.slots;
   $('#relicBody').innerHTML=`<p class="rl-h">${full?'Slots full. Pick one, then tap a subsystem of yours to replace it.':'Choose one. It rides with us for the rest of the campaign.'}</p>
    <div class="rl-cards" id="relicCards">${ids.map(id=>{const r=relicOf(id);return`<button type="button" class="rl-c${RL.sel===id?' sel':''}" data-id="${id}" style="--rc:${r.c}"><i>${r.g}</i><b>${r.name}</b><span>${r.d}</span></button>`;}).join('')}</div>
    <div class="pull ship rl-pull"><div class="pull-h"><span>SubSystems</span><em>${own.length}/${RELIC_SLOTS} installed${full&&RL.sel?' · tap one to replace':''}</em></div>
     <div class="pull-b rl-own">${own.map(id=>{const r=relicOf(id);return`<button type="button" class="rl-o${RL.sel&&full?' pick':''}" data-own="${id}" style="--rc:${r.c}"><i>${r.g}</i><span><b>${r.name}</b><small>${r.d}</small></span></button>`;}).join('')+Array.from({length:Math.max(0,RELIC_SLOTS-own.length)},()=>'<div class="rl-empty">empty slot</div>').join('')}</div></div>`;}
-function takeRelic(id,replace){S.relics=S.relics||[];if(replace){const i=S.relics.indexOf(replace);if(i<0)return;S.relics[i]=id;}else S.relics.push(id);
-  S.pendRelics=[];persist();sfx.coin();show('#relic',false);const r=relicOf(id);toast(`<b>${r.name}</b><span>${r.d}</span>`,r.c);
+function takeRelic(id,replace){const K=RK(RL&&RL.sc);S[K.own]=S[K.own]||[];const A=S[K.own];if(replace){const i=A.indexOf(replace);if(i<0)return;A[i]=id;}else A.push(id);
+  S[K.pend]=[];if(RL&&RL.sc==='p'){ST=ST;}persist();sfx.coin();show('#relic',false);const r=relicOf(id);toast(`<b>${r.name}</b><span>${r.d}</span>`,r.c);
   const b=$('#dbRelicBtn');if(b)b.remove();}
 (()=>{$('#relicBody').addEventListener('click',e=>{const c=e.target.closest('.rl-c'),o=e.target.closest('.rl-o');if(!RL)return;
-    if(c){sfx.tick();const id=c.dataset.id;if((S.relics||[]).length<RELIC_SLOTS){takeRelic(id);return;}RL.sel=id;paintRelic();return;}
-    if(o&&RL.sel&&(S.relics||[]).length>=RELIC_SLOTS)takeRelic(RL.sel,o.dataset.own);});
+    if(c){sfx.tick();const id=c.dataset.id;const K=RK(RL.sc);if((S[K.own]||[]).length<K.slots){takeRelic(id);return;}RL.sel=id;paintRelic();return;}
+    if(o&&RL.sel&&(S[RK(RL.sc).own]||[]).length>=RK(RL.sc).slots)takeRelic(RL.sel,o.dataset.own);});
   $('#rlLater').onclick=()=>{sfx.tick();show('#relic',false);};
-  $('#rlSkip').onclick=()=>{sfx.tick();S.pendRelics=[];persist();show('#relic',false);const b=$('#dbRelicBtn');if(b)b.remove();};})();
+  $('#rlSkip').onclick=()=>{sfx.tick();S[RK(RL&&RL.sc).pend]=[];persist();show('#relic',false);const b=$('#dbRelicBtn');if(b)b.remove();};})();
 
 /* ================= v72: OVERDRIVE. Perfect clears charge a burst: tap targets, short window then overtime ================= */
 function core(k){const r=Math.min(S&&S.station&&S.station.core&&S.station.core[k]||0,rl('tach'));return Math.min(3,r+(relicHas('capacitor')?1:0));}
@@ -4894,7 +4921,7 @@ function buyAlloyAt(id){
 }
 function hexPath(c,x,y,r){c.beginPath();for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/2;i?c.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r):c.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r);}c.closePath();}
 function wallet(full=true){const base=`${coin(S.bucks)}<span class="wsep"></span>${alloyTag(S.station?S.station.alloy:0)}`;if(!full)return base;
-  return`<span class="wv"><i class="coin"></i>${S.bucks}</span><span class="wv"><i class="alloy"></i>${S.station?S.station.alloy:0}</span><span class="wv lg"><i>★</i>${legendOf()}</span><span class="wv rt"><i>◆</i>${rating()}</span>`;}
+  return`<span class="wv"><i class="coin"></i>${S.bucks}</span><span class="wv"><i class="alloy"></i>${S.station?S.station.alloy:0}</span>${(S.data||0)>0?`<span class="wv dt"><i>◈</i>${S.data}</span>`:''}<span class="wv lg"><i>★</i>${legendOf()}</span><span class="wv rt"><i>◆</i>${rating()}</span>`;}
 
 /* ---- in-run effects ---- */
 function droneTarget(){
@@ -5087,9 +5114,33 @@ function exchangeBlock(){
       <button class="btn xch-buy" id="xchBuy" ${ok?'':'disabled'}>Buy 1 Alloy · ${coin(price)}</button>
     </div>
     <p class="hg-note">You can buy Alloy where you are parked${tradeReach()?` and up to ${tradeReach()} jump${tradeReach()>1?'s':''} away`:'. Upgrade Sensors to trade with systems in reach'}. Prices climb as you buy.</p>`;}
+const PU_KEYS=['rad','pres','h2o','temp','oxy'],PU_COST=[12,28,48,75],PU_MAX=4;
+const PU_TEXT={
+  rad:['+2 capacity','+2 capacity, +1 charge per match','+2 capacity','+2 capacity, +1 more charge per match'],
+  pres:['+2 capacity, +6% max Gravity','+2 capacity, +1 charge per match, +6% Gravity','+2 capacity, +25 max Gravity, +6%','+2 capacity, +1 more charge, +6% Gravity'],
+  h2o:['+2 capacity, hazards spotted sooner','+2 capacity, +1 charge per match','+2 capacity, hazards spotted sooner','+2 capacity, +1 more charge, spotted sooner'],
+  temp:['+2 capacity, Oxygen drains 8% slower','+2 capacity, +1 charge per match','+2 capacity','+2 capacity, +1 more charge, 8% slower drain'],
+  oxy:['+15 Oxygen tank','+15 tank, +1 Oxygen per Oxygen tile','+15 tank','+15 tank, +1 more per Oxygen tile']};
+const puLvl=k=>(S.pup&&S.pup[k])||0;
+const dataTag=(n,dark)=>`<span style="color:${dark?'#1b1206':'#a6ef5a'};font-weight:700">◈ ${n}</span>`;
 function renderComms(){
-  $('#commsBody').innerHTML=reelBlock();
-  $('#commsBody').querySelectorAll('[data-cal]').forEach(b=>b.onclick=()=>{const k=b.dataset.cal,r=calOf(k),stn=ensureStation();const cc=CAL_COST[r];if(r>=Math.min(2,rle('comms')-1)||!cc||stn.alloy<cc[0]||S.bucks<cc[1]||stn.pop-cc[2]<1){sfx.bad();return;}stn.alloy-=cc[0];S.bucks-=cc[1];stn.pop-=cc[2];crewSync();stn.cal=stn.cal||{};stn.cal[k]=r+1;persist();sfx.buy();renderHangar();H.flash=1;});
+  const cap=rle('comms'),have=S.data||0,own=S.prel||[],pend=(S.pendPRel||[]).length;
+  $('#commsBody').innerHTML=`<div class="hg-label">Planet systems · you hold ${dataTag(have)} Data</div>
+   <p class="hg-note" style="margin-top:0">Survey Runs bring home Data. Spend it here to tune the systems used on Survey and Terraform Runs. Your Sensors level (${cap}) sets the highest rank. The Shipyard has no effect on planets.</p>
+   <div id="puList"></div>
+   <div class="hg-label" style="margin-top:14px">Planet subsystems · ${own.length} / ${PREL_SLOTS}</div>
+   ${pend?`<button class="btn" id="puOffer" type="button" style="margin-bottom:8px">Choose a subsystem (${pend} offered)</button>`:''}
+   ${own.length?`<div class="rl-list">${own.map(id=>{const r=relicOf(id);return`<div class="rl-row" style="--rc:${r.c}"><i>${r.g}</i><div><b>${r.name}</b><span>${r.d}</span></div></div>`;}).join('')}</div>`:'<p class="hg-note">None yet. Winning a Survey or Terraform Run, or the right anomaly, offers a choice of subsystems for planet runs.</p>'}`;
+  const list=$('#puList');
+  PU_KEYS.forEach((k,i)=>{const lvl=puLvl(k),sk=TERRA_SKIN[i],max=lvl>=PU_MAX,gate=!max&&lvl>=cap,cost=PU_COST[lvl]||0;
+    const row=document.createElement('div');row.className='up';row.style.setProperty('--c',sk.color);
+    row.append(smallCanvas(TERRA_ICONS[i]));
+    row.insertAdjacentHTML('beforeend',`<div class="up-name" style="color:${sk.color}">${sk.name.toUpperCase()}<span class="pips">${[0,1,2,3].map(j=>`<i class="${j<lvl?'on':''}"></i>`).join('')}</span></div>
+      <div class="up-next">${max?'Fully tuned. '+PU_TEXT[k][3]:gate?`Needs Sensors level ${lvl+1}. Next: ${PU_TEXT[k][lvl]}`:'Next: '+PU_TEXT[k][lvl]}</div>`);
+    const btn=document.createElement('button');btn.className='up-buy';btn.innerHTML=max?'MAX':gate?`SENSORS L${lvl+1}`:dataTag(cost,have>=cost);btn.disabled=max||gate||have<cost;
+    btn.onclick=()=>{if(max||gate||(S.data||0)<cost)return;S.data-=cost;S.pup=S.pup||{};S.pup[k]=lvl+1;H.flash=1;persist();sfx.buy();renderHangar();};
+    row.append(btn);list.append(row);});
+  const po=$('#puOffer');if(po)po.onclick=()=>{sfx.tick();openRelicOffer('p');};
 }
 function commsToMap(id){goMap();const st=S.gal.stars[id];requestAnimationFrame(()=>requestAnimationFrame(()=>{MAP.wFull=false;showStarWidget(st);}));}
 function drawCoreScope(c,W,Hh,t){const L=Math.max(1,rl('tach')),cx=W/2,cy=Hh*.52,n=S.gal?Math.min(shardsMine(S.gal),SHARD_NEED):0,pl=.5+.5*Math.sin(t*2.4);
@@ -6030,7 +6081,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v139b-terra';
+const BUILD='v140-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6167,7 +6218,7 @@ function pilotDone(){H.intro=false;sfx.tick();goMap();}
 function applyWarBoost(){if(!G.warPend)return;G.warPend=false;{const ls=TR||!CHOICE?0:((S.loss||{})[CHOICE.starId]||0);if(ls){for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2*ls);setTimeout(()=>{if(scene==='game'&&G.running)vpPop(`LESSONS LEARNED · ALL SYSTEMS +${2*ls}`,'#ffd84a');},700);}}const w=Math.max(0,rle('war')-1)*2+(peak('war')?2:0);if(!w)return;const n=[0,0,0,0];for(const row of B.grid)for(const x of row)if(x&&x.t<4)n[x.t]++;const m=n.indexOf(Math.max(...n));
   G.meters[m]=Math.min(ST.cap[m],G.meters[m]+w);G.warBoost={m,w};const el=gEls[m].g;el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),600);vpPop(`WAR ROOM · ${TYPES[m].name.toUpperCase()} CHARGED +${w}`,TYPES[m].color);}
 function startRun(){
-  const TP=TERRA_PENDING;TERRA_PENDING=false;if(!TP&&document.body.classList.contains('terra')){G.terra=false;G.survey=false;skinTerra(false);}
+  const TP=TERRA_PENDING;TERRA_PENDING=false;TERRA_STATS=!!TP;if(!TP&&document.body.classList.contains('terra')){G.terra=false;G.survey=false;skinTerra(false);}
   CINE=null;RUNX=TR?null:{depth:depthNow(),load:loadFor(depthNow()),forced:FORCED[depthNow()]};const gx=!TR&&CHOICE&&CHOICE.gate&&S.gal&&S.gal.cons;if(gx){RUNX.depth=0;RUNX.f=[];RUNX.gate=true;RUNX.stage=0;RUNX.forced='loot';RUNX.load=loadFor(0);}
   if(TP)RUNX={depth:1,load:TP==='survey'?['line','nova','loot']:['line','nova','burner'],forced:null,f:[],terra:true};
   SYS=sysView(CHOICE.key);resetGame();{const e=$('#tileCtr b');if(e)e.textContent='0';}G.hold=false;G.depth=gx?1:(RUNX?RUNX.depth:1);G.aegis=0;if(TP)terraInit(TP);if(gx){G.sayT=3;setTimeout(()=>{if(scene==='game'&&G.running)pilotSay('Steady!');},1400);}G.od=0;IL=null;setTimeout(odSync,60);if(peak('shipyard'))for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2);sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
