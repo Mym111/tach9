@@ -637,6 +637,8 @@ button:disabled{cursor:default}
 #tfBody .geo[data-g=pres]{left:8px;top:calc(50% - 104px)}#tfBody .geo[data-g=oxy]{left:8px;top:calc(50% + 22px)}
 #tfBody .geo[data-g=temp]{right:56px;top:calc(50% - 104px)}#tfBody .geo[data-g=h2o]{right:56px;top:calc(50% + 22px)}
 .g-slot{position:absolute;right:-50px;top:50%;margin-top:-21px;width:42px;height:42px;box-sizing:border-box;border-radius:50%;border:2px dashed rgba(127,243,255,.3);background:rgba(4,12,24,.55);pointer-events:none}
+/* the reel you are working grows so the marker is easier to read and place */
+#tfBody .geo{transition:scale .18s ease}#tfBody .geo.foc,#tfBody .geo.hot{scale:1.22;z-index:6}#tfBody .geo.foc .g-bar,#tfBody .geo.hot .g-bar{height:20px}
 .g-slot::after{content:'';position:absolute;left:50%;top:50%;width:16px;height:4px;margin:-2px -8px;border-radius:2px;background:#050b18;box-shadow:inset 0 0 0 1px #2b3b5e}
 .geo.lk .g-slot{opacity:.25}.geo.hot .g-slot{border-style:solid;border-color:#7ff3ff;box-shadow:0 0 14px rgba(127,243,255,.7);transform:scale(1.12)}
 #tfBody .geo.foc{box-shadow:0 0 0 2px #7ff3ff,0 0 18px rgba(127,243,255,.4)}#tfBody .geo.foc .g-slot{border-style:solid;border-color:#7ff3ff}
@@ -1601,7 +1603,7 @@ const G={};
 function resetGame(){
   ST=stats();
   const T=CHOICE?CHOICE.threat:0;
-  Object.assign(G,{running:true,T,time:0,dist:0,len:gateLen(T),prog:0,vel:1,fuel:ST.tank,hull:ST.hullMax,meters:[0,0,0,0],
+  Object.assign(G,{running:true,flare:null,T,time:0,dist:0,len:gateLen(T),prog:0,vel:1,fuel:ST.tank,hull:ST.hullMax,meters:[0,0,0,0],
     events:[],spawnT:1.6,sincePlanet:0,contacts:0,cleared:0,bestChain:1,ending:null,endT:0,speedMul:1,
     shipY:null,shipDead:false,warpX:0,warpIn:0,catchT:-99,shake:0,flash:0,wobble:0,fx:[],pops:[],nebX:0,gap:ST.gapStart,
     runBucks:0,bounty:0,decayT:0,intT:14,skimT:5,alarmT:0,milestones:{half:false,sight:false},
@@ -5842,7 +5844,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v134';
+const BUILD='v135';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
