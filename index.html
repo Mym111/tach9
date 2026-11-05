@@ -1280,11 +1280,11 @@ function terraEnd(win,reason){if(!G.running)return;G.running=false;const nm=(CHO
   const g=S.gal,st=g&&CHOICE&&!CHOICE.test&&g.stars[CHOICE.starId];
   if(G.survey){const f=surveyFactor(),thr=(CHOICE&&CHOICE.threat)||0,bonus=win?Math.round((8+5*thr)*f):0,tot=Math.round(G.data+bonus);
     if(!(CHOICE&&CHOICE.test)){S.data=(S.data||0)+tot;if(st){st.surveys=(st.surveys||0)+1;st.surv=true;}persist();}
-    toast(win?`<b>${nm} SURVEYED</b><span>+${tot} Data${bonus?` (${bonus} completion)`:''} · repeat surveys here pay ${Math.round(Math.max(.25,f-.3)*100)}% · hazards handled ${G.cleared}/${G.contacts}</span>`:`<b>SURVEY ABORTED</b><span>${reason==='hull'?'Gravity failed.':'Oxygen failed.'} You keep the ${tot} Data you gathered. Nothing is lost here.</span>`,win?'#a6ef5a':'#ff8a95');
+    toast(win?`<b>${nm} SURVEYED</b><span>+${tot} Data${bonus?` (${bonus} completion)`:''} · repeat surveys here pay ${Math.round(Math.max(.25,f-.3)*100)}% · hazards handled ${G.cleared}/${G.contacts}</span>`:`<b>SURVEY ABORTED</b><span>${reason==='abandon'?'You pulled out.':reason==='hull'?'Gravity failed.':'Oxygen failed.'} You keep the ${tot} Data you gathered. Nothing is lost here.</span>`,win?'#a6ef5a':'#ff8a95');
     setTimeout(()=>{G.terra=false;G.survey=false;skinTerra(false);goMap();},1700);return;}
   if(st){if(win){const pl=tfPlan(st),cr=Math.round((40+25*pl.th+G.cleared*3)*pl.mul*.75),al=Math.floor(G.cleared/6),ppl=terraPop(st);S.bucks+=cr;if(S.station){S.station.alloy+=al;S.station.pop=Math.max(1,S.station.pop-ppl);crewSync();}st.terra=true;g.terra=terraDone(g)+1;extra=` · +${cr} cr${al?` +${al} alloy`:''} · ${ppl} settled`;}
     else st.terraLost=true;persist();}
-  toast(win?`<b>${nm} TERRAFORMED</b><span>Hazards handled ${G.cleared}/${G.contacts} · best chain ×${G.bestChain}${extra}</span>`:`<b>${nm} LOST</b><span>${reason==='hull'?'Gravity failed: the world tore itself apart.':'Oxygen failed: the air ran out.'} Hazards handled ${G.cleared}/${G.contacts}.</span>`,win?'#5ef0d0':'#ff4d5e');
+  toast(win?`<b>${nm} TERRAFORMED</b><span>Hazards handled ${G.cleared}/${G.contacts} · best chain ×${G.bestChain}${extra}</span>`:`<b>${nm} LOST</b><span>${reason==='abandon'?'The crew abandoned it, and the world is left to die.':reason==='hull'?'Gravity failed: the world tore itself apart.':'Oxygen failed: the air ran out.'} Hazards handled ${G.cleared}/${G.contacts}.</span>`,win?'#5ef0d0':'#ff4d5e');
   setTimeout(()=>{G.terra=false;skinTerra(false);goMap();},1700);}
 function drawTerraBG(b,W,H,t){
   const sv=G.survey,life=sv?clamp(G.prog*.8,0,1):terraLife(),st=terraStress(),cx=shipBaseX()+8;
@@ -6030,7 +6030,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v139-terra';
+const BUILD='v139b-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6395,7 +6395,7 @@ function setTile(i){if(TR){$('#tileNote').textContent='Tile size is fixed during
   if(scene==='game'&&G.running&&!G.ending&&B.busy){TILE.pending=i;paintTileSeg();return;}
   applyTileNow();}
 $('#tileSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{sfx.tick();setTile(+b.dataset.i);});
-function setPaused(p){if(scene!=='game'||!G.running)return;if(!p&&perkOpen){paused=false;show('#pause',false);return;}paused=p;drag=null;if(p){paintTileSeg();$('#abandonBtn').textContent=TR?'Leave training':'Abandon system';}show('#pause',p);}
+function setPaused(p){if(scene!=='game'||!G.running)return;if(!p&&perkOpen){paused=false;show('#pause',false);return;}paused=p;drag=null;if(p){paintTileSeg();$('#abandonBtn').textContent=TR?'Leave training':G.terra&&!G.survey?'Abandon world (it is lost)':G.survey?'Abort survey':'Abandon system';}show('#pause',p);}
 
 $('#continueBtn').onclick=()=>{audio();goMap();};
 { // new game: wipes an existing campaign only after a second tap
@@ -6559,7 +6559,7 @@ const TRAIN_CH=[
   {say:'Solar flares are the wild one. Cross two runs of the same colour in an L, T or + shape and the crossing tile becomes a flare. Make this L.',next:'swap',allow:[[[2,2],[3,2]]],ring:'pairs',board:trLay([[2,0,0],[2,1,0],[2,2,1],[3,2,0],[1,2,0],[0,2,0]])},
   {say:'That glowing tile is a solar flare. It is armed to burn a row, a column or a 3×3 square, and the mode changes with every flare you forge. Match it with the two reds above it.',next:'swap',allow:[[[3,3],[3,4]]],ring:'pairs',board:trLay([[1,3,0],[2,3,0],[3,3,1],[3,4,'k']])},
   {say:'The flare keeps burning for a couple of seconds. Tiles that fall into the fire are burned for a flat payout, but burned tiles never cascade. Good for cleaning up damage.',next:'tap'},
-  {say:'That is every tile system. In the campaign they unlock as you clear systems. Which ones ride on your board is set by the run type: Trade Runs carry Credits & crates, Survey Runs carry Solar flares.',next:'end'}]},
+  {say:'That is every tile system. In the campaign they unlock as you clear systems. Which ones ride on your board is set by the run type: Trade Runs carry Credits & crates, and Survey Runs carry Data tiles.',next:'end'}]},
  {k:'pursuer',t:'The pursuer',d:'The gap bar, attacks, and how to stay ahead.',feats:[],steps:[
   {say:'From the deeper systems on, an Empire cruiser hunts us. Its gap bar sits top-left of the viewport. The wider the gap, the safer we are.',next:'tap',board:trLay([]),ring:'#viewport'},
   {say:'Every contact you miss closes the gap. Every perfect clear, where you are fully charged for a contact, pushes it back. At zero we are caught and the system is lost.',next:'tap'},
