@@ -666,7 +666,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
 .rlcard{max-width:400px;width:100%;margin:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:12px}.rl-b{padding:0 16px;display:flex;flex-direction:column;gap:10px}.rl-h{margin:0;font-size:13px;line-height:1.4;color:#d5dff2}
 .rl-cards{display:grid;gap:8px}.rl-c{display:grid;grid-template-columns:30px 1fr;grid-template-rows:auto auto;column-gap:10px;text-align:left;font:inherit;background:#0e1830;border:1px solid #2b3b5e;border-radius:10px;padding:10px;color:#e1e9f7;cursor:pointer}.rl-c i{grid-row:span 2;font-style:normal;font-size:22px;color:var(--rc);align-self:center;text-align:center}.rl-c b{font-size:14px}.rl-c span{font-size:12px;color:#aebbd6;line-height:1.35}.rl-c.sel{border-color:var(--rc);box-shadow:0 0 0 1px var(--rc)}
 .rl-pull .pull-b{flex-direction:column;align-items:stretch;gap:6px}.rl-empty{border:1px dashed #2b3b5e;border-radius:8px;padding:9px;font-size:11px;color:#5d6f94;text-align:center}.rl-own{display:flex;flex-direction:column;gap:6px}.rl-o{display:flex;align-items:center;gap:10px;text-align:left;width:100%}.rl-o span{display:flex;flex-direction:column}.rl-o b{font-size:12px}.rl-o small{font-size:10.5px;color:#aebbd6;line-height:1.3}.rl-list{display:flex;flex-direction:column;gap:6px}.rl-row{display:flex;gap:10px;align-items:center;border:1px solid var(--rc);border-radius:10px;padding:8px 10px;background:#0e1830}.rl-row i{font-style:normal;color:var(--rc);font-size:18px}.rl-row b{display:block;font-size:13px}.rl-row span{font-size:11px;color:#aebbd6;line-height:1.35}.rl-own em{font-size:12px;color:var(--dim);font-style:normal}.rl-o{font:inherit;font-size:12px;background:#0e1830;border:1px solid #2b3b5e;border-radius:8px;padding:6px 9px;color:#e1e9f7;cursor:pointer}.rl-o i{font-style:normal;color:var(--rc);margin-right:6px}.rl-o.pick{border-color:var(--rc);animation:coPulse 1.1s ease-in-out infinite}
-.br-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.sw-d.t4{grid-template-columns:repeat(3,1fr)}.sw-d.t4 button.tf{grid-column:1/-1;border-color:#2f6f63}.sw-d.t4 button.tf.on{border-color:#5ef0d0;color:#d9fff6}.br-seg button[data-d=T]{grid-column:1/-1;border-color:#2f6f63}.br-seg button[data-d=T].on{border-color:#5ef0d0;color:#d9fff6}.br-seg button,.br-chips button{font:inherit;background:#0e1830;border:1px solid #2b3b5e;color:#aebbd6;border-radius:9px;padding:8px 4px;display:flex;flex-direction:column;gap:2px;align-items:center;font-size:12.5px;font-weight:600;cursor:pointer}.br-seg button small{font-size:10px;font-weight:400;color:var(--dim)}.br-seg button.on,.br-chips button.on{border-color:#7ff3ff;color:#e1f9ff;background:rgba(127,243,255,.12);box-shadow:0 0 0 1px rgba(127,243,255,.3)}
+.br-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.runbucks .coin{transition:filter .2s}body.survey .runbucks{color:#a6ef5a}body.survey .runbucks .coin{filter:hue-rotate(132deg)}.sw-d.t4{grid-template-columns:repeat(3,1fr)}.sw-d.t4 button.tf{grid-column:1/-1;border-color:#2f6f63}.sw-d.t4 button.tf.on{border-color:#5ef0d0;color:#d9fff6}.br-seg button[data-d=T]{grid-column:1/-1;border-color:#2f6f63}.br-seg button[data-d=T].on{border-color:#5ef0d0;color:#d9fff6}.br-seg button,.br-chips button{font:inherit;background:#0e1830;border:1px solid #2b3b5e;color:#aebbd6;border-radius:9px;padding:8px 4px;display:flex;flex-direction:column;gap:2px;align-items:center;font-size:12.5px;font-weight:600;cursor:pointer}.br-seg button small{font-size:10px;font-weight:400;color:var(--dim)}.br-seg button.on,.br-chips button.on{border-color:#7ff3ff;color:#e1f9ff;background:rgba(127,243,255,.12);box-shadow:0 0 0 1px rgba(127,243,255,.3)}
 .br-dn{margin:0;font-size:12px;line-height:1.4;color:#aebbd6}.br-chips{display:flex;flex-wrap:wrap;gap:6px}.br-chips button{padding:7px 10px;flex-direction:row}.br-chips span{font-size:12px;color:#d5dff2;padding:6px 9px;border:1px solid #2b3b5e;border-radius:8px;background:#0e1830}.br-chips span i{font-style:normal;color:var(--rc);margin-right:5px}
 #brief{z-index:13}.brcard{max-width:400px;width:100%;margin:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:12px}
 .br-btns{display:grid;grid-template-columns:1fr 1.6fr;gap:8px;margin:0 16px}.br-btns .btn{font-size:14px;padding:13px}
@@ -1217,6 +1217,9 @@ const TERRA_ROWS=[
 const TERRA_ICONS=TERRA_SKIN.map((ty,i)=>bitmap(TERRA_ROWS[i],{'#':ty.color,'+':ty.light}));
 const GRAV_ICON=bitmap(["....#....","....#....","....#....","..#.#.#..","...###...","....#....",".........","#########","........."],{'#':'#b48cff','+':'#e6d6ff'});
 const SHIP_SKIN=TYPES.map(o=>Object.assign({},o)),SHIP_ICONS=ICONS.slice(0,5),TERRA_BLANK=bitmap(["."],{});
+const DATA_DEF={name:'Data',color:'#a6ef5a',light:'#e3ffbf',dark:'#1f3a10'},BUCKS_ORIG=Object.assign({},BUCKS_DEF),BUCKS_ICON=ICONS[BUCKS],
+ DATA_ICON=bitmap([".........","..#####..",".#+++++#.","..#####..",".#+++++#.","..#####..",".#+++++#.","..#####..","........."],{'#':DATA_DEF.color,'+':DATA_DEF.light});
+const surveyFactor=()=>{const st=S.gal&&CHOICE&&!CHOICE.test&&S.gal.stars[CHOICE.starId];return Math.max(.25,1-.3*((st&&st.surveys)||0));};
 let TERRA_PENDING=false;
 const TL_KEYS=['rad','pres','h2o','temp'];
 function setBarIcons(terra){const hi=$('#hullIc'),fi=$('#fuelIc');
@@ -1224,7 +1227,8 @@ function setBarIcons(terra){const hi=$('#hullIc'),fi=$('#fuelIc');
   else{hi.width=SHIP_BW;hi.height=SHIP_BH;hi.getContext('2d').drawImage(bitmap(SHIP_ROWS,{'#':'#e1e9f7','o':'#56658a','+':'#7ff3ff','e':'#4a5878'}),0,0);}
   fi.width=9;fi.height=9;const y=fi.getContext('2d');y.clearRect(0,0,9,9);y.drawImage(ICONS[4],0,0);
   $('#hullBar').setAttribute('aria-label',terra?'Gravity':'Hull');$('#fuelBar').setAttribute('aria-label',terra?'Oxygen':'Fuel');}
-function skinTerra(on){
+function skinTerra(on,survey){
+  Object.assign(BUCKS_DEF,on&&survey?DATA_DEF:BUCKS_ORIG);ICONS[BUCKS]=on&&survey?DATA_ICON:BUCKS_ICON;document.body.classList.toggle('survey',!!(on&&survey));
   for(let i=0;i<5;i++){Object.assign(TYPES[i],on?TERRA_SKIN[i]:SHIP_SKIN[i]);ICONS[i]=on?TERRA_ICONS[i]:SHIP_ICONS[i];}
   gEls.forEach((el,m)=>{const ty=TYPES[m];el.fill.style.background=ty.color;el.fill.style.boxShadow=`0 0 8px ${ty.color}80`;
     const top=el.g.querySelector('.g-top'),old=top.querySelector('canvas');top.replaceChild(iconCanvas(m,'g-ico'),old);const sp=top.querySelector('span');sp.style.color=ty.color;sp.textContent=ty.name.toUpperCase();});
@@ -1237,18 +1241,18 @@ const rgbHex=c=>'#'+c.map(v=>v.toString(16).padStart(2,'0')).join('');
 // how alive the world looks: progress plus whatever you have been matching lately
 const terraLife=()=>clamp(G.prog*.5+((G.tl.h2o+G.tl.temp+G.tl.pres+G.tl.oxy+G.tl.rad)/5)*.7,0,1);
 const terraStress=()=>clamp(1-Math.min(G.hull/ST.hullMax,G.fuel/ST.tank)/.5,0,1);
-function terraInit(){
-  G.terra=true;G.len=9;G.tl={rad:0,pres:0,h2o:0,temp:0,oxy:0};G.tut=false;G.strayPod=false;
+function terraInit(mode){
+  G.survey=mode==='survey';G.data=0;G.runBucks=0;G.terra=true;G.len=9;G.tl={rad:0,pres:0,h2o:0,temp:0,oxy:0};G.tut=false;G.strayPod=false;
   for(const k of ['comet','eruption','surge','storm','swarm','seed']){G.R.spawn[k]=0;G.R.out[k]=[0,0,0];}
-  skinTerra(true);
+  skinTerra(true,G.survey);
 }
 function terraCharge(gains,fn,chain){const T=G.tl,m=1+.15*Math.max(0,chain-1);
   TL_KEYS.forEach((k,i)=>{if(gains[i])T[k]=Math.min(1,T[k]+.03*gains[i]*m);});if(fn)T.oxy=Math.min(1,T.oxy+.03*fn*m);}
 function terraTick(dt){for(const k in G.tl)G.tl[k]=Math.max(0,G.tl[k]-.01*dt);}
 let _tfT=0;
 function terraFrame(){const now=performance.now();if(now-_tfT<120)return;_tfT=now;
-  const life=terraLife(),st=terraStress(),blink=st>.55&&Math.sin(now/110)>0,bz=blink?'#ff4d5e':rgbHex(mixC('#8a5236','#2fb89c',life)),
-    glow=rgbaC(mixC('#a0522d','#d5dcea',life),.1+.2*life+(st>.55?.12:0)),a=rgbHex(mixC('#241008','#07261f',life)),c2=rgbHex(mixC('#0c0608','#041310',life)),sb=document.body.style;
+  const sv=G.survey,life=sv?clamp(G.prog*.8,0,1):terraLife(),st=terraStress(),blink=st>.55&&Math.sin(now/110)>0,bz=blink?'#ff4d5e':rgbHex(mixC(sv?'#2a4a78':'#8a5236',sv?'#4da6ff':'#2fb89c',life)),
+    glow=rgbaC(mixC(sv?'#2a5fa8':'#a0522d',sv?'#7fd0ff':'#38e09b',life),.1+.2*life+(st>.55?.12:0)),a=rgbHex(mixC(sv?'#0b1830':'#241008',sv?'#0a2440':'#07261f',life)),c2=rgbHex(mixC(sv?'#04070f':'#0c0608',sv?'#040c18':'#041310',life)),sb=document.body.style;
   sb.setProperty('--tfb',bz);sb.setProperty('--tfg',blink?'rgba(255,77,94,.3)':glow);sb.setProperty('--tfa',a);sb.setProperty('--tfc',c2);}
 const TERRA_PICK=[['comet',3],['eruption',3],['surge',2],['storm',2],['swarm',2]];
 function terraPickHazard(){if(G.sincePlanet>=5)return'seed';const sw=G.prog>.3?1:0.001;const w=TERRA_PICK.map(([k,v])=>[k,k==='swarm'?v*sw:v]),tot=w.reduce((a,b2)=>a+b2[1],0);let r=Math.random()*tot;for(const[k,v]of w){r-=v;if(r<=0)return k;}return'comet';}
@@ -1274,13 +1278,17 @@ function resolveTerra(e){
 }
 function terraEnd(win,reason){if(!G.running)return;G.running=false;const nm=(CHOICE&&CHOICE.name)||'World';let extra='';
   const g=S.gal,st=g&&CHOICE&&!CHOICE.test&&g.stars[CHOICE.starId];
+  if(G.survey){const f=surveyFactor(),thr=(CHOICE&&CHOICE.threat)||0,bonus=win?Math.round((8+5*thr)*f):0,tot=Math.round(G.data+bonus);
+    if(!(CHOICE&&CHOICE.test)){S.data=(S.data||0)+tot;if(st){st.surveys=(st.surveys||0)+1;st.surv=true;}persist();}
+    toast(win?`<b>${nm} SURVEYED</b><span>+${tot} Data${bonus?` (${bonus} completion)`:''} · repeat surveys here pay ${Math.round(Math.max(.25,f-.3)*100)}% · hazards handled ${G.cleared}/${G.contacts}</span>`:`<b>SURVEY ABORTED</b><span>${reason==='hull'?'Gravity failed.':'Oxygen failed.'} You keep the ${tot} Data you gathered. Nothing is lost here.</span>`,win?'#a6ef5a':'#ff8a95');
+    setTimeout(()=>{G.terra=false;G.survey=false;skinTerra(false);goMap();},1700);return;}
   if(st){if(win){const pl=tfPlan(st),cr=Math.round((40+25*pl.th+G.cleared*3)*pl.mul*.75),al=Math.floor(G.cleared/6),ppl=terraPop(st);S.bucks+=cr;if(S.station){S.station.alloy+=al;S.station.pop=Math.max(1,S.station.pop-ppl);crewSync();}st.terra=true;g.terra=terraDone(g)+1;extra=` · +${cr} cr${al?` +${al} alloy`:''} · ${ppl} settled`;}
     else st.terraLost=true;persist();}
   toast(win?`<b>${nm} TERRAFORMED</b><span>Hazards handled ${G.cleared}/${G.contacts} · best chain ×${G.bestChain}${extra}</span>`:`<b>${nm} LOST</b><span>${reason==='hull'?'Gravity failed: the world tore itself apart.':'Oxygen failed: the air ran out.'} Hazards handled ${G.cleared}/${G.contacts}.</span>`,win?'#5ef0d0':'#ff4d5e');
   setTimeout(()=>{G.terra=false;skinTerra(false);goMap();},1700);}
 function drawTerraBG(b,W,H,t){
-  const life=terraLife(),st=terraStress(),cx=shipBaseX()+8;
-  const g=b.createRadialGradient(cx,H/2,3,cx,H/2,W*.8);g.addColorStop(0,rgbaC(mixC('#4a2410','#10665e',life),.7));g.addColorStop(.55,rgbaC(mixC('#1e0d09','#06241f',life),.55));g.addColorStop(1,'rgba(4,6,13,0)');
+  const sv=G.survey,life=sv?clamp(G.prog*.8,0,1):terraLife(),st=terraStress(),cx=shipBaseX()+8;
+  const g=b.createRadialGradient(cx,H/2,3,cx,H/2,W*.8);g.addColorStop(0,rgbaC(mixC(sv?'#10315e':'#4a2410',sv?'#1a5f9a':'#10665e',life),.7));g.addColorStop(.55,rgbaC(mixC(sv?'#09162b':'#1e0d09',sv?'#0a2a4a':'#06241f',life),.55));g.addColorStop(1,'rgba(4,6,13,0)');
   b.fillStyle=g;b.fillRect(0,0,W,H);
   if(st>0){const v=b.createRadialGradient(W/2,H/2,H*.4,W/2,H/2,W*.62);v.addColorStop(0,'rgba(255,60,80,0)');v.addColorStop(1,`rgba(255,60,80,${.3*st})`);b.fillStyle=v;b.fillRect(0,0,W,H);}
 }
@@ -1301,14 +1309,19 @@ function terraPlanetPaint(N,t,I,hp,ox){
     d[i]=Math.max(0,Math.min(255,pr));d[i+1]=Math.max(0,Math.min(255,pg));d[i+2]=Math.max(0,Math.min(255,pb));d[i+3]=255;}
 }
 function drawTerraVP(b,W,H,t){
-  const R=Math.max(14,Math.round(H*.4)),N=R*2,base=clamp(G.prog*.5,0,.5),I={};for(const k of ['rad','pres','h2o','temp','oxy'])I[k]=clamp(base+G.tl[k]*.7,0,1);
-  const hp=clamp(G.hull/ST.hullMax,0,1),ox=clamp(G.fuel/ST.tank,0,1),endU=G.ending?clamp(G.endT/(G.ending==='gate'?1.7:2.3),0,1):0,lose=G.ending&&G.ending!=='gate',win=G.ending==='gate';
+  const R=Math.max(14,Math.round(H*.4)),N=R*2,sv=G.survey,base=sv?.1:clamp(G.prog*.5,0,.5),I={};for(const k of ['rad','pres','h2o','temp','oxy'])I[k]=clamp(base+G.tl[k]*(sv?.25:.7),0,1);
+  const hp=clamp(G.hull/ST.hullMax,0,1),ox=clamp(G.fuel/ST.tank,0,1),endU=G.ending?clamp(G.endT/(G.ending==='gate'?1.7:2.3),0,1):0,lose=G.ending&&G.ending!=='gate'&&!sv,win=G.ending==='gate';
   const sc=lose?Math.max(.04,1-Math.pow(endU,2.2)):win?1+.3*(1-Math.pow(1-endU,3)):1;
   const wob=(1-hp)*2.2*Math.sin(t*5)+(lose?(Math.random()-.5)*endU*5:0),cx=shipBaseX()+24-R+4+wob,cy=H/2;
   if(!_tpc||_tpc.width!==N){_tpc=document.createElement('canvas');_tpc.width=_tpc.height=N;_tpImg=_tpc.getContext('2d').createImageData(N,N);_tpT=-9;}
   if(t-_tpT>.06){_tpT=t;terraPlanetPaint(N,t,I,lose?Math.min(hp,.2):hp,ox);_tpc.getContext('2d').putImageData(_tpImg,0,0);}
   const atm=I.pres*.7+I.oxy*.3,ag=b.createRadialGradient(cx,cy,R*.9,cx,cy,R*1.45);ag.addColorStop(0,rgbaC(mixC('#ff7a4a','#6fd0ff',atm),.18+.3*atm*ox));ag.addColorStop(1,'rgba(0,0,0,0)');b.fillStyle=ag;b.beginPath();b.arc(cx,cy,R*1.45,0,6.283);b.fill();
   b.imageSmoothingEnabled=false;b.drawImage(_tpc,Math.round(cx-R*sc),Math.round(cy-R*sc),Math.round(N*sc),Math.round(N*sc));
+  if(sv){b.save();b.beginPath();b.arc(cx,cy,R,0,6.283);b.clip();b.strokeStyle='rgba(127,208,255,.22)';b.lineWidth=1;
+    for(let i=-2;i<=2;i++){b.beginPath();b.moveTo(cx-R,cy+i*R*.4);b.lineTo(cx+R,cy+i*R*.4);b.stroke();}
+    for(let i=-2;i<=2;i++){b.beginPath();b.ellipse(cx,cy,Math.abs(i)*R*.28+.5,R,0,0,6.283);b.stroke();}
+    const sy=cy+Math.sin(t*1.4)*R*.95;b.fillStyle='rgba(166,239,90,.18)';b.fillRect(cx-R,sy-4,R*2,8);b.fillStyle='rgba(206,255,150,.9)';b.fillRect(cx-R,Math.round(sy),R*2,1);b.restore();
+    TL_KEYS.concat('oxy').forEach((k,i)=>{const u=clamp(G.tl[k]*2.2,0,1);if(u<=.02)return;const a0=-1.2+i*.48;b.strokeStyle=TERRA_SKIN[['rad','pres','h2o','temp','oxy'].indexOf(k)].color;b.lineWidth=2;b.globalAlpha=.4+.6*u;b.beginPath();b.arc(cx,cy,R+7,a0,a0+.4*u);b.stroke();b.globalAlpha=1;});}
   if(win){b.fillStyle=`rgba(200,255,230,${.35*Math.sin(Math.min(1,endU)*Math.PI)})`;b.fillRect(0,0,W,H);}
   const sh=G.fx.find(f=>f.k==='tshield');if(sh){const u=sh.t/sh.d;b.strokeStyle=`rgba(127,190,255,${1-u})`;b.lineWidth=1.5;b.beginPath();b.arc(cx,cy,R+2+u*4,-.9,.9);b.stroke();}
   for(const e of G.events){if(e.resolved||!e.ided)continue;const x=evX(e.p),y=e.y,sd=e.seed;
@@ -1743,7 +1756,7 @@ const G={};
 function resetGame(){
   ST=stats();
   const T=CHOICE?CHOICE.threat:0;
-  Object.assign(G,{running:true,terra:false,flare:null,T,time:0,dist:0,len:gateLen(T),prog:0,vel:1,fuel:ST.tank,hull:ST.hullMax,meters:[0,0,0,0],
+  Object.assign(G,{running:true,terra:false,survey:false,data:0,flare:null,T,time:0,dist:0,len:gateLen(T),prog:0,vel:1,fuel:ST.tank,hull:ST.hullMax,meters:[0,0,0,0],
     events:[],spawnT:1.6,sincePlanet:0,contacts:0,cleared:0,bestChain:1,ending:null,endT:0,speedMul:1,
     shipY:null,shipDead:false,warpX:0,warpIn:0,catchT:-99,shake:0,flash:0,wobble:0,fx:[],pops:[],nebX:0,gap:ST.gapStart,
     runBucks:0,bounty:0,decayT:0,intT:14,skimT:5,alarmT:0,milestones:{half:false,sight:false},
@@ -1922,7 +1935,7 @@ function updateGame(dt){
     if(!G.milestones.half&&G.prog>=.5){G.milestones.half=true;showBanner(G.hold?'Gate 50%':'Halfway',G.hold?'THE GATE PUSHES BACK':'KEEP THE SHIP TOGETHER');sfx.milestone();}
     if(!G.milestones.sight&&G.prog>=.88){G.milestones.sight=true;showBanner('Gate in sight','HOLD ON');sfx.milestone();}
     if(G.prog>=1&&RUNX&&RUNX.gate&&!TR&&!G.exoDone){G.exoDone=true;G.runTime=G.time;startCine('exodus',{c:'#5ef0d0'},4.8);CINE.next=()=>{G.ending='gate';G.endT=1;G.warpX=V.W+70;sfx.win();showBanner('Exodus','THROUGH THE GATE');};}
-    else if(G.prog>=1&&!G.exoDone){G.runTime=G.time;G.ending='gate';G.endT=0;sfx.win();showBanner(G.terra?'Terraformed':G.hold?'Gate open':'Jump gate',G.terra?'THE WORLD LIVES':G.hold?'ALL HANDS · SLIP THROUGH':'SYSTEM CLEARED');}
+    else if(G.prog>=1&&!G.exoDone){G.runTime=G.time;G.ending='gate';G.endT=0;sfx.win();showBanner(G.survey?'Survey done':G.terra?'Terraformed':G.hold?'Gate open':'Jump gate',G.survey?'DATA SECURED':G.terra?'THE WORLD LIVES':G.hold?'ALL HANDS · SLIP THROUGH':'SYSTEM CLEARED');}
     if(G.prog<.92){G.spawnT-=dt*sm;if(G.spawnT<=0){spawnEvent();G.spawnT=interval();}}
   }
   const T=travel(),pxs=((V.W+14)-(shipBaseX()+24))/T;
@@ -2122,7 +2135,7 @@ function tileWeights(){
 }
 function typeCount(ty){let n=0;if(B.grid)for(const row of B.grid)for(const t of row)if(t&&t.t===ty)n++;return n;}
 const crateCount=()=>typeCount(CRATE);
-function randType(){const w=tileWeights().concat([CHOICE&&CHOICE.sig==='derelict'?.3:.07,feat('burner')?.16:0]);if(!feat('loot')){w[5]=0;w[6]=0;}const tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;for(let i=0;i<8;i++){r-=w[i];if(r<=0){if(TILE_POOL[i]===CRATE&&crateCount()>=3)return randType();if(TILE_POOL[i]===BURN&&typeCount(BURN)>=2)return randType();return TILE_POOL[i];}}return 0;}
+function randType(){const w=tileWeights().concat([CHOICE&&CHOICE.sig==='derelict'?.3:.07,feat('burner')?.16:0]);if(!feat('loot')){w[5]=0;w[6]=0;}if(G.survey){w[6]=0;w[5]*=1.7;}const tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;for(let i=0;i<8;i++){r-=w[i];if(r<=0){if(TILE_POOL[i]===CRATE&&crateCount()>=3)return randType();if(TILE_POOL[i]===BURN&&typeCount(BURN)>=2)return randType();return TILE_POOL[i];}}return 0;}
 const swappable=t=>!!t&&t.t!==DEBRIS&&!t.lock;
 const matchable=t=>t!=null&&(t<5||t===BUCKS||t===CRATE||t===BURN);
 const isWild=t=>t===BUCKS||t===CRATE||t===BURN;
@@ -2221,7 +2234,8 @@ async function clearCells(set,chain,makes=[],wild=new Map()){
   for(let m=0;m<4;m++)if(gains[m]){gains[m]+=ST.eff[m]+Math.max(0,chain-1);G.meters[m]=Math.min(ST.cap[m],G.meters[m]+gains[m]);lit=TYPES[m].color;const el=gEls[m].g;el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);setTimeout(()=>{el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),300);},430);}
   if(G.terra)terraCharge(gains,fn,chain);
   if(fuel){const amt=fuel+(chain>1?2+(relicHas('chainfuel')?3:0):0);G.R.fuel.tiles+=amt;G.fuel=Math.min(ST.tank,G.fuel+amt);pulseFuel();if(fn)boardPop(`+${amt} FUEL`,fc/fn+.5,fr/fn+.5,'#ffd84a');lit=lit||'#ffd84a';}
-  if(bucks){const n=bucks/2;addBucks(bucks,null,false);sfx.cash();boardPop(`+${bucks} CR`,bc0/n+.5,br0/n+.5,'#ff7ad9');lit=lit||'#ff7ad9';}
+  if(bucks&&G.survey){const n=bucks/2,amt=bucks*surveyFactor();G.data+=amt;G.runBucks=Math.round(G.data);const el=$('#runBucksEl');el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);sfx.cash();boardPop(`+${Math.max(1,Math.round(amt))} DATA`,bc0/n+.5,br0/n+.5,DATA_DEF.color);lit=lit||DATA_DEF.color;}
+  else if(bucks){const n=bucks/2;addBucks(bucks,null,false);sfx.cash();boardPop(`+${bucks} CR`,bc0/n+.5,br0/n+.5,'#ff7ad9');lit=lit||'#ff7ad9';}
   if(lit)B.glow={color:lit,t:0};
   sfx.match(chain);
   G.log.firesOut+=fires;G.log.debris+=broke;G.R.broken+=broke;
@@ -2629,7 +2643,7 @@ function updateUI(){
   {const L=G.danger||{fuel:0,hull:0};f.classList.toggle('warn',L.fuel===1);f.classList.toggle('crit',L.fuel===2);h.classList.toggle('warn',L.hull===1);h.classList.toggle('crit',L.hull===2);}
   $('#runBucks').textContent=G.runBucks;
   {const braced=G.braceT>0&&!G.ending;engEl.classList.toggle('braced',braced);}
-  $('#loc').innerHTML=G.terra?`<b>TERRAFORM</b> · ${CHOICE?CHOICE.name:''} · ${Math.floor(G.prog*100)}%`:G.hold?`<b>EXODUS GATE</b> · OPEN ${Math.floor(G.dist/G.len*100)}%`:`<b>${CHOICE?CHOICE.name:''}</b> · ${G.dist.toFixed(1)}/${G.len.toFixed(0)} AU`;
+  $('#loc').innerHTML=G.terra?`<b>${G.survey?'SURVEY':'TERRAFORM'}</b> · ${CHOICE?CHOICE.name:''} · ${Math.floor(G.prog*100)}%`:G.hold?`<b>EXODUS GATE</b> · OPEN ${Math.floor(G.dist/G.len*100)}%`:`<b>${CHOICE?CHOICE.name:''}</b> · ${G.dist.toFixed(1)}/${G.len.toFixed(0)} AU`;
 }
 let bannerTimer=0;
 function showBanner(a,b){$('#b1').textContent=a;$('#b2').textContent=b;$('#banner').classList.add('show');clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>$('#banner').classList.remove('show'),1900);}
@@ -2649,7 +2663,7 @@ const coin=n=>`<i class="coin"></i>${n}`;
 
 function renderSplash(){
   $('#continueBtn').hidden=!hasSave;$('#saveLine').hidden=!hasSave;
-  $('#saveLine').innerHTML=hasSave?`${captainName().toUpperCase()} · ${S.gal?`${S.gal.cons?'CONSTELLATION '+S.gal.num:'TACH '+tachNow()} · RATING ${rating()}`:`${S.cleared} CLEARED`} · ${coin(S.bucks)}`:'';
+  $('#saveLine').innerHTML=hasSave?`${captainName().toUpperCase()} · ${S.gal?`${S.gal.cons?'CONSTELLATION '+S.gal.num:'TACH '+tachNow()} · RATING ${rating()}`:`${S.cleared} CLEARED`} · ${coin(S.bucks)}${S.data?` · <span style="color:#a6ef5a">◈ ${S.data} DATA</span>`:''}`:'';
   const ng=$('#newGameBtn');ng.classList.toggle('ghost',hasSave);ng.classList.remove('armed');ng.textContent='New game';
 }
 /* --- galaxy map: symbol-first system scans in a carousel --- */
@@ -3039,7 +3053,7 @@ const depthOn=(k,d)=>DEPTH_FEAT[k].includes(d)&&(!DEPTH_LATE.includes(k)||prog()
 function depthOutline(d){const L=[];
   if(d===0)L.push('no pursuer','credits & crates required');
   else if(d===1){L.push(depthOn('strike',d)?'pursuer with attacks':'pursuer shadows us');if(depthOn('own',d))L.push('every pursuer type');L.push('Legend for a win');}
-  else L.push('storm fronts drain fuel','faster flight','sensors reach further','Solar flares required','charts the system');
+  else L.push('planet match: five systems','scan the world for Data','nothing lost if it fails');
   L.push(`pay ×${DEPTH_PAY[d]}`);
   if(unl('relics'))L.push(d===0?'no subsystem':d===1?'subsystem: 1 of 2':'subsystem: 1 of 3');
   return L.join(' · ');}
@@ -3721,6 +3735,12 @@ function showBrief(ch){{const o=terraOpt(ch);BRIEF_T=!!o&&!o.lk&&MAP.tSel===ch.s
     ${sys.twist&&!vl?`<ul class="br-ul"><li><i class="b-ok">＋</i>${sys.bonus}</li><li><i class="b-bad">！</i>${sys.twist}</li></ul>`:''}
     ${(ch.gate&&S.gal&&S.gal.cons)?`<div class="br-lab">Exodus Run</div><p class="br-dn">The end goal, all three run types in one. The first third is a quiet Trade Run. A pursuer joins us at one third. At two thirds the Tach goes fast, solar flares join, and the storm closes in, with the pursuer still on us. It gets harder as we go.</p>`:unl('depth')?`<div class="br-lab">Run type</div><div class="br-seg" id="brDepth">${DEPTH_NAME.map((n,i)=>{const lk=i>depthMax();return `<button type="button" data-d="${i}" class="${i===dp&&!BRIEF_T?'on':''}${lk?' lk':''}">${n}<small>${lk?'🔒 clear '+DEPTH_UNL[i]:DEPTH_SUB[i]}</small></button>`;}).join('')}${(()=>{const o=terraOpt(ch);return o?`<button type="button" data-d="T" class="${BRIEF_T?'on':''}${o.lk?' lk':''}">Terraform<small>${o.lk||'the goal · settle this world'}</small></button>`:'';})()}</div><p class="br-dn">${BRIEF_T?'Terraform Run: this world is the ship. Match Radiation, Pressure, Water and Temperature to build it up, keep Oxygen from running out, and keep hazards from tearing its Gravity apart. Win and settlers stay behind; lose and the world is gone for good.':DEPTH_NOTE[dp]}</p>`:''}
     ${(ch.gate&&S.gal&&S.gal.cons)?'':pullRow('brLoad')}`;
+  if(BRIEF_T||(dp===2&&!(ch.gate&&S.gal&&S.gal.cons))){const kk=$('#brBody').querySelectorAll('.br-k div');
+    if(!BRIEF_T&&kk[2]){const f=(()=>{const st=S.gal&&S.gal.stars[ch.starId];return Math.max(.25,1-.3*((st&&st.surveys)||0));})();kk[2].innerHTML=`<span>Data</span><b style="color:#a6ef5a">◈ ~${Math.round((8+5*thr)*f)}+</b>`;}
+    else if(kk[2])kk[2].innerHTML=`<span>Settlers</span><b>${(()=>{const st=S.gal&&S.gal.stars[ch.starId];return st?terraPop(st):'?';})()} stay</b>`;
+    {const ul=$('#brBody').querySelector('.br-ul');if(ul)ul.remove();}
+    if(kk[3])kk[3].innerHTML='<span>Gauges</span><b style="color:#d5dcea">Gravity · Oxygen</b>';
+    const mx=$('#brBody').querySelector('.br-mix');if(mx)mx.innerHTML='<div style="grid-column:1/-1;width:100%;box-sizing:border-box;border:1px solid #2b3b5e;border-radius:10px;padding:12px;color:#aebbd6;font-size:13px;line-height:1.45"><b style="font:10px Silkscreen,monospace;letter-spacing:.14em;color:#7fd0ff;display:block;margin-bottom:6px">PLANET HAZARDS</b>Comets and swarms hit Gravity. Eruptions burn it. Radiation storms and water surges drain Oxygen. Seed clouds refill it.</div>';}
   $('#brBody').querySelectorAll('canvas[data-spr]').forEach(cv=>{const img=CONTACT_SPR(cv.dataset.spr);cv.width=img.width;cv.height=img.height;cv.getContext('2d').drawImage(img,0,0);});
   $('#brBody').querySelectorAll('canvas[data-ic]').forEach(cv=>{cv.width=9;cv.height=9;cv.getContext('2d').drawImage(ICONS[+cv.dataset.ic],0,0);});};
   $('#brTitle').textContent='';
@@ -3777,8 +3797,8 @@ const prog=()=>career().cleared||0,unl=k=>prog()>=(UNL[k]||0);
 const depthMax=()=>prog()>=DEPTH_UNL[2]?2:prog()>=DEPTH_UNL[1]?1:0;
 const stageNow=()=>9;
 /* ================= v71: SURVEY DEPTH, TILE LOADOUT, RELICS ================= */
-const DEPTH_NAME=['Trade Run','Attack Run','Survey Run'],DEPTH_PAY=[.6,1,1.3],DEPTH_SUB=['goods, light pay','pursuer, legend','storm, charts system'];
-const DEPTH_NOTE=['A quiet haul. Credits and crates are always in the mix. No pursuer, no attacks, and the contacts are gentle. Pays 40% less and finds no subsystems, but salvage crates hold trade goods.','A pursuer is on our tail, and from the third run it brings every trick it has. Standard pay, plus Legend for a win. SubSystem offer: choose 1 of 2.','There is no pursuer, but the Tach runs fast and the space itself closes in: storms, rocks and ships grow thicker as the gap shrinks. Storm fronts hit on a timer: charge Engines to burn through, or lose fuel. Solar flares are always in the mix. Our sensors reach further. Pays 30% more, SubSystem offer: choose 1 of 3. Charting a system this way reveals its details for good.'];
+const DEPTH_NAME=['Trade Run','Attack Run','Survey Run'],DEPTH_PAY=[.6,1,1.3],DEPTH_SUB=['goods, light pay','pursuer, legend','scan a world · Data'];
+const DEPTH_NOTE=['A quiet haul. Credits and crates are always in the mix. No pursuer, no attacks, and the contacts are gentle. Pays 40% less and finds no subsystems, but salvage crates hold trade goods.','A pursuer is on our tail, and from the third run it brings every trick it has. Standard pay, plus Legend for a win. SubSystem offer: choose 1 of 2.','Survey Run: scan the world on the planet board. The five systems fight comets, eruptions and storms while Data tiles pile up. Data buys Sensor upgrades. If it fails you keep what you gathered and nothing is lost, but each repeat survey here pays less.'];
 const DEPTH_FEAT={pursuer:[1],gap:[1,2],strike:[1],own:[1],intercept:[1],mods:[2],survey:[2]},DEPTH_LATE=['strike','own','intercept'],SPECIALS=['line','nova','loot','flare','burner'];
 const SPECIAL_NAME={line:'Line tiles',nova:'Nova core',loot:'Credits & crates',flare:'Solar flare',burner:'Afterburner tile'};
 let RUNX=null;
@@ -4660,7 +4680,7 @@ const COACH_TIPS={
   gate:{el:'#chartCv',t:()=>'The Exodus Gate is in reach. It is the last system in this constellation. Clear it and we jump on to the next. Tap it to see what is waiting.'},
   tach:{el:'.tc-tot',t:()=>'Five reels, one per system, and all five must hold. The chances multiply, so one weak reel drags the whole jump down. Shore up the weakest first.'},
   tach_fail:{el:'.tc-res',t:()=>'We lost a level on every system that failed. Hard lesson. Rebuild at the planets, research what broke, and we go again.'},
-  depth:{el:'#brDepth',t:()=>'Your call on the kind of run. Trade Run: crates full of goods to sell. Attack Run: a pursuer, and Legend. Survey Run: fast, far sensors, bigger pay. Choose before you give the order.'},
+  depth:{el:'#brDepth',t:()=>'Your call on the kind of run. Trade Run: crates full of goods to sell. Attack Run: a pursuer, and Legend. Survey Run: scan a world on the planet board and bring home Data. Choose before you give the order.'},
   load:{el:'#brLoad',t:()=>'We only have room for so many Tile systems. Each run type brings its own.'},
   burst:{el:'#board',t:()=>'Overdrive is charged. Tap the glowing bolt tile on the board. Clear it in a match and you lose charge. Counterfire pushes the pursuer back, the Fuel snake tops up the tank, Repair is a plate-welding game that mends the hull, and Power slots spends fuel to spin your systems for charge: pick how many lines to play. Most Overdrives burn about a tenth of your tank.'},
   relic:{el:'#relicCards',t:()=>'A subsystem. It stays installed for the whole campaign, so choose what we will lean on. We only have three slots.'},
@@ -6010,7 +6030,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v138c-terra';
+const BUILD='v139-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6139,7 +6159,7 @@ function drawBoardClearFX(c){
 /* ================= FLOW ================= */
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function goSplash(){scene='splash';SP.shipX=-innerWidth*.6;renderSplash();renderInstall();only('#splash');}
-function goMap(){if(document.body.classList.contains('terra')){G.terra=false;skinTerra(false);}if($('#chartBox'))$('#chartBox').classList.remove('big'),$('#zBig').textContent='⤢',MAP.z=1,MAP.panX=MAP.panY=0;scene='map';renderMap();only('#map');}
+function goMap(){if(document.body.classList.contains('terra')){G.terra=false;G.survey=false;skinTerra(false);}if($('#chartBox'))$('#chartBox').classList.remove('big'),$('#zBig').textContent='⤢',MAP.z=1,MAP.panX=MAP.panY=0;scene='map';renderMap();only('#map');}
 function goHangar(){scene='hangar';renderHangar();only('#hangar');}
 function openQuarters(){ensureStation();H.tab='quarters';H.room='habitat';H.intro=false;sfx.tick();goHangar();const b=$('#hangar .hg-body');if(b)b.scrollTop=0;}
 function openPilotIntro(){H.tab='quarters';H.room='habitat';H.intro=true;goHangar();}
@@ -6147,10 +6167,10 @@ function pilotDone(){H.intro=false;sfx.tick();goMap();}
 function applyWarBoost(){if(!G.warPend)return;G.warPend=false;{const ls=TR||!CHOICE?0:((S.loss||{})[CHOICE.starId]||0);if(ls){for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2*ls);setTimeout(()=>{if(scene==='game'&&G.running)vpPop(`LESSONS LEARNED · ALL SYSTEMS +${2*ls}`,'#ffd84a');},700);}}const w=Math.max(0,rle('war')-1)*2+(peak('war')?2:0);if(!w)return;const n=[0,0,0,0];for(const row of B.grid)for(const x of row)if(x&&x.t<4)n[x.t]++;const m=n.indexOf(Math.max(...n));
   G.meters[m]=Math.min(ST.cap[m],G.meters[m]+w);G.warBoost={m,w};const el=gEls[m].g;el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),600);vpPop(`WAR ROOM · ${TYPES[m].name.toUpperCase()} CHARGED +${w}`,TYPES[m].color);}
 function startRun(){
-  const TP=TERRA_PENDING;TERRA_PENDING=false;if(!TP&&document.body.classList.contains('terra')){G.terra=false;skinTerra(false);}
+  const TP=TERRA_PENDING;TERRA_PENDING=false;if(!TP&&document.body.classList.contains('terra')){G.terra=false;G.survey=false;skinTerra(false);}
   CINE=null;RUNX=TR?null:{depth:depthNow(),load:loadFor(depthNow()),forced:FORCED[depthNow()]};const gx=!TR&&CHOICE&&CHOICE.gate&&S.gal&&S.gal.cons;if(gx){RUNX.depth=0;RUNX.f=[];RUNX.gate=true;RUNX.stage=0;RUNX.forced='loot';RUNX.load=loadFor(0);}
-  if(TP)RUNX={depth:1,load:['line','nova','loot'],forced:null,f:[],terra:true};
-  SYS=sysView(CHOICE.key);resetGame();{const e=$('#tileCtr b');if(e)e.textContent='0';}G.hold=false;G.depth=gx?1:(RUNX?RUNX.depth:1);G.aegis=0;if(TP)terraInit();if(gx){G.sayT=3;setTimeout(()=>{if(scene==='game'&&G.running)pilotSay('Steady!');},1400);}G.od=0;IL=null;setTimeout(odSync,60);if(peak('shipyard'))for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2);sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
+  if(TP)RUNX={depth:1,load:TP==='survey'?['line','nova','loot']:['line','nova','burner'],forced:null,f:[],terra:true};
+  SYS=sysView(CHOICE.key);resetGame();{const e=$('#tileCtr b');if(e)e.textContent='0';}G.hold=false;G.depth=gx?1:(RUNX?RUNX.depth:1);G.aegis=0;if(TP)terraInit(TP);if(gx){G.sayT=3;setTimeout(()=>{if(scene==='game'&&G.running)pilotSay('Steady!');},1400);}G.od=0;IL=null;setTimeout(odSync,60);if(peak('shipyard'))for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2);sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
   for(let m=0;m<4;m++)gEls[m].bar.style.setProperty('--n',ST.cap[m]);
   B.waiters.length=0;B.dying=[];B.beams=[];B.bomb=null;B.barr=null;B.pops=[];B.hazards=[];B.sel=null;B.hint=null;B.idle=0;B.glow=null;
   fillBoard();B.busy=true;settle().then(()=>{B.busy=false;});
@@ -6160,11 +6180,11 @@ function startRun(){
   if(S.tutRunDone==null)S.tutRunDone=career().runs>0;G.tut=!S.tutRunDone&&!TP;
   G.cdTotal=G.countdown=AUD.cd??3;G.cdArrived=false;G.cdBoost=0;if(!G.countdown)applyWarBoost();
   if(G.tut&&!G.countdown)setTimeout(()=>coach('run_start'),700);
-  if(!G.countdown)showBanner(TP?'Terraform':`${CHOICE.name} · ${SYS.type}`,TP?`${CHOICE.name.toUpperCase()} · HOLD THE WORLD TOGETHER`:`${SYS.pName.toUpperCase()} ON SCOPE`);
+  if(!G.countdown)showBanner(TP==='survey'?'Survey':TP?'Terraform':`${CHOICE.name} · ${SYS.type}`,TP==='survey'?`${CHOICE.name.toUpperCase()} · SCAN FOR DATA`:TP?`${CHOICE.name.toUpperCase()} · HOLD THE WORLD TOGETHER`:`${SYS.pName.toUpperCase()} ON SCOPE`);
 }
 async function launch(choice){
   audio();if(AUD.brief!==false&&choice&&!choice.hold&&choice.key){if(!(await showBrief(choice)))return;}else if(choice){const o=terraOpt(choice);BRIEF_T=!!o&&!o.lk&&MAP.tSel===choice.starId;}
-  CHOICE=choice;if(BRIEF_T){TERRA_PENDING=true;BRIEF_T=false;}sfx.launch();
+  CHOICE=choice;{const exo=choice&&choice.gate&&S.gal&&S.gal.cons;if(BRIEF_T)TERRA_PENDING='terra';else if(!TR&&choice&&choice.key&&!choice.hold&&!exo&&depthNow()===2)TERRA_PENDING='survey';BRIEF_T=false;}sfx.launch();
   SP.shipX=0;SP.launching=true;SP.warpTarget=1;only();
   await sleep(850);
   startRun();SP.warpTarget=0;SP.launching=false;
