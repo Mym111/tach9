@@ -128,8 +128,8 @@ button:disabled{cursor:default}
 .bucks .alloy+*{color:#cfe0f5}
 .stbay{height:clamp(290px,46vh,390px)}
 .stbay canvas{cursor:pointer}
-.rtabs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin:10px 0 8px;flex:none}
-.rtab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 1px 7px;border-radius:9px;border:1px solid var(--bezel);background:#0d1528;font-family:var(--f-display);font-size:7px;letter-spacing:.02em;color:var(--dim);min-width:0}
+.rtabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:10px 0 8px;flex:none}
+.rtab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 1px 7px;border-radius:9px;border:1px solid var(--bezel);background:#0d1528;font-family:var(--f-display);font-size:9px;letter-spacing:.04em;color:var(--dim);min-width:0}
 .rtab i{width:8px;height:8px;border-radius:2px;background:var(--rc)}
 .rtab span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .rtab em{font-style:normal;color:var(--ink);font-size:9px}
@@ -3467,7 +3467,7 @@ const availSpecials=()=>SPECIALS.filter(unl);
 function loadNow(){const a=availSpecials(),n=loadSlots();if(!unl('load')||a.length<=n)return a;
   const l=(S.load||[]).filter(k=>a.includes(k)).slice(0,n);for(const k of a)if(l.length<n&&!l.includes(k))l.push(k);return l;}
 const rx=()=>TR?null:BRIEF?{depth:depthNow(),load:loadNow()}:RUNX;
-const feat=k=>{if(TR)return TR.feats.includes(k);if(k in UNL&&!unl(k))return false;const x=rx();if(!x)return true;
+const feat=k=>{if(TR)return TR.feats.includes(k);if(k==='burst'&&!rl('tach'))return false;if(k in UNL&&!unl(k))return false;const x=rx();if(!x)return true;
   if(k in DEPTH_MIN)return x.depth>=DEPTH_MIN[k];if(SPECIALS.includes(k))return x.load.includes(k);return true;};
 const RELICS=[
  {id:'plating',name:'Hull plating',g:'▣',c:'#9fb6d9',d:'+15 maximum hull.'},
@@ -4022,7 +4022,7 @@ const STAGES=[null,
  {short:'A pursuer, and its attacks',obj:'Something has picked up our trail.',
   news:['An Empire cruiser now chases us. Watch the GAP bar, top-left of the viewport','Missed contacts close the gap. Perfect clears push it back. At zero we are caught','It launches attacks too. Have enough charge banked in the system it names before the timer ends','SURVEY DEPTH is yours to set in the briefing. Fly-by is quiet and pays less. Deep survey brings every threat and pays more']},
  {short:'Ship rooms unlock',obj:'Time to build out the ship.',
-  news:['Credits and Alloy can now build and upgrade rooms: Sensors, Shipyard, War room, Refinery, Habitat, Drone bay and Tach drive','Open the Ship from the map to spend','OVERDRIVE: perfect clears charge the Overdrive bar above the gauges. When it fills, tap the bolt tile for Counterfire, a repair, a fuel snake, Power slots, Afterburn or the Rail loader. Most burn fuel, so watch the tank']},
+  news:['Credits and Alloy can now build and upgrade rooms: Sensors, Shipyard, War room, Refinery, Habitat, Drone bay and Tach drive','Open the Ship from the map to spend','OVERDRIVE: build the Overdrive core in the Ship first. Then perfect clears charge the Overdrive bar above the gauges. When it fills, tap the bolt tile for Counterfire, a repair, a fuel snake, Power slots, Afterburn or the Rail loader. Most burn fuel, so watch the tank']},
  {short:'Combo perks',obj:'Big chains pay off now.',
   news:['Chains of 3+ let your crew fire a combo perk','Set the loadout in the War room. Longer chains unlock stronger perks']},
  {short:'Every pursuer is different',obj:'Each system now has its own pursuer.',
@@ -4067,7 +4067,7 @@ function reelBase(k){const u=S.up,parts=S.gal?Math.min(shardsMine(S.gal),SHARD_N
     case'wpn':return{P:u.wpn+rl('war')+tachBonus(k),src:[['Weapons',u.wpn],['War room',rl('war')]]};
     case'shd':return{P:u.shd+rl('drone')+tachBonus(k),src:[['Shields',u.shd],['Drone bay',rl('drone')]]};
     case'eng':return{P:u.eng+Math.floor(u.fuel/2)+Math.floor(rl('shipyard')/2)+tachBonus(k),src:[['Engines',u.eng],['Fuel',u.fuel],['Shipyard',rl('shipyard')]]};
-    default:return{P:parts*1.5+(rl('tach')-1)*1.5+tachBonus(k),src:[['Gate parts',`${parts}/${SHARD_NEED}`],['Tach drive',rl('tach')]]};}}
+    default:return{P:parts*1.5+Math.max(0,rl('tach')-1)*1.5+tachBonus(k),src:[['Gate parts',`${parts}/${SHARD_NEED}`],['Tach drive',rl('tach')]]};}}
 // each Tach asks a little more of every system, and a little more again the higher you go
 const tachReq=T=>.9+.8*(T-1);
 const reelOdds=(P,T)=>clamp(1/(1+Math.exp(-.9*(P-tachReq(T)))),.03,.98);
@@ -4488,8 +4488,8 @@ const ROOMS=[
   {k:'drone',name:'Drone bay',col:'#c792ff',max:3,cost:[[3,60],[5,120],[8,200]],panel:'drones',open:'Drone payloads',
    desc:'Drones ride along on every expedition. Every so often one drops onto the board carrying the payload you picked: a line clearer, a bomb or a hazard seeker. Higher levels mean more frequent drops and bigger payloads, and from level 2 drones also seal one hull breach when the hull runs low.',
    eff:L=>L?`A drone every ${DRONE_T[L]}s · ${PAYLOADS[payload()].name.toLowerCase()} ${PAYLOADS[payload()].eff(L)}${PATCH[L]?` · seals ${PATCH[L]} hull once`:''}`:'Offline'},
-  {k:'tach',name:'Overdrive core',col:'#5ef0d0',max:3,cost:[null,[6,150],[10,300]],panel:'core',open:'Core tuning',
-   desc:'The reactor behind Overdrive. Perfect clears charge it, and a bigger core needs fewer of them. Engage it from under the systems for Counterfire, Fuel snake, Repair, Power slots, Afterburn or the Rail loader. The same drive carries the ship through the Exodus Gate.',
+  {k:'tach',name:'Overdrive core',col:'#5ef0d0',max:3,cost:[[4,90],[6,150],[10,300]],panel:'core',open:'Core tuning',
+   desc:'The reactor behind Overdrive. Overdrive stays offline until you build it. Perfect clears charge it, and a bigger core needs fewer of them. Engage it from under the systems for Counterfire, Fuel snake, Repair, Power slots, Afterburn or the Rail loader. The same drive carries the ship through the Exodus Gate.',
    eff:L=>`Overdrive charges in ${[0,5,4,3][L]} perfect clears · tuning up to rank ${L}`},
 ];
 {const ord=['comms','shipyard','war','habitat','refinery','drone','tach'];ROOMS.sort((a,b)=>ord.indexOf(a.k)-ord.indexOf(b.k));}
@@ -4498,9 +4498,9 @@ const alloyTag=n=>`<i class="alloy"></i>${n}`;
 function ensureStation(){
   if(!S.station){
     const mx=Math.max(1,...Object.values(S.up||{}));
-    S.station={alloy:0,pop:12,rooms:{comms:1,war:1,shipyard:Math.min(4,mx),habitat:1,refinery:0,drone:0,tach:1}};
+    S.station={alloy:0,pop:12,rooms:{comms:1,war:1,shipyard:Math.min(4,mx),habitat:1,refinery:0,drone:0,tach:0},coreV:1};
   }
-  const rm=S.station.rooms;if(rm.comms==null){rm.comms=rm.war||1;rm.war=1;}for(const k of ['refinery','drone'])if(!(rm[k]>=0))rm[k]=0;if(!rm.war)rm.war=1;if(!rm.tach)rm.tach=1;
+  const rm=S.station.rooms;if(rm.comms==null){rm.comms=rm.war||1;rm.war=1;}for(const k of ['refinery','drone'])if(!(rm[k]>=0))rm[k]=0;if(!rm.war)rm.war=1;if(!S.station.coreV){S.station.coreV=1;if(!rm.tach)rm.tach=1;}if(!(rm.tach>=0))rm.tach=0;
   // v53: the Flight deck is gone; refund what was spent on it
   if(rm.flight!=null){const L=rm.flight||0;S.station.alloy+=[0,4,10,19][L]||0;S.bucks+=[0,80,220,440][L]||0;delete rm.flight;if(S.station.crew)delete S.station.crew.flight;}
   if(S.station.crew)crewSync();
@@ -4623,7 +4623,7 @@ function renderStation(){
   const tabs=$('#rtabs');tabs.innerHTML='';
   for(const d of ROOMS){const L=rl(d.k),b=document.createElement('button');b.className='rtab';b.setAttribute('role','tab');
     b.setAttribute('aria-selected',RM.sel===d.k?'true':'false');b.style.setProperty('--rc',d.col);
-    b.innerHTML=`<i></i><span>${d.name.replace(' bay','').replace(' room','').replace(' deck','').replace('Refinery','Refine').replace('Shipyard','Yard').replace('Habitat','Hab').replace(' drive','')}</span><em>${L?'L'+L:'—'}${CREWED.includes(d.k)&&L?`<u style="background:${CREW_COL[crewState(d.k)]}"></u>`:''}</em>`;
+    b.innerHTML=`<i></i><span>${d.name.replace(' bay','').replace(' room','').replace(' deck','').replace('Refinery','Refine').replace('Shipyard','Yard').replace('Habitat','Hab').replace(' drive','').replace('Overdrive core','Core')}</span><em>${L?'L'+L:'—'}${CREWED.includes(d.k)&&L?`<u style="background:${CREW_COL[crewState(d.k)]}"></u>`:''}</em>`;
     b.onclick=()=>{RM.sel=d.k;sfx.tick();renderStation();};tabs.append(b);}
   // room card
   const d=roomDef(RM.sel),L=rl(d.k),max=L>=d.max,cost=max?null:d.cost[L];
@@ -4633,7 +4633,7 @@ function renderStation(){
   else if(max)act=`<div class="up-max">★ MAX LEVEL</div>`;
   else{const[a,cr]=cost,cw=crewCost(d,L),okA=stn.alloy>=a,okC=S.bucks>=cr,okW=stn.pop-cw>=1;
     act=`<button class="btn up-btn" id="rcBuild" ${okA&&okC&&okW?'':'disabled'}><i class="up-i">${ICO.up}</i>${L?'Upgrade':'Build'} <span class="rc-cost${okA?'':' short'}">${alloyTag(a)}</span><span class="rc-cost${okC?'':' short'}">${coin(cr)}</span>${cw?`<span class="rc-cost${okW?'':' short'}">${ICO.person} ${cw}</span>`:''}</button>`;}
-  const nowTxt=L?(rle(d.k)<L?`${rle(d.k)?d.eff(rle(d.k)):'Offline'}<em class="up-warn">${ICO.person} Needs crew · assign in the Habitat · working as ${rle(d.k)?'L'+rle(d.k):'offline'}</em>`:d.eff(L)):'Not built',nav=ROOM_NAV[d.k];
+  const nowTxt=L?(rle(d.k)<L?`${rle(d.k)?d.eff(rle(d.k)):'Offline'}<em class="up-warn">${ICO.person} Needs crew · assign in the Habitat · working as ${rle(d.k)?'L'+rle(d.k):'offline'}</em>`:d.eff(L)):'Not built',nav=L?ROOM_NAV[d.k]:null;
 
   $('#roomCard').style.setProperty('--rc',d.col);
   $('#roomCard').innerHTML=`<div class="rc-head"><span class="rc-name">${d.name.toUpperCase()}${d.k==='drone'?'<canvas class="rc-tile" id="rcTile" width="72" height="72" title="The drone tile you tap on the board"></canvas>':''}</span><span class="pips">${pips}</span></div>
@@ -4930,13 +4930,13 @@ function drawStation(dt){
       badge(q,d);}
     flash(q);label(q,d,L);}
   // TACH DRIVE: the Luxometer, a ring with a slot for each gate part
-  {const q=rooms.tach,L=rl('tach'),d=roomDef('tach');frame(q,d.col,L);
+  {const q=rooms.tach,L=rl('tach'),d=roomDef('tach');frame(q,d.col,L);if(L){
     const gx=q.x+q.w*.34,gy=q.y+q.h*.6,r=Math.min(q.h*.34,q.w*.2),n=S.gal?Math.min(shardsMine(S.gal),SHARD_NEED):0;
     for(let k=0;k<L;k++){c.strokeStyle=`rgba(94,240,208,${.3+.15*k+.15*Math.sin(t*3+k)})`;c.lineWidth=1;c.beginPath();c.ellipse(gx,gy,r*(.5+k*.25),r*(.3+k*.15),t*(k%2?-.5:.5),0,6.28);c.stroke();}
     for(let i=0;i<SHARD_NEED;i++){const a=t*.8+i*Math.PI/2,x=gx+Math.cos(a)*r*1.1,y=gy+Math.sin(a)*r*.6;c.fillStyle=i<n?SHARD_COL:'rgba(94,240,208,.18)';c.fillRect(R(x)-1,R(y)-2,3,4);}
     c.fillStyle=Math.sin(t*5)>0?'#ffd84a':'#8a7a2a';c.fillRect(R(gx)-1,R(gy)-1,3,3);
     c.font='7px Silkscreen, monospace';c.textAlign='right';c.textBaseline='bottom';c.fillStyle='#5ef0d0';c.fillText(`TACH ${tachNow()}`,q.x+q.w-5,q.y+q.h-4);
-    badge(q,d);flash(q);label(q,d,L);}
+    badge(q,d);flash(q);label(q,d,L);}}
   for(let i=0;i<rl('drone');i++){const a=t*.5+i*2.1,x=cx+Math.cos(a)*W*.47,y=H*.5+Math.sin(a)*H*.46;
     c.fillStyle='#c792ff';c.fillRect(R(x)-2,R(y)-1,4,2);c.fillStyle=Math.sin(t*8+i)>0?'#ffffff':'#c792ff';c.fillRect(R(x),R(y)-2,1,1);}
   c.font='8px Silkscreen, monospace';c.textAlign='left';c.textBaseline='top';c.fillStyle='rgba(225,233,247,.75)';
@@ -5585,7 +5585,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v126';
+const BUILD='v127';
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
@@ -6108,7 +6108,7 @@ const TRAIN_CH=[
   {say:'Deep surveys add attacks. The action freezes while the pursuer winds up, then a red alert names a system and starts a timer. Have that system charged before it runs out, or take hull damage, lose gap and take board damage.',next:'tap'},
   {say:'Chain combo perks, Afterburn and Counterfire all push the gap back. Harder tiers close it faster, so keep your systems topped up and do not stock one at the expense of the others.',next:'end'}]},
  {k:'overdrive',t:'Overdrive and fuel',d:'Six power-up games, and what they cost.',feats:[],steps:[
-  {say:'Perfect clears fill the Overdrive bar, the glowing strip just above your system gauges. When it is full, one tile on the board gets a bolt. Tap that tile to open the Overdrive menu.',next:'tap',board:trLay([]),ring:'#odBar',enter(){trOdBar(true);}},
+  {say:'Overdrive needs the Overdrive core built in your Ship. Once it is, perfect clears fill the Overdrive bar, the glowing strip just above your system gauges. When it is full, one tile on the board gets a bolt. Tap that tile to open the Overdrive menu.',next:'tap',board:trLay([]),ring:'#odBar',enter(){trOdBar(true);}},
   {say:'You pick one of six games. Each costs about a tenth of your tank, except the Fuel snake, which is free, and Power slots, which charge per line. Let’s play each one. This is practice, so nothing is spent.',next:'tap'},
   {say:'COUNTERFIRE. Tap the targets that appear on the enemy cruiser before they fade. Keep going into overtime, but the first miss there ends it. Every hit pushes the pursuer back.',next:'cond',cond:()=>!IL,enter(){trTest('counter');},delay:600},
   {say:'REPAIR. A plate slides back and forth over the stack. Tap to drop it. Overhang is trimmed off, so line it up. A perfect weld keeps the full width. Tap the bank button any time to take the hull repair so far.',next:'cond',cond:()=>!IL,enter(){trTest('repair');},delay:600},
@@ -6134,7 +6134,7 @@ TRAIN_CH.push(
   {say:'Terraform enough worlds and the Exodus Gate unseals. Then Launch becomes the jump to the next constellation. That is the goal of every campaign.',next:'end'}]},
  {k:'station',t:'Ship upgrades',d:'Rooms, ship systems and crew.',sandbox:true,feats:['pursuer','strike','rooms','line','nova','loot','perks'],steps:[
   {say:'This is your ship. Rooms give it abilities, and you pay for them with Alloy and credits. This lesson runs on a practice save with some resources.',next:'tap',ring:'#stCv',enter(){goStation();}},
-  {say:'Each tab is a room: Sensors, Yard, War room, Refinery, Hab, Drone bay and Tach drive. Tap a couple of tabs to read what they do. Tap your portrait, top left, to name yourself and your ship.',next:'cond',cond:()=>RM.sel!==TR.sel0,ring:'#rtabs',delay:900,enter(){TR.sel0=RM.sel;}},
+  {say:'Each tab is a room: Sensors, Yard, War room, Refinery, Hab, Drone bay and Tach drive. Tap a couple of tabs to read what they do. The Core room powers Overdrive and has to be built before you can use it. Tap your portrait, top left, to name yourself and your ship.',next:'cond',cond:()=>RM.sel!==TR.sel0,ring:'#rtabs',delay:900,enter(){TR.sel0=RM.sel;}},
   {say:'Build the Refinery. It costs Alloy and credits (shown top right), adds a Tile systems slot and hosts the Alloy exchange.',next:'cond',cond:()=>S.station.rooms.refinery>=1,ring:['#rcBuild'],delay:1200,enter(){RM.sel='refinery';renderStation();}},
   {say:'Built. Rooms have levels, and they need crew to run at full strength. The card tells you when one is short. The Habitat holds your people.',next:'tap',ring:'#roomCard'},
   {say:'Now the Shipyard. Press Open to go to the ship bay.',next:'cond',cond:()=>scene==='hangar',ring:'#rcOpen',delay:700,enter(){RM.sel='shipyard';renderStation();}},
