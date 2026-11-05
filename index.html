@@ -815,7 +815,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
   <section class="screen" id="splash">
     <div class="sp-top">
       <div class="eyebrow">Ship log</div>
-      <h1 class="title">Tach 9</h1>
+      <h1 class="title" data-gn>Tach 9</h1>
       <p class="tag">Push your ship past the speed of light, one jump at a time.</p>
     </div>
     <nav class="sp-menu" aria-label="Main menu">
@@ -848,7 +848,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
   <section class="screen overlay off" id="credits">
     <div class="card credcard">
       <div class="eyebrow">Credits</div>
-      <h2>Tach 9</h2>
+      <h2 data-gn>Tach 9</h2>
       <dl>
         <div><dt>CONCEPT &amp; DESIGN</dt><dd>Michael</dd></div>
         <div><dt>MUSIC</dt><dd>Generative, composed live in code</dd></div>
@@ -1159,8 +1159,10 @@ const TYPES=[
   {key:'eng', name:'Engines',    color:'#ff9640', light:'#ffd6b3', dark:'#3e2211', handles:'Slingshot gravity wells'},
   {key:'fuel',name:'Fuel cells', color:'#ffd84a', light:'#fff3bf', dark:'#3a3210', handles:'Pour straight into the tank'},
 ];
-const NOVA=5, DEBRIS=6, BUCKS=7, CRATE=8;
+const NOVA=5, DEBRIS=6, BUCKS=7, CRATE=8, BURN=9;
+const GAME_NAME='Tach 9';   // working title: change here (plus manifest/sw/icons, see README) to rename
 const BUCKS_DEF={name:'Credits',color:'#ff7ad9',light:'#ffd1f1',dark:'#3d1433'};
+const BURN_DEF={name:'Afterburner',color:'#ff9640',light:'#ffe0b8',dark:'#3a1706'};
 const CRATE_DEF={name:'Salvage crate',color:'#ffd84a',light:'#fff3bf',dark:'#3a2606'};
 const ICON_ROWS=[
  ["....#....","..#####..",".#..#..#.",".#.....#.","####+####",".#.....#.",".#..#..#.","..#####..","....#...."],
@@ -1186,6 +1188,7 @@ const ICONS=ICON_ROWS.map((rows,i)=>i<5?bitmap(rows,{'#':TYPES[i].color,'+':TYPE
   :i===NOVA?bitmap(rows,{'#':'#c792ff','+':'#ffffff'})
   :i===DEBRIS?bitmap(rows,{'#':'#ad967a','o':'#5e5048'})
   :bitmap(rows,{'#':BUCKS_DEF.color,'+':BUCKS_DEF.light}));
+ICONS[BURN]=bitmap(["....#....","...###...","..#+++#..",".#+###+#.",".#+#o#+#.","#+#ooo#+#","#+#o+o#+#",".#.#+#.#.","....#...."],{'#':'#ff7a1a','o':'#ffd84a','+':'#fff3d6'});
 ICONS[CRATE]=bitmap([".#######.","#+++++++#","#o#ooo#o#","#oo#o#oo#","#+++#+++#","#oo#o#oo#","#o#ooo#o#","#+++++++#",".#######."],{'#':'#8a5410','o':'#d99a32','+':'#ffe066'});
 const PAINTS=[{n:'Standard',c:'#c9d4ea'},{n:'Amber',c:'#ffc46b'},{n:'Crimson',c:'#ff7a86'},{n:'Mint',c:'#7ae8b4'},{n:'Cobalt',c:'#8fb3ff'},{n:'Orchid',c:'#dcb0ff'}];
 // Hull: 20×13, nose to the right, engines on the left. Upgrades bolt onto real hull edges.
@@ -1962,21 +1965,22 @@ const B={cv:$('#board'),ctx:null,grid:[],dying:[],beams:[],pops:[],hazards:[],tr
 B.ctx=B.cv.getContext('2d');
 let uid=0;
 const newTile=(t,r,c,y0)=>({id:uid++,t,sp:0,x:c,y:y0??r,vy:0,scale:1,alpha:1,fire:null,lock:false,hit:0,lerp:false});
-const TILE_POOL=[0,1,2,3,4,BUCKS,CRATE];
+const TILE_POOL=[0,1,2,3,4,BUCKS,CRATE,BURN];
 // the board leans toward the colours this system's contacts demand
 let TILE_W=null,TILE_W_FOR=null;
 function tileWeights(){
   if(TILE_W_FOR===SYS)return TILE_W;const w=SYS.w,load=[(w.enemy||0)+(w.gunship||0)/2,(w.asteroid||0)+(w.gunship||0)/2,w.planet||0,w.well||0],tot=load.reduce((a,b)=>a+b,0)||1;
   TILE_W=load.map(l=>.7+1.3*l/tot).concat([.8,SYS.bucksW||.35]);TILE_W_FOR=SYS;return TILE_W;
 }
-function crateCount(){let n=0;if(B.grid)for(const row of B.grid)for(const t of row)if(t&&t.t===CRATE)n++;return n;}
-function randType(){const w=tileWeights().concat([CHOICE&&CHOICE.sig==='derelict'?.3:.07]);if(!feat('loot')){w[5]=0;w[6]=0;}const tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;for(let i=0;i<7;i++){r-=w[i];if(r<=0){if(TILE_POOL[i]===CRATE&&crateCount()>=3)return randType();return TILE_POOL[i];}}return 0;}
+function typeCount(ty){let n=0;if(B.grid)for(const row of B.grid)for(const t of row)if(t&&t.t===ty)n++;return n;}
+const crateCount=()=>typeCount(CRATE);
+function randType(){const w=tileWeights().concat([CHOICE&&CHOICE.sig==='derelict'?.3:.07,feat('burner')?.16:0]);if(!feat('loot')){w[5]=0;w[6]=0;}const tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;for(let i=0;i<8;i++){r-=w[i];if(r<=0){if(TILE_POOL[i]===CRATE&&crateCount()>=3)return randType();if(TILE_POOL[i]===BURN&&typeCount(BURN)>=2)return randType();return TILE_POOL[i];}}return 0;}
 const swappable=t=>!!t&&t.t!==DEBRIS&&!t.lock;
-const matchable=t=>t!=null&&(t<5||t===BUCKS||t===CRATE);
-const isWild=t=>t===BUCKS||t===CRATE;
+const matchable=t=>t!=null&&(t<5||t===BUCKS||t===CRATE||t===BURN);
+const isWild=t=>t===BUCKS||t===CRATE||t===BURN;
 const sameCell=(a,b)=>a&&b&&a[0]===b[0]&&a[1]===b[1];
 const sameLane=(a,b)=>a&&b&&!sameCell(a,b)&&(a[0]===b[0]||a[1]===b[1]);
-const tdef=t=>t===BUCKS?BUCKS_DEF:t===CRATE?CRATE_DEF:TYPES[t];
+const tdef=t=>t===BUCKS?BUCKS_DEF:t===CRATE?CRATE_DEF:t===BURN?BURN_DEF:TYPES[t];
 function until(fn){return new Promise(res=>B.waiters.push({fn,res}));}
 function wait(sec){let t=0;return until(dt=>(t+=dt)>=sec);}
 function settled(){for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const t=B.grid[r][c];if(t&&(t.x!==c||t.y!==r))return false;}return true;}
@@ -2049,7 +2053,7 @@ async function clearCells(set,chain,makes=[],wild=new Map()){
       const t=g[nr][nc],nk=nr*COLS+nc;if(t&&t.t===DEBRIS&&!set.has(nk)){set.add(nk);broke++;}}}
   B.swapCleared=(B.swapCleared||0)+set.size;
   G.tilesCleared=(G.tilesCleared||0)+set.size;{const e=$('#tileCtr b');if(e)e.textContent=G.tilesCleared;}
-  const gains=[0,0,0,0],crates=[];let fuel=0,fires=0,fr=0,fc=0,fn=0,bucks=0,br0=0,bc0=0;const br=B.cv.getBoundingClientRect();let streaks=0;
+  const gains=[0,0,0,0],crates=[],burns=[];let fuel=0,fires=0,fr=0,fc=0,fn=0,bucks=0,br0=0,bc0=0;const br=B.cv.getBoundingClientRect();let streaks=0;
   for(const k of set){
     const r=Math.floor(k/COLS),c=k%COLS,t=g[r][c];if(!t)continue;
     if(t.fire!=null)fires++;
@@ -2059,10 +2063,12 @@ async function clearCells(set,chain,makes=[],wild=new Map()){
     else if(t.t===4){fuel+=ST.fuelTile;fr+=r;fc+=c;fn++;}
     else if(t.t===BUCKS){bucks+=2;br0+=r;bc0+=c;if(wild.has(k)){const wc=wild.get(k);if(wc<4)gains[wc]++;else fuel+=ST.fuelTile;}}
     else if(t.t===CRATE){crates.push([r,c]);tgt=wild.has(k)?wild.get(k):BUCKS;if(wild.has(k)){const wc=wild.get(k);if(wc<4)gains[wc]++;else fuel+=ST.fuelTile;}}
+    else if(t.t===BURN){burns.push([r,c]);tgt=wild.has(k)?wild.get(k):BUCKS;if(wild.has(k)){const wc=wild.get(k);if(wc<4)gains[wc]++;else fuel+=ST.fuelTile;}}
     else continue;
     if(streaks++<36){const[tx,ty]=gaugeTarget(tgt);streak(br.left+(c+.5)*B.tile,br.top+(r+.5)*B.tile,tx,ty,tdef(t.t).color);}
   }
   for(const[r,c]of crates)openCrate(r,c);
+  if(burns.length)afterburnTiles(burns);
   let lit=null;
   for(let m=0;m<4;m++)if(gains[m]){gains[m]+=ST.eff[m]+Math.max(0,chain-1);G.meters[m]=Math.min(ST.cap[m],G.meters[m]+gains[m]);lit=TYPES[m].color;const el=gEls[m].g;el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),220);setTimeout(()=>{el.classList.add('pulse');setTimeout(()=>el.classList.remove('pulse'),300);},430);}
   if(fuel){const amt=fuel+(chain>1?2+(relicHas('chainfuel')?3:0):0);G.R.fuel.tiles+=amt;G.fuel=Math.min(ST.tank,G.fuel+amt);pulseFuel();if(fn)boardPop(`+${amt} FUEL`,fc/fn+.5,fr/fn+.5,'#ffd84a');lit=lit||'#ffd84a';}
@@ -2080,6 +2086,33 @@ async function clearCells(set,chain,makes=[],wild=new Map()){
   for(const m of makes){const nt=newTile(m.t,m.r,m.c);nt.sp=m.sp;if(m.sp===4)nt.fm=m.fm;nt.scale=.2;g[m.r][m.c]=nt;}
   if(makes.length)sfx.special();
   for(const m of makes){const nt=g[m.r][m.c];if(nt&&!TR)nudge(m.sp===3?'mk_nova':m.sp===4?'mk_flare':'mk_line',nt);}
+}
+function afterburnTiles(burns){
+  // wild Afterburner tile: a quick burst of speed that also stokes the combo
+  const n=burns.length;
+  B.chainBonus=(B.chainBonus||0)+2*n;
+  if(!TR&&G.running){
+    G.dist=Math.min(G.len-.2,G.dist+.35*n);G.gap=Math.min(100,G.gap+4*n);
+    G.fx.push({k:'burst',t:0,d:.9});vpPop(n>1?`AFTERBURN ×${n}`:'AFTERBURN','#ff9640');
+  }
+  burns.forEach(([r,c],i)=>{
+    boardPop('AFTERBURN +2',c+.5,r+.5,'#ff9640');
+    for(let j=1;j<=3;j++)setTimeout(()=>{if(B.beams)B.beams.push({h:true,i:Math.min(ROWS-1,r+j-2),t:0,color:'#ff9640'});},60*j+i*40);
+  });
+  sfx.special();noise(.35,.05);
+}
+// nova: jagged lightning hopping through the cleared tiles, nearest neighbour first
+function novaBolts(origin,cells){
+  const left=cells.filter(k=>k!==origin),pts=[],cx=k=>(k%COLS)+.5,cy=k=>Math.floor(k/COLS)+.5;
+  let cur=origin,delay=0;
+  while(left.length&&pts.length<40){
+    let bi=0,bd=1e9;for(let i=0;i<left.length;i++){const d=(cx(left[i])-cx(cur))**2+(cy(left[i])-cy(cur))**2;if(d<bd){bd=d;bi=i;}}
+    const nx=left.splice(bi,1)[0];
+    const seg=[];const x0=cx(cur),y0=cy(cur),x1=cx(nx),y1=cy(nx),L=Math.hypot(x1-x0,y1-y0)||1,nxv=-(y1-y0)/L,nyv=(x1-x0)/L,steps=4;
+    for(let s2=0;s2<=steps;s2++){const f=s2/steps,j=(s2===0||s2===steps)?0:(Math.random()-.5)*.5;seg.push([x0+(x1-x0)*f+nxv*j,y0+(y1-y0)*f+nyv*j]);}
+    B.beams.push({bolt:true,seg,t:-delay,color:'#e6d2ff'});delay+=.008;
+    cur=nx;pts.push(nx);
+  }
 }
 async function collapse(){
   const g=B.grid;
@@ -2114,9 +2147,9 @@ async function cascade(pivots){
         const nv=run.cells.length>=5&&feat('nova');if(!makes.some(m=>m.k===k)&&!makes.some(m=>m.sp===4&&run.cells.some(([r,c])=>r===m.r&&c===m.c))&&(nv||feat('line')))makes.push({k,r:piv[0],c:piv[1],t:nv?NOVA:run.t,sp:nv?3:(run.dir==='h'?1:2)});
       }
     }
-    await clearCells(set,chain,makes,wild);await collapse();pivots=[];
+    await clearCells(set,chain,makes,wild);if(B.chainBonus){chain+=B.chainBonus;B.chainBonus=0;chainShow(chain);pilotCatch(chain);}await collapse();pivots=[];
   }
-  G.bestChain=Math.max(G.bestChain,chain);
+  B.chainBonus=0;G.bestChain=Math.max(G.bestChain,chain);
   if(chain>=3){G.R.chains3++;maybeOfferPerk(chain);}
 }
 async function flareBurn(){
@@ -2155,7 +2188,7 @@ async function doSwap(r1,c1,r2,c2){
   if(a.t===NOVA||b.t===NOVA){
     const set=new Set(),other=a.t===NOVA?b:a;
     for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const t=g[r][c];if(other.t===NOVA||t.t===other.t||t===a||t===b)set.add(r*COLS+c);}
-    B.beams.push({nova:true,t:0});
+    B.beams.push({nova:true,t:0});if(other.t!==NOVA){const nv=a.t===NOVA?a:b;let nk=0;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(g[r][c]===nv)nk=r*COLS+c;novaBolts(nk,[...set]);await wait(.22);}
     await clearCells(set,1);await collapse();await cascade([]);
   }else if(!findRuns().length){
     G.R.invalid++;g[r1][c1]=a;g[r2][c2]=b;a.lerp=b.lerp=true;sfx.bad();await settle();B.busy=false;return;
@@ -2325,6 +2358,9 @@ function drawBoard(){
   if(G&&G.flare&&G.time<G.flare.until){const fa=.18+.12*Math.sin(B.t*14);c.fillStyle=`rgba(255,150,64,${fa})`;const F=G.flare;if(F.m===0)c.fillRect(0,F.r*T,B.w,T);else if(F.m===1)c.fillRect(F.c*T,0,T,B.h);else c.fillRect((F.c-1)*T,(F.r-1)*T,3*T,3*T);}
   for(const bm of B.beams){
     const a=1-bm.t/.4;
+    if(bm.bolt){if(bm.t<0)continue;const ba=Math.max(0,1-bm.t/.3);c.save();c.lineJoin='round';c.lineCap='round';c.shadowColor='#b48cff';c.shadowBlur=12;
+      c.strokeStyle=`rgba(180,140,255,${ba*.8})`;c.lineWidth=T*.14;c.beginPath();bm.seg.forEach(([x,y],i)=>i?c.lineTo(x*T,y*T):c.moveTo(x*T,y*T));c.stroke();
+      c.shadowBlur=0;c.strokeStyle=`rgba(255,255,255,${ba})`;c.lineWidth=Math.max(1.5,T*.045);c.stroke();c.restore();continue;}
     if(bm.nova){c.fillStyle=`rgba(199,146,255,${a*.25})`;c.fillRect(0,0,B.w,B.h);continue;}
     c.fillStyle=bm.color+Math.round(a*120).toString(16).padStart(2,'0');
     if(bm.h)c.fillRect(0,bm.i*T+T*.2,B.w,T*.6);else c.fillRect(bm.i*T+T*.2,0,T*.6,B.h);
@@ -2825,15 +2861,17 @@ const _tileC={};
 function loadTileURL(k){if(_tileC[k])return _tileC[k];const cv=document.createElement('canvas');cv.width=cv.height=48;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;const sz=40,x=4,y=4,rad=sz*.22;
   try{if(k==='nova'){c.fillStyle='#24123d';rr(c,x,y,sz,sz,rad);c.fill();const g=c.createLinearGradient(0,0,48,48);['#ff7ad9','#7ff3ff','#ffd84a','#b48cff'].forEach((col,i,a)=>g.addColorStop(i/(a.length-1),col));c.strokeStyle=g;c.lineWidth=2.5;c.stroke();c.drawImage(ICONS[NOVA],12,12,24,24);}
   else if(k==='flare'){const ty=tdef(1);c.fillStyle=ty.dark;rr(c,x,y,sz,sz,sz*.22);c.fill();c.strokeStyle='#ff9640';c.lineWidth=2.5;c.stroke();c.fillStyle='#ffb547';c.beginPath();c.arc(24,24,7,0,6.283);c.fill();c.strokeStyle='#ffb547';c.lineWidth=2.5;c.beginPath();for(let i=0;i<8;i++){const a=i*.7854;c.moveTo(24+Math.cos(a)*10,24+Math.sin(a)*10);c.lineTo(24+Math.cos(a)*15,24+Math.sin(a)*15);}c.stroke();}
+  else if(k==='burner'){const ty=tdef(BURN);c.fillStyle=ty.dark;rr(c,x,y,sz,sz,sz*.22);c.fill();c.strokeStyle=ty.color;c.lineWidth=2.5;c.stroke();c.drawImage(ICONS[BURN],12,12,24,24);}
   else if(k==='loot'){const ty=tdef(BUCKS);c.fillStyle=ty.dark;rr(c,x,y,sz,sz,sz*.5);c.fill();c.strokeStyle=ty.color+'d0';c.lineWidth=2.5;c.stroke();c.drawImage(ICONS[BUCKS],12,12,24,24);}
   else{const ty=tdef(0);c.fillStyle=ty.dark;rr(c,x,y,sz,sz,rad);c.fill();c.strokeStyle=ty.color+'80';c.lineWidth=2;c.stroke();c.drawImage(ICONS[0],12,12,24,24);
     c.strokeStyle='rgba(255,255,255,.88)';c.lineWidth=3;c.beginPath();c.moveTo(7,24);c.lineTo(41,24);c.moveTo(11,24);c.lineTo(17,19);c.moveTo(11,24);c.lineTo(17,29);c.moveTo(37,24);c.lineTo(31,19);c.moveTo(37,24);c.lineTo(31,29);c.stroke();}}catch(e){}
   return _tileC[k]=cv.toDataURL();}
-const SPECIAL_DESC={line:'Match 4 in a row to forge a line tile. Match it later to sweep its whole row or column.',nova:'Match 5 to forge a nova core. Swap it with any tile to clear every tile of that colour.',loot:'Credits tiles and salvage crates join the board.',flare:'Match an L, T or + shape to forge a flare tile. Match it later to set a row, column or 3×3 square burning for 2.5 seconds (it rotates): every tile that falls into that row is burned.'};
+const SPECIAL_DESC={line:'Match 4 in a row to forge a line tile. Match it later to sweep its whole row or column.',nova:'Match 5 to forge a nova core. Swap it with any tile to clear every tile of that colour.',loot:'Credits tiles and salvage crates join the board.',burner:'A wild tile for Attack Runs. Joins any colour in a match of 4 or more, then fires a quick afterburn: a short leap toward the gate, a little pursuer gap, and +2 chain levels.',flare:'Match an L, T or + shape to forge a flare tile. Match it later to set a row, column or 3×3 square burning for 2.5 seconds (it rotates): every tile that falls into that row is burned.'};
 const LOAD_ICO={
  line:'<svg viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="4" rx="1" fill="currentColor"/><path d="M5 5l2 3M12 4v4M19 5l-2 3M5 19l2-3M12 20v-4M19 19l-2-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
  nova:'<svg viewBox="0 0 24 24"><path d="M12 2l2.2 6.8L21 6l-4.2 5.8L22 14l-7 1.2L12 22l-2.6-6.8L2 14l5.2-2.2L3 6l6.8 2.8z" fill="currentColor"/></svg>',
  flare:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+ burner:'<svg viewBox="0 0 24 24"><path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-10z" fill="currentColor"/></svg>',
  loot:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 6.5v11M9 9.5h4.5a1.8 1.8 0 0 1 0 3.5H9.5a1.8 1.8 0 0 0 0 3.5H15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>'};
 const loadBtn=(k,on,tag='button')=>`<${tag} ${tag==='button'?'type="button" ':''}data-k="${k}" data-tip="<b>${SPECIAL_NAME[k]}</b><br>${SPECIAL_DESC[k]}" class="ldi${on?' on':''}" aria-label="${SPECIAL_NAME[k]}"><img class="tile-i" src="${loadTileURL(k)}" alt=""></${tag}>`;
 function loadPanel(id){const d=depthNow(),ld=loadFor(d).filter(k=>unl(k)||k===FORCED[d]);if(!ld.length)return '';
@@ -3583,8 +3621,8 @@ const stageNow=()=>9;
 /* ================= v71: SURVEY DEPTH, TILE LOADOUT, RELICS ================= */
 const DEPTH_NAME=['Trade Run','Attack Run','Survey Run'],DEPTH_PAY=[.6,1,1.3],DEPTH_SUB=['goods, light pay','pursuer, legend','storm, charts system'];
 const DEPTH_NOTE=['A quiet haul. Credits and crates are always in the mix. No pursuer, no attacks, and the contacts are gentle. Pays 40% less and finds no subsystems, but salvage crates hold trade goods.','A pursuer is on our tail, and from the third run it brings every trick it has. Standard pay, plus Legend for a win. SubSystem offer: choose 1 of 2.','There is no pursuer, but the Tach runs fast and the space itself closes in: storms, rocks and ships grow thicker as the gap shrinks. Storm fronts hit on a timer: charge Engines to burn through, or lose fuel. Solar flares are always in the mix. Our sensors reach further. Pays 30% more, SubSystem offer: choose 1 of 3. Charting a system this way reveals its details for good.'];
-const DEPTH_FEAT={pursuer:[1],gap:[1,2],strike:[1],own:[1],intercept:[1],mods:[2],survey:[2]},DEPTH_LATE=['strike','own','intercept'],SPECIALS=['line','nova','loot','flare'];
-const SPECIAL_NAME={line:'Line tiles',nova:'Nova core',loot:'Credits & crates',flare:'Solar flare'};
+const DEPTH_FEAT={pursuer:[1],gap:[1,2],strike:[1],own:[1],intercept:[1],mods:[2],survey:[2]},DEPTH_LATE=['strike','own','intercept'],SPECIALS=['line','nova','loot','flare','burner'];
+const SPECIAL_NAME={line:'Line tiles',nova:'Nova core',loot:'Credits & crates',flare:'Solar flare',burner:'Afterburner tile'};
 let RUNX=null;
 const FORCED={0:'loot',2:'flare'};
 const surveyVeil=ch=>!TR&&ch&&!ch.gate&&ch.starId!=null&&depthMax()>=2&&!(S.gal&&S.gal.stars[ch.starId]&&S.gal.stars[ch.starId].surv);
@@ -3593,7 +3631,7 @@ const loadSlots=()=>2+(S.station&&rle('refinery')>=1?1:0);
 const availSpecials=()=>SPECIALS.filter(unl);
 function loadNow(){const a=availSpecials(),n=loadSlots();if(!unl('load')||a.length<=n)return a;
   const l=(S.load||[]).filter(k=>a.includes(k)).slice(0,n);for(const k of a)if(l.length<n&&!l.includes(k))l.push(k);return l;}
-const FIXED_LOAD={0:['line','nova','loot'],1:['line','nova'],2:['line','nova','flare']};
+const FIXED_LOAD={0:['line','nova','loot'],1:['line','nova','burner'],2:['line','nova','flare']};
 const loadFor=d=>FIXED_LOAD[d]||FIXED_LOAD[1];
 const rx=()=>TR?null:BRIEF?{depth:depthNow(),load:loadFor(depthNow()),forced:FORCED[depthNow()]}:(RUNX&&RUNX.gate&&scene!=='game'?null:RUNX);
 const rd=()=>TR?0:(RUNX&&scene==='game'?RUNX.depth:depthNow());
@@ -4268,7 +4306,7 @@ function finishTach(){
   const b=$('#tcBody');b.classList.remove('running');
   const done=T>=TACH_GOAL;
   b.insertAdjacentHTML('beforeend',`<div class="tc-res ${ok?'ok':'bad'}"><b>${ok?(done?`TACH ${T} · YOU MADE IT`:`TACH ${T} REACHED`):'DRIVE FAILURE'}</b>
-    <p>${ok?(done?'The ship breaks Tach 9. Nobody has gone faster. The galaxies beyond are yours if you want to keep pushing.':'The ship tears through the barrier into a new galaxy. The next Tach asks more of every system.'):'The drive shuts down short of the barrier. Rebuild what broke and try again.'}</p>
+    <p>${ok?(done?`The ship breaks Tach ${TACH_GOAL}. Nobody has gone faster. The galaxies beyond are yours if you want to keep pushing.`:'The ship tears through the barrier into a new galaxy. The next Tach asks more of every system.'):'The drive shuts down short of the barrier. Rebuild what broke and try again.'}</p>
     <ul>${lines.map(l=>`<li>${l}</li>`).join('')}</ul>${rateWidget('tach '+T+(ok?' ok':' fail'))}</div>`);bindRate(b);
   $('#tcX').hidden=false;const go=$('#tcGo');go.hidden=false;go.innerHTML=ok?`<i class="tc-gi">${ICO.tach}</i>${done?'Keep going':'Make the jump'}`:'Back to the map';
   go.onclick=ok?()=>{closeTach();nextGalaxy();}:closeTach;
@@ -4598,14 +4636,14 @@ const INST={evt:null};
 const isInstalled=()=>matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
 const isIOS=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();INST.evt=e;renderInstall();});
-addEventListener('appinstalled',()=>{INST.evt=null;renderInstall();toast('<b>Tach 9 installed</b><span>Open it from your home screen for the full-screen game.</span>','#5ef0d0');});
+addEventListener('appinstalled',()=>{INST.evt=null;renderInstall();toast(`<b>${GAME_NAME} installed</b><span>Open it from your home screen for the full-screen game.</span>`,'#5ef0d0');});
 const SHARE_SVG='<svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 11H5v10h14V11h-1" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
 function renderInstall(){
   let bar=$('#instBar');let off=false;try{off=!!sessionStorage.getItem('t9.noinst');}catch(e){}
   if(!window.__PWA||isInstalled()||off){if(bar)bar.remove();return;}
   if(!bar){bar=document.createElement('div');bar.id='instBar';bar.className='inst';const menu=$('#splash .sp-menu');if(!menu)return;menu.prepend(bar);}
   const ios=isIOS(),can=!!INST.evt;
-  bar.innerHTML=`<img src="icons/icon-192.png" alt=""><div><b>Install Tach 9</b><span>${ios?'Full-screen, offline, with its own home-screen icon.':can?'One tap: full-screen, offline, own icon.':'Use your browser menu: Install app or Add to Home Screen.'}</span></div>
+  bar.innerHTML=`<img src="icons/icon-192.png" alt=""><div><b>Install ${GAME_NAME}</b><span>${ios?'Full-screen, offline, with its own home-screen icon.':can?'One tap: full-screen, offline, own icon.':'Use your browser menu: Install app or Add to Home Screen.'}</span></div>
     ${ios||can?`<button class="btn" id="instGo">${ios?'How':'Install'}</button>`:''}<button class="inst-x" id="instX" aria-label="Not now">✕</button>`;
   const go=$('#instGo');if(go)go.onclick=async()=>{sfx.tick();
     if(INST.evt){INST.evt.prompt();try{await INST.evt.userChoice;}catch(e){}INST.evt=null;renderInstall();return;}
@@ -5306,9 +5344,10 @@ const GUIDE=[
   {g:'TILES',title:'Fuel cells',tile:{t:4},text:'Pours straight into the fuel tank. Fuel drains all the time.'},
   {g:'TILES',title:'Credits',tile:{t:BUCKS},text:'Wild. Joins any color, but only in a match of 4 or more. Banks money and charges that color.'},
   {g:'TILES',title:'Salvage crate',tile:{t:CRATE},text:'Rare wild, like Credits: joins any color in a match of 4 or more. Cracks open for a random prize: Credits, fuel, Alloy, a survivor, charge, or a jackpot. On a Trade Run it holds trade goods instead, which you sell from the Cargo hold.'},
+  {g:'TILES',title:'Afterburner tile',tile:{t:BURN},text:'Attack Run wild. Joins any color in a match of 4 or more, like Credits. When it clears it fires a quick afterburn: a short leap toward the gate, a little pursuer gap, and +2 chain levels on the cascade it is in.'},
   {g:'TILES',title:'Line blast',tile:{t:0,sp:1},text:'Made by matching 4. When it clears, it clears its whole row or column.'},
   {g:'TILES',title:'Solar flare',tile:{t:0,sp:4},text:'Forged where two runs of the same colour cross in an L, T or +. Match it and a fire burns a row, column or 3×3 square for a couple of seconds, rotating each time. Burned tiles pay a flat bonus and do not cascade.'},
-  {g:'TILES',title:'Nova core',tile:{t:NOVA},text:'Made by matching 5. Swap it with any tile to clear every tile of that type.'},
+  {g:'TILES',title:'Nova core',tile:{t:NOVA},text:'Made by matching 5. Swap it with any tile to clear every tile of that type, with a lightning bolt hopping from tile to tile.'},
   {g:'TILES',title:'Mega chain',toks:[['icon',NOVA],['plus'],['icon',NOVA],['arrow'],['gate']],text:'Clear 56 tiles in a single move, counting every cascade it sets off. Swapping two nova cores together always does it. Reward: a 1.5 AU leap toward the gate, +15 gap and 17 Credits.'},
   {g:'HAZARDS',title:'Debris',tile:{t:DEBRIS},text:'From a missed asteroid. Can’t be moved. Match next to it to break it, or work it down to the bottom row to eject it.'},
   {g:'HAZARDS',title:'Fire',tile:{t:1,fire:1},text:'From a missed enemy. Match it before the ring runs out, or it burns to debris, spreads and damages the hull.'},
@@ -5406,10 +5445,10 @@ const PERKS=[
   {k:'control',name:'Damage control',cost:90,icon:()=>ICONS[DEBRIS],v:[0,3,5,8],
      desc:(p,t)=>`A ship sweeps the board. Every damaged tile and ${p.v[t]} random tiles become Tile systems.`,
      apply:(p,t)=>{const g=B.grid,dmg=[],rest=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const x=g[r][c];if(!x)continue;if(x.t===DEBRIS||x.fire!=null||x.lock)dmg.push(x);else if(x.t<5&&!x.sp)rest.push(x);}
-       const pool=['line','nova','loot','flare'].filter(k=>feat(k));if(!pool.length)pool.push('line');
+       const pool=['line','nova','loot','flare','burner'].filter(k=>feat(k));if(!pool.length)pool.push('line');
        const tg=dmg.concat(rest.sort(()=>Math.random()-.5).slice(0,p.v[t]));
        for(const x of tg){x.fire=null;x.lock=false;if(x.t===DEBRIS||x.t>=5)x.t=randType()%4;const k=pool[Math.floor(Math.random()*pool.length)];
-         if(k==='line'){x.sp=Math.random()<.5?1:2;}else if(k==='nova'){x.t=NOVA;x.sp=3;}else if(k==='loot'){x.t=Math.random()<.5?BUCKS:CRATE;x.sp=0;}else{x.sp=4;x.fm=(G.fmN=(G.fmN||0)+1)%3;}
+         if(k==='line'){x.sp=Math.random()<.5?1:2;}else if(k==='nova'){x.t=NOVA;x.sp=3;}else if(k==='loot'){x.t=Math.random()<.5?BUCKS:CRATE;x.sp=0;}else if(k==='burner'){x.t=BURN;x.sp=0;}else{x.sp=4;x.fm=(G.fmN=(G.fmN||0)+1)%3;}
          x.hit=.5;x.scale=.3;}
        for(let r=0;r<ROWS;r++)setTimeout(()=>{if(B.beams)B.beams.push({h:true,i:r,t:0,color:'#4da6ff'});},r*70);
        G.fx.push({k:'burst',t:0,d:1});sfx.special();boardPop(`${tg.length} TILES UPGRADED`,COLS/2,ROWS/2,'#4da6ff');}},
@@ -5803,7 +5842,9 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v133';
+const BUILD='v134';
+// brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
+document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
   out:{asteroid:[0,0,0],enemy:[0,0,0],planet:[0,0,0],well:[0,0,0],gunship:[0,0,0],attack:[0,0,0],pod:[0,0,0]},need:{},had:{},
   hullBy:{asteroid:0,enemy:0,gunship:0,attack:0,burnout:0,overflow:0},fuel:{start:G.fuel,drain:0,tiles:0,planets:0,perks:0,wells:0},
