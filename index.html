@@ -1277,7 +1277,7 @@ function resolveTerra(e){
   if(e.type==='comet'||e.type==='swarm'||e.type==='eruption'){damage(dmg,e.type);vpPop(`GRAVITY -${dmg}`,'#b48cff');queueHazard(e.type==='eruption'?'fire':'debris',Math.max(1,Math.round(short*(3+extra))));}
   else{G.R.fuel.wells+=dmg;G.fuel=Math.max(0,G.fuel-dmg);G.wobble=1;G.shake=.35;G.flash=.4;vpPop(`OXYGEN -${dmg}`,'#d5dcea');sfx.bad();queueHazard('lock',2+Math.round(short*3)+extra);}
 }
-function terraEnd(win,reason){if(!G.running)return;G.running=false;G.cineS=null;const nm=(CHOICE&&CHOICE.name)||'World';const ex=[];
+function terraEnd(win,reason){if(!G.running)return;G.running=false;G.cineS=null;const nm=(CHOICE&&CHOICE.name)||'World';const ex=[];let settlers=0;
   const g=S.gal,st=g&&CHOICE&&!CHOICE.test&&g.stars[CHOICE.starId],isS=!!G.survey;
   const why=reason==='abandon'?'You pulled out.':reason==='hull'?'Gravity failed.':'Oxygen failed.';
   let sub='';
@@ -1290,14 +1290,14 @@ function terraEnd(win,reason){if(!G.running)return;G.running=false;G.cineS=null;
     if(win&&!(CHOICE&&CHOICE.test)){const rr=rollRelics(3,'p');S.pendPRel=rr.map(x=>x.id);persist();}
     sub=win?'Survey complete · nothing was lost':`${why} You keep the Data you gathered. Nothing is lost here.`;}
   else{
-    if(st){if(win){const pl=tfPlan(st),cr=Math.round((40+25*pl.th+G.cleared*3)*pl.mul*.75),al=Math.floor(G.cleared/6),ppl=Math.max(1,terraPop(st)-(prHas('kit')?1:0));S.bucks+=cr;if(S.station){S.station.alloy+=al;S.station.pop=Math.max(1,S.station.pop-ppl);crewSync();}st.terra=true;g.terra=terraDone(g)+1;
+    if(st){if(win){const pl=tfPlan(st),cr=Math.round((40+25*pl.th+G.cleared*3)*pl.mul*.75),al=Math.floor(G.cleared/6),ppl=Math.max(1,terraPop(st)-(prHas('kit')?1:0));settlers=ppl;S.bucks+=cr;if(S.station){S.station.alloy+=al;S.station.pop=Math.max(1,S.station.pop-ppl);crewSync();}st.terra=true;g.terra=terraDone(g)+1;
         ex.push(['Terraform bounty',`<em style="color:#ffd84a">+${cr} CR</em>`]);if(al)ex.push(['Alloy recovered',alloyTag('+'+al)]);ex.push(['Settlers landed',`<em style="color:#38e09b">${ppl}</em>`]);
         ex.push(['Worlds terraformed',`<em style="color:#5ef0d0">${terraDone(g)} / ${terraNeed(g)}</em>`]);}
       else{st.terraLost=true;ex.push(['World lost',`<em style="color:#ff8a95">${nm} is left to die</em>`]);}
       if(win){const rr=rollRelics(2,'p');S.pendPRel=rr.map(x=>x.id);}persist();}
     sub=win?'The world lives':`${reason==='abandon'?'The crew abandoned it, and the world is left to die.':reason==='hull'?'Gravity failed: the world tore itself apart.':'Oxygen failed: the air ran out.'}`;}
   const hp=clamp(G.hull/ST.hullMax,0,1);
-  const d={win,reason,terra:true,survey:isS,name:nm,sub,tiles:G.log.tiles.slice(),contacts:G.contacts,cleared:G.cleared,hullPct:hp,chain:G.bestChain,hazards:G.log.hazards,time:G.runTime||G.time,par:G.runTime||G.time,dist:G.dist,len:G.len,pay:[],total:0,noPay:true,extra:ex,legend:0};
+  const d={win,reason,terra:true,survey:isS,name:nm,sub,tiles:G.log.tiles.slice(),contacts:G.contacts,cleared:G.cleared,hullPct:hp,chain:G.bestChain,hazards:G.log.hazards,time:G.runTime||G.time,par:G.runTime||G.time,dist:G.dist,len:G.len,pay:[],total:0,noPay:true,settlers,extra:ex,legend:0};
   d.rank=rankOf(d);RUNX=null;showDebrief(d);}
 function drawTerraBG(b,W,H,t){
   const sv=G.survey,life=sv?clamp(G.prog*.8,0,1):terraLife(),st=terraStress(),cx=shipBaseX()+8;
@@ -6107,7 +6107,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v143-terra';
+const BUILD='v144-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6412,7 +6412,7 @@ function showDebrief(d){
   DB.skip=false;DB.win=d.win;DB.t=0;DB.tint=null;
   DB.orbit=[];CTR_TYPES.forEach((ty,i)=>{const n=Math.min(7,Math.ceil(d.tiles[i]/5));for(let j=0;j<n;j++)DB.orbit.push({i,ty,a:Math.random()*6.28,sp:.6+Math.random()*.8,rx:.3+Math.random()*.12,ry:.3+Math.random()*.1,gone:false});});
   DB.stars=Array.from({length:40},()=>({x:Math.random(),y:Math.random(),z:Math.random()}));
-  const R={gate:'Jump gate reached',fuel:'Fuel depleted',hull:'Hull breach',caught:`Caught by the ${((SYS&&SYS.pName)||'pursuer').toLowerCase()}`,abandon:'System abandoned'};DB.terra=d.terra?{win:d.win,survey:d.survey}:null;
+  const R={gate:'Jump gate reached',fuel:'Fuel depleted',hull:'Hull breach',caught:`Caught by the ${((SYS&&SYS.pName)||'pursuer').toLowerCase()}`,abandon:'System abandoned'};DB.terra=d.terra?{win:d.win,survey:d.survey,settlers:d.settlers||0}:null;DB.landed=[];
   $('#dbEyebrow').textContent=d.terra?`Debrief · ${d.name} · ${d.survey?'Survey':'Terraform'}`:`Debrief · ${CHOICE.name} · ${SYS.type}`;$('#dbEyebrow').style.color=d.win?'var(--good)':'var(--alert)';
   $('#dbTitle').textContent=d.terra?(d.survey?(d.win?'Survey complete':'Survey aborted'):(d.win?'World terraformed':'World lost')):(d.win?'System cleared':'System lost');
   $('#dbSub').textContent=d.terra?d.sub:(R[d.reason]||'');
@@ -6499,6 +6499,13 @@ function drawDebriefStage(dt){
     if(DB.t-DB.pT>.08){DB.pT=DB.t;_tpImg=DB.pi;terraPlanetPaint(N,DB.t,I,T.win?1:.12,T.win?1:.3);DB.pc.getContext('2d').putImageData(DB.pi,0,0);}
     if(T.win&&!T.survey){const ag=c.createRadialGradient(cx,cy,N*.45,cx,cy,N*.75);ag.addColorStop(0,'rgba(120,220,255,.28)');ag.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=ag;c.beginPath();c.arc(cx,cy,N*.75,0,6.283);c.fill();}
     c.drawImage(DB.pc,Math.round(cx-N/2),Math.round(cy-N/2),N,N);
+    if(T.win&&!T.survey&&T.settlers){const R2=N/2;for(let i=0;i<Math.min(T.settlers,12);i++){const p=clamp((DB.t-1.4-i*.45)/1.1,0,1),ang=-1.9+i*.62,lx=cx+Math.cos(ang)*R2*.62,ly=cy+Math.sin(ang)*R2*.55;
+        if(p<=0)continue;if(p<1){const sx=cx+R2*1.9+i*6,sy=cy-R2*1.6,e=1-Math.pow(1-p,2),x=sx+(lx-sx)*e,y=sy+(ly-sy)*e;
+          for(let k=1;k<6;k++){const e2=Math.max(0,1-Math.pow(1-(p-k*.04),2));c.fillStyle=`rgba(255,200,120,${.5*(1-k/6)})`;c.fillRect(Math.round(sx+(lx-sx)*e2),Math.round(sy+(ly-sy)*e2),2,2);}
+          c.fillStyle='#ffe9b0';c.fillRect(Math.round(x)-1,Math.round(y)-1,3,3);}
+        else{if(!DB.landed[i]){DB.landed[i]=DB.t;if(!DB.skip)tone(880+i*60,.05,'square',.02);}const q=clamp((DB.t-DB.landed[i])/.7,0,1);
+          c.strokeStyle=`rgba(255,233,176,${.8*(1-q)})`;c.lineWidth=1.5;c.beginPath();c.arc(lx,ly,2+q*9,0,6.283);c.stroke();
+          {const gl=c.createRadialGradient(lx,ly,0,lx,ly,9);gl.addColorStop(0,'rgba(255,225,150,.75)');gl.addColorStop(1,'rgba(255,225,150,0)');c.fillStyle=gl;c.fillRect(lx-9,ly-9,18,18);}c.fillStyle=(Math.sin(DB.t*3+i)>-.6)?'#fff3c8':'#e0b86a';c.fillRect(Math.round(lx)-1,Math.round(ly)-1,3,3);}}}
     if(!T.win&&!T.survey){for(let i=0;i<14;i++){const a=i*2.4+DB.t*.2,d0=N*(.55+((i*37)%10)/22);c.fillStyle=i%3?'#6f7f9e':'#ff9640';c.fillRect(Math.round(cx+Math.cos(a)*d0),Math.round(cy+Math.sin(a)*d0*.7),3,3);}}
     drawOrbit(true);return;}
   const bx0=sx+SHIP_OX*scale,by0=sy+SHIP_OY*scale;
