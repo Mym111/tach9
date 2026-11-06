@@ -982,7 +982,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
   </section>
   <section class="screen overlay off" id="pause">
     <div class="card">
-      <div class="eyebrow">Console standby</div>
+      <div class="eyebrow">Console standby · <b id="pauseBuild" style="color:var(--amber,#ffb547)"></b></div>
       <h2>Paused</h2>
       <p>The ship holds position while you're away.</p>
       <div class="tilesz"><span class="tz-l">Tile size</span><div class="seg" id="tileSeg"><button type="button" data-i="0">Standard</button><button type="button" data-i="1">Large</button><button type="button" data-i="2">Huge</button></div><small id="tileNote"></small></div>
@@ -6081,7 +6081,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v140b-terra';
+const BUILD='v140c-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6446,7 +6446,7 @@ function setTile(i){if(TR){$('#tileNote').textContent='Tile size is fixed during
   if(scene==='game'&&G.running&&!G.ending&&B.busy){TILE.pending=i;paintTileSeg();return;}
   applyTileNow();}
 $('#tileSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{sfx.tick();setTile(+b.dataset.i);});
-function setPaused(p){if(scene!=='game'||!G.running)return;if(!p&&perkOpen){paused=false;show('#pause',false);return;}paused=p;drag=null;if(p){paintTileSeg();$('#abandonBtn').textContent=TR?'Leave training':G.terra&&!G.survey?'Abandon world (it is lost)':G.survey?'Abort survey':'Abandon system';}show('#pause',p);}
+function setPaused(p){if(scene!=='game'||!G.running)return;if(!p&&perkOpen){paused=false;show('#pause',false);return;}paused=p;drag=null;if(p){paintTileSeg();$('#pauseBuild').textContent=BUILD;$('#abandonBtn').textContent=TR?'Leave training':G.terra&&!G.survey?'Abandon world (it is lost)':G.survey?'Abort survey':'Abandon system';}show('#pause',p);}
 
 $('#continueBtn').onclick=()=>{audio();goMap();};
 { // new game: wipes an existing campaign only after a second tap
