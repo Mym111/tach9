@@ -1282,7 +1282,7 @@ function terraEnd(win,reason){if(!G.running)return;G.running=false;G.cineS=null;
   const why=reason==='abandon'?'You pulled out.':reason==='hull'?'Gravity failed.':'Oxygen failed.';
   let sub='';
   if(isS){const f=surveyFactor(),thr=(CHOICE&&CHOICE.threat)||0,bonus=win?Math.round((8+5*thr)*f*(prHas('uplink')?1.25:1)):0,tot=Math.round(G.data+bonus);
-    if(!(CHOICE&&CHOICE.test)){S.data=(S.data||0)+tot;if(st){st.surveys=(st.surveys||0)+1;st.surv=true;}persist();}
+    if(!(CHOICE&&CHOICE.test)){S.data=(S.data||0)+tot;if(st){st.surveys=(st.surveys||0)+1;st.surv=true;if(win){st.rt=st.rt||{};st.rt[2]=1;}}persist();}
     ex.push(['Data gathered',`<em style="color:#a6ef5a"><i class="dbi"></i>+${tot - bonus}</em>`]);
     if(bonus)ex.push(['Completion bonus',`<em style="color:#a6ef5a"><i class="dbi"></i>+${bonus}</em>`]);
     ex.push(['Data banked',`<em style="color:#a6ef5a"><i class="dbi"></i>+${tot}</em>`]);
@@ -3084,7 +3084,7 @@ function depthOutline(d){const L=[];
 function depthPanel(s){if(s&&S.gal&&S.gal.cons&&s.id===S.gal.gate)return `<div class="sw-exo"><b>EXODUS RUN</b><span>The end goal. A quiet haul, then a pursuer, then the storm. Everything we have built, in one run.</span></div>`;
   const dp=depthNow(),av=availSpecials(),ld=loadNow();let h='';
   const to=terraOpt({starId:s.id,hold:false}),tOn=!!to&&!to.lk&&MAP.tSel===s.id;
-  h+=`<div class="sw-d${to?' t4':''}" id="swDepth">${DEPTH_NAME.map((n,i)=>{const lk=i>depthMax();return `<button type="button" data-d="${i}" class="${i===dp&&!tOn?'on':''}${lk?' lk':''}">${n}<small>${lk?'🔒 clear '+DEPTH_UNL[i]+(DEPTH_UNL[i]>1?' runs':' run'):DEPTH_SUB[i]}</small></button>`;}).join('')}${to?`<button type="button" data-d="T" class="tf${tOn?' on':''}${to.lk?' lk':''}">Terraform<small>${to.lk||'the goal · settle this world'}</small></button>`:''}</div><p class="sw-dn">${tOn?'Terraform Run: this world is the ship. Win and settlers stay behind. Lose and it is gone for good.':depthOutline(dp)}</p>`;
+  h+=`<div class="sw-d${to?' t4':''}" id="swDepth">${DEPTH_NAME.map((n,i)=>{const lk=i>depthMax();return `<button type="button" data-d="${i}" class="${i===dp&&!tOn?'on':''}${lk?' lk':''}">${n}<small>${lk?'🔒 clear '+DEPTH_UNL[i]+(DEPTH_UNL[i]>1?' runs':' run'):DEPTH_SUB[i]}</small></button>`;}).join('')}${to?`<button type="button" data-d="T" class="tf${tOn?' on':''}${to.lk?' lk':''}">Terraform<small>${to.lk||'the goal · settle this world'}</small></button>`:''}</div><p class="sw-dn">${tOn?'Terraform Run: this world is the ship. Win and settlers stay behind. Lose and it is gone for good. It opens once you have won a Trade, Attack and Survey Run here.':depthOutline(dp)}</p>`;
   h+=pullRow('swLoad');
   return h;}
 function showStarWidget(s){
@@ -3752,8 +3752,9 @@ window.SMOKE.push({name:'tester report: opens and draws its code',async run(){op
 const CONTACT_NAME={rock:'Asteroids',enemy:'Enemy ships',planet:'Planets',well:'Gravity wells',gunship:'Gunships'};
 const CONTACT_SPR=k=>({rock:MINI.rock,enemy:MINI.enemy,gunship:MINI.gunship,planet:MINI.planet,well:MINI.well})[k];
 let BRIEF=null,BRIEF_T=false;
+const rtDone=(st,i)=>!!(st&&st.rt&&st.rt[i]),rtNext=st=>[0,1,2].find(i=>!rtDone(st,i))??-1;
 function terraOpt(ch){const g=S.gal,st=g&&ch&&g.stars[ch.starId];if(!st||!g.cons||st.id===g.gate||st.terra||st.terraLost||ch.hold||TR)return null;
-  if(!(st.clears>0))return{lk:'🔒 fly a run here first'};if(!popOk(st))return{lk:`🔒 need ${terraPop(st)+1} people aboard`};return{lk:''};}
+  const nx=rtNext(st);if(nx>=0)return{lk:`🔒 next: ${DEPTH_NAME[nx]}`};if(!popOk(st))return{lk:`🔒 need ${terraPop(st)+1} people aboard`};return{lk:''};}
 function showBrief(ch){{const o=terraOpt(ch);BRIEF_T=!!o&&!o.lk&&MAP.tSel===ch.starId;}return new Promise(res=>{
   const sys0=()=>sysView(ch.key);
   const paint=()=>{const sys=sys0(),vl=surveyVeil(ch),thr=ch.threat,dp=depthNow(),ld=loadNow(),av=availSpecials(),ownR=S.relics||[],
@@ -4226,7 +4227,7 @@ const terraNeed=g=>g&&g.cons?Math.min(4,1+Math.ceil(g.num/3)):0;
 const terraDone=g=>(g&&g.terra)||0;
 const bagNow=()=>{const b=S.bag=S.bag||[0,0,0,0];return b;};
 const bagTotal=()=>bagNow().reduce((a,b)=>a+b,0);
-const canTerra=st=>!!(S.gal&&S.gal.cons&&st&&st.id!==S.gal.gate&&st.clears>0&&!st.terra&&!st.terraLost);
+const canTerra=st=>!!(S.gal&&S.gal.cons&&st&&st.id!==S.gal.gate&&rtNext(st)<0&&!st.terra&&!st.terraLost);
 const terraDoomed=g=>!!(g&&g.cons&&!g.gateWon&&terraDone(g)+g.stars.filter(x=>x.id!==g.gate&&!x.terra&&!x.terraLost).length<terraNeed(g));
 const terraPop=st=>Math.max(2,Math.round(1.5+tfPlan(st).th*.9)),popOk=st=>(S.station?S.station.pop:0)-terraPop(st)>=1;
 // a geo-form is one variable of the planet. c = ideal centre, ih = ideal half-width, vol = how wild it is
@@ -4427,9 +4428,9 @@ const STAGES=[null,
  {short:'Line tiles',obj:'Same job, one new trick for the board.',
   news:['Match 4 in a row to forge a LINE tile','Match a line tile later and it sweeps its whole row or column']},
  {short:'Nova cores, credits, crates',obj:'The board is getting richer.',
-  news:['Match 5 to forge a NOVA core. Swap it with any tile to clear every tile of that colour','Credits tiles (pink) pay straight into your wallet','Salvage crates join a match of 4+ and crack open for a prize','Each run type flies its own Tile systems: Trade Runs bring credits and crates, Survey Runs add solar flares','Clear a system and the crew offers a relic: a permanent ship upgrade']},
+  news:['Match 5 to forge a NOVA core. Swap it with any tile to clear every tile of that colour','Credits tiles (pink) pay straight into your wallet','Salvage crates join a match of 4+ and crack open for a prize','Each run type flies its own Tile systems: Trade Runs bring credits and crates, Attack Runs bring the Afterburner, and Survey and Terraform Runs play on a planet board','Clear a system and the crew offers a relic: a permanent ship upgrade']},
  {short:'A pursuer, and its attacks',obj:'Something has picked up our trail.',
-  news:['An Empire cruiser now chases us. Watch the GAP bar, top-left of the viewport','Missed contacts close the gap. Perfect clears push it back. At zero we are caught','It launches attacks too. Have enough charge banked in the system it names before the timer ends','RUN TYPE is yours to set in the briefing. Trade Run: crates full of goods to sell. Attack Run: a pursuer, and Legend. Survey Run: fast, far sensors, bigger pay']},
+  news:['An Empire cruiser now chases us. Watch the GAP bar, top-left of the viewport','Missed contacts close the gap. Perfect clears push it back. At zero we are caught','It launches attacks too. Have enough charge banked in the system it names before the timer ends','RUN TYPE is yours to set in the briefing. Trade Run: crates full of goods to sell. Attack Run: a pursuer, and Legend. Survey Run: scan a world on the planet board for Data. Win all three at a system and you can Terraform it']},
  {short:'Ship rooms unlock',obj:'Time to build out the ship.',
   news:['Credits and Alloy can now build and upgrade rooms: Sensors, Shipyard, War room, Refinery, Habitat, Drone bay and Tach drive','Open the Ship from the map to spend','OVERDRIVE: build the Overdrive core in the Ship first. Then perfect clears charge the Overdrive bar above the gauges. When it fills, tap the bolt tile for Counterfire, a repair, a fuel snake, Power slots, Afterburn or the Rail loader. Most burn fuel, so watch the tank']},
  {short:'Combo perks',obj:'Big chains pay off now.',
@@ -4719,7 +4720,7 @@ const COACH_TIPS={
   run_contact:{el:'#vp',run:true,t:()=>'Contact on scope! The bars beside it show which systems it needs. Charge those before it reaches us and we clear it cleanly.'},
   run_clear:{el:'#vp',run:true,t:()=>feat('gap')?'Clean clear. Perfect clears push the '+(feat('pursuer')?'pursuer':'storm')+' back. Keep that gap open and keep flying for the jump gate.':'Clean clear. Keep handling contacts and keep flying for the jump gate.'},
   run_chain:{el:'#board',run:true,t:()=>feat('perks')?'A chain! Big chains fire a combo perk from the War room loadout. The bigger the chain, the bigger the perk.':'A chain! Cascades clear extra tiles and charge more systems for free.'},
-  debrief:{el:'#dbResBtn',t:()=>'Credits banked. Every system we clear pays out, and Legend grows with how well we fly. This planet also has research waiting.'},
+  debrief:{el:'#dbResBtn',t:()=>'Credits banked. Every system we clear pays out, and Legend grows with how well we fly. Trade, Attack and Survey each count: win all three at a system and we can Terraform it.'},
   research:{el:'.rv-opts',t:()=>'Science team, pick one project. Each one strengthens a reel of the Tach drive for every jump attempt in this galaxy. One project per planet.'},
   move:{el:'#chartCv',t:()=>'Helm, tap a star one jump away and Move. Jumps cost credits. New stars bring migrants, Alloy markets and sometimes something strange.'},
   part:{el:'#chartCv',t:()=>'See the teal crystal? A gate part. Win the system that holds it and the part calibrates our Luxometer. Four makes for a clean Tach jump.'},
@@ -4728,7 +4729,9 @@ const COACH_TIPS={
   gate:{el:'#chartCv',t:()=>'The Exodus Gate is in reach. It is the last system in this constellation. Clear it and we jump on to the next. Tap it to see what is waiting.'},
   tach:{el:'.tc-tot',t:()=>'Five reels, one per system, and all five must hold. The chances multiply, so one weak reel drags the whole jump down. Shore up the weakest first.'},
   tach_fail:{el:'.tc-res',t:()=>'We lost a level on every system that failed. Hard lesson. Rebuild at the planets, research what broke, and we go again.'},
-  depth:{el:'#brDepth',t:()=>'Your call on the kind of run. Trade Run: crates full of goods to sell. Attack Run: a pursuer, and Legend. Survey Run: scan a world on the planet board and bring home Data. Choose before you give the order.'},
+  depth:{el:'#brDepth',t:()=>'Your call on the kind of run. Trade Run: crates full of goods to sell. Attack Run: a pursuer, and Legend. Survey Run: scan a world on the planet board and bring home Data. Win all three at a system and Terraform opens: the goal of the constellation. Choose before you give the order.'},
+  terra_start:{el:'#board',t:()=>'Terraform board. The five colours are planet readings now: Radiation, Pressure, Water, Temperature, Oxygen. Match them to fill the progress bar and bring the world to life. Hazards hit the planet from the right. If Gravity or Oxygen runs out, the world is lost for good.'},
+  survey_start:{el:'#board',t:()=>'Survey Run. The same planet board, but we are scanning, not changing the world. Data tiles (the green cylinder) bank Data even if we fail, and nothing here is lost. Spend Data in the Sensors room on planet upgrades.'},
   load:{el:'#brLoad',t:()=>'We only have room for so many Tile systems. Each run type brings its own.'},
   burst:{el:'#board',t:()=>'Overdrive is charged. Tap the glowing bolt tile on the board. Clear it in a match and you lose charge. Counterfire pushes the pursuer back, the Fuel snake tops up the tank, Repair is a plate-welding game that mends the hull, and Power slots spends fuel to spin your systems for charge: pick how many lines to play. Most Overdrives burn about a tenth of your tank.'},
   relic:{el:'#relicCards',t:()=>'A subsystem. It stays installed for the whole campaign, so choose what we will lean on. We only have three slots.'},
@@ -6102,7 +6105,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v141-terra';
+const BUILD='v142-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6252,6 +6255,7 @@ function startRun(){
   if(S.tutRunDone==null)S.tutRunDone=career().runs>0;G.tut=!S.tutRunDone&&!TP;
   G.cdTotal=G.countdown=AUD.cd??3;G.cdArrived=false;G.cdBoost=0;if(!G.countdown)applyWarBoost();
   if(G.tut&&!G.countdown)setTimeout(()=>coach('run_start'),700);
+  if(G.terra)setTimeout(()=>{if(scene==='game'&&G.running&&G.terra)coach(G.survey?'survey_start':'terra_start');},1800);
   if(!G.countdown)showBanner(TP==='survey'?'Survey':TP?'Terraform':`${CHOICE.name} · ${SYS.type}`,TP==='survey'?`${CHOICE.name.toUpperCase()} · SCAN FOR DATA`:TP?`${CHOICE.name.toUpperCase()} · HOLD THE WORLD TOGETHER`:`${SYS.pName.toUpperCase()} ON SCOPE`);
 }
 async function launch(choice){
@@ -6319,7 +6323,7 @@ function buildDebrief(win,reason){
    d.legend=legendFor(d)+(win&&!TR&&G.depth===1&&!(CHOICE&&CHOICE.gate)?1+Math.floor(G.T/4):0);S.legend=legendOf()+d.legend;
    if(d.legend)d.extra.push(['Legend',`<em style="color:#ffd84a">+${d.legend} ★</em>`]);
 }
-  if(S.gal){const st=S.gal.stars[CHOICE.starId];if(st&&win)st.clears++;d.extra.push(['Ship rating',`<em style="color:#ffd84a">${rating()}</em>`]);S.choices=genChoices();}
+  if(S.gal){const st=S.gal.stars[CHOICE.starId];if(st&&win){st.clears++;if(!TR&&!(CHOICE&&CHOICE.gate)){st.rt=st.rt||{};st.rt[G.depth||0]=1;}}d.extra.push(['Ship rating',`<em style="color:#ffd84a">${rating()}</em>`]);S.choices=genChoices();}
   {const cr=career();cr.runs++;if(win)cr.cleared++;else cr.lost++;cr.bestChain=Math.max(cr.bestChain,d.chain);cr.earned+=d.total;cr.contacts+=d.cleared;
    cr.repelled+=G.log.repelled||0;cr.perks+=G.log.perks||0;if(win&&RANK_ORDER.indexOf(d.rank)>RANK_ORDER.indexOf(cr.bestRank))cr.bestRank=d.rank;}
   if(win&&!TR&&unl('relics')&&(G.depth==null?1:G.depth)>=1){const rr=rollRelics((G.depth||1)>=2?3:2);S.pendRelics=rr.map(r=>r.id);if(rr.length)d.extra.push(['Relic found',`<em style="color:#ff7ad9">${rr.length} to choose from</em>`]);}
@@ -6643,7 +6647,7 @@ const TRAIN_CH=[
   {say:'The flare keeps burning for a couple of seconds. Tiles that fall into the fire are burned for a flat payout, but burned tiles never cascade. Good for cleaning up damage.',next:'tap'},
   {say:'That is every tile system. In the campaign they unlock as you clear systems. Which ones ride on your board is set by the run type: Trade Runs carry Credits & crates, and Survey Runs carry Data tiles.',next:'end'}]},
  {k:'pursuer',t:'The pursuer',d:'The gap bar, attacks, and how to stay ahead.',feats:[],steps:[
-  {say:'From the deeper systems on, an Empire cruiser hunts us. Its gap bar sits top-left of the viewport. The wider the gap, the safer we are.',next:'tap',board:trLay([]),ring:'#viewport'},
+  {say:'On Attack Runs and at the Exodus Gate, an Empire cruiser hunts us. Its gap bar sits top-left of the viewport. The wider the gap, the safer we are.',next:'tap',board:trLay([]),ring:'#viewport'},
   {say:'Every contact you miss closes the gap. Every perfect clear, where you are fully charged for a contact, pushes it back. At zero we are caught and the system is lost.',next:'tap'},
   {say:'Attack Runs add attacks. The action freezes while the pursuer winds up, then a red alert names a system and starts a timer. Have that system charged before it runs out, or take hull damage, lose gap and take board damage.',next:'tap'},
   {say:'Chain combo perks, Afterburn and Counterfire all push the gap back. Harder tiers close it faster, so keep your systems topped up and do not stock one at the expense of the others.',next:'end'}]},
@@ -6664,13 +6668,24 @@ const TRAIN_CH=[
   {say:'Others change the board or the next moments: Strafing run and Mega clear blast tiles and charge your systems, Damage control sweeps over every damaged tile plus a few more and turns them into your Tile systems, and Target lock makes the next contact clear perfectly whatever your charge.',next:'tap'},
   {say:'Chain echo starts your next chain higher, so chains feed each other. The ×6+ slot is SUPERNOVA, and an empty slot falls back to the one below it.',next:'end'}]},
 ];
+TRAIN_CH.splice(4,0,
+ {k:'runtypes',t:'Run types and planet boards',d:'Trade, Attack, Survey and Terraform: what rides on each board.',feats:['line','nova','loot'],steps:[
+  {say:'Every run type has its own tile system. First the ones you know. A TRADE RUN adds Credits (the pink coin) and Salvage crates. It is the money run: no pursuer, goods to sell.',next:'tap',board:trLay([[2,1,'C'],[3,4,'X'],[5,2,'C'],[1,5,'X']]),enter(){skinTerra(false);}},
+  {say:'An ATTACK RUN swaps those for the Afterburner, a wild tile that joins any match and punches the ship forward. A pursuer chases you, and it pays Legend. No Credits or crates here.',next:'tap',board:trLay([[2,1,'W'],[4,4,'W']])},
+  {say:'SURVEY and TERRAFORM runs play on a planet board. The five ship colours become five planet readings: Radiation (red), Pressure (yellow), Water (blue), Temperature (orange) and Oxygen (grey). Same swaps, same rules.',next:'tap',board:trLay([]),ring:'.engineering',enter(){skinTerra(true,false);}},
+  {say:'Matches charge the planet instead of the ship. Swap the highlighted pair to line up three Water tiles.',next:'swap',allow:TR_GREEN_ALLOW,ring:'pairs',board:trLay(TR_GREEN)},
+  {say:'On a planet board the side gauges are Gravity and Oxygen. If either one empties, the world is lost for good. Hazards come in from the right and hit the planet, the way contacts hit a ship.',next:'tap',ring:['#hullBar','#fuelBar']},
+  {say:'Line tiles and Nova cores still work here. Credits, crates and the Afterburner do not. Make a match of four to forge a Line tile.',next:'swap',allow:[[[2,2],[3,2]]],ring:'pairs',board:trLay(trLayLineMake)},
+  {say:'A SURVEY RUN is the same planet board, but Credits become Data (the green cylinder). Match four with the Data tile.',next:'swap',allow:[[[2,3],[3,3]]],ring:'pairs',board:trLay([[2,0,0],[2,1,'C'],[2,2,0],[2,3,1],[2,4,3],[3,3,0]]),enter(){skinTerra(true,true);}},
+  {say:'Data is kept even if the survey fails, and nothing is lost. You spend it in the Sensors room on planet upgrades. Surveying the same system again pays less each time.',next:'tap'},
+  {say:'TERRAFORM is the goal of each constellation. Fill the progress bar and the world lives and settlers stay. Lose Gravity or Oxygen and it is gone. It opens at a system once you have won a Trade, an Attack and a Survey Run there.',next:'end',leave(){skinTerra(false);}}]});
 TRAIN_CH.push(
  {k:'map',t:'Galaxy map',d:'Moving between stars, gate parts and the action buttons.',sandbox:true,feats:['pursuer','strike','rooms','line','nova','loot','perks'],steps:[
   {say:'This is the galaxy map. Each dot is a star system, and the ring marks where your ship is parked. This lesson runs on a practice save.',next:'tap',ring:'#chartCv',enter(){goMap();}},
   {say:'The cards underneath are the systems in range. Swipe through them. Each shows its threat, how far the gate is and what to expect.',next:'tap',ring:'#carousel'},
   {say:'Let’s move. Swipe to a card that is not your current system, then press Move. Jumps cost credits.',next:'cond',cond:()=>S.gal.at!==TR.at0&&!WARP&&!MAP.anim,ring:['#carousel','#moveBtn'],delay:900,enter(){TR.at0=S.gal.at;}},
   {say:'Arrived. Moving brings you to the next star on the line. Clear a system there for credits.',next:'tap',ring:'#chartCv'},
-  {say:'The buttons along the bottom: Launch flies the selected system (turned off in training), Terraform works on a world you have cleared, and Ship opens your base and markets.',next:'tap',ring:'.map-actions'},
+  {say:'The buttons along the bottom: Launch flies the selected system (turned off in training), Terraform opens on a world once you have won a Trade, Attack and Survey Run there, and Ship opens your base and markets.',next:'tap',ring:'.map-actions'},
   {say:'Terraform enough worlds and the Exodus Gate unseals. Then Launch becomes the jump to the next constellation. That is the goal of every campaign.',next:'end'}]},
  {k:'station',t:'Ship upgrades',d:'Rooms, ship systems and crew.',sandbox:true,feats:['pursuer','strike','rooms','line','nova','loot','perks'],steps:[
   {say:'This is your ship. Rooms give it abilities, and you pay for them with Alloy and credits. This lesson runs on a practice save with some resources.',next:'tap',ring:'#stCv',enter(){goStation();}},
@@ -6680,7 +6695,7 @@ TRAIN_CH.push(
   {say:'Now the Shipyard. Press Open to go to the ship bay.',next:'cond',cond:()=>scene==='hangar',ring:'#rcOpen',delay:700,enter(){RM.sel='shipyard';renderStation();}},
   {say:'Here you upgrade ship systems: weapons, shields, sensors, engines and fuel. Upgrades cost credits. Upgrade any one of them.',next:'cond',cond:()=>JSON.stringify(S.up)!==TR.up0,ring:'#upgrades',delay:1000,enter(){TR.up0=JSON.stringify(S.up);}},
   {say:'Upgraded. The Shipyard’s level caps how far each system can go, so building rooms keeps you growing. Tap the back arrow to return to the ship.',next:'cond',cond:()=>scene==='station',ring:'#hangarBack',delay:500},
-  {say:'Sensors calibrates Terra-reels for credits, Alloy and crew. The War room sets your chain combos. Three kinds of upgrade: Ship systems (weapons to fuel, in the Shipyard), SubSystems (picked up during a run, last the campaign) and Tile systems (what rides on your board). That is the whole loop: earn, build, upgrade, launch.',next:'end',enter(){RM.sel='war';renderStation();}}]});
+  {say:'Sensors spends Data on planet upgrades and subsystems for Survey and Terraform Runs. The War room sets your chain combos. Three kinds of upgrade: Ship systems (weapons to fuel, in the Shipyard), SubSystems (picked up during a run, last the campaign) and Tile systems (what rides on your board). That is the whole loop: earn, build, upgrade, launch.',next:'end',enter(){RM.sel='war';renderStation();}}]});
 let TRSOON=[];
 
 function trRects(st){
@@ -6710,7 +6725,7 @@ function trBoard(rows){
   B.waiters.length=0;B.dying=[];B.beams=[];B.bomb=null;B.barr=null;B.pops=[];B.hazards=[];B.sel=null;B.hint=null;B.idle=0;B.glow=null;
   if(!rows)fillBoard();
   else B.grid=rows.map((row,r)=>[...row].map((ch,c)=>{const k='abcdefghij'.indexOf(ch);let t,sp=0;
-    if(k>=0){t=k%5;sp=k<5?1:2;}else if(ch==='N'){t=NOVA;sp=3;}else if(ch==='C')t=BUCKS;else if(ch==='X')t=CRATE;else if('klm'.includes(ch)){t=0;sp=4;}else t=+ch;
+    if(k>=0){t=k%5;sp=k<5?1:2;}else if(ch==='N'){t=NOVA;sp=3;}else if(ch==='C')t=BUCKS;else if(ch==='X')t=CRATE;else if(ch==='W')t=BURN;else if('klm'.includes(ch)){t=0;sp=4;}else t=+ch;
     const tl=newTile(t,r,c,r-ROWS-1-c*.35);tl.sp=sp;if(sp===4)tl.fm='klm'.indexOf(ch);return tl;}));
   B.busy=true;settle().then(()=>{B.busy=false;});}
 async function trGo(i){
@@ -6782,7 +6797,7 @@ function exitTrain(done){
   if(!TR)return;const ci=TR.ci,snap=TR.snap,had=TR.had,tile=TR.tile;
   if(done){AUD.trained=AUD.trained||{};AUD.trained[TRAIN_CH[ci].k]=1;}
   AUD.tile=tile;saveAudio();
-  if(IL){try{closeBurst();}catch(e){}}trOdBar(false);TR=null;paused=false;show('#pause',false);$('#trUi').hidden=true;
+  if(IL){try{closeBurst();}catch(e){}}trOdBar(false);skinTerra(false);TR=null;paused=false;show('#pause',false);$('#trUi').hidden=true;
   try{S=JSON.parse(snap);SHIP=makeShip(S.paint,S.up);}catch(e){}hasSave=had;if(had)persist();else{try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
   G.running=false;G.events=[];G.ending=null;CHOICE=null;B.hazards=[];B.hint=null;B.sel=null;
   applyTileNow();scene='splash';only('#splash');renderSplash();openTrainMenu();}

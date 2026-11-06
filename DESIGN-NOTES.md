@@ -52,3 +52,7 @@ Terraform is greyed out until the system has at least one cleared run and enough
 - Removed the old Terraform token bag (G.bag accumulation and debrief row). `bagNow/bagTotal` and `.tf-bag` CSS remain as dead code for the reels cleanup.
 - Terraform/Survey now end in the standard debrief screen (`d.terra`, `d.noPay`) with a planet instead of the ship; skin is restored in goMap/goStation.
 - Terraform finale: win 4.8 s (planet morphs barren to lush, shock rings, sparks, flash, caption pops), loss 3.4 s (fracture flash, debris, collapse).
+
+## v142
+- Terraform now needs a win of each run type (Trade, Attack, Survey) at that system: st.rt[0..2], shown as 'next: <run>' on the card.
+- New training lesson 'Run types and planet boards' compares Trade/Attack/Survey/Terraform tile systems; stale tips (research, Survey flares) updated; first-time tips for planet runs.
