@@ -1282,7 +1282,7 @@ function terraEnd(win,reason){if(!G.running)return;G.running=false;G.cineS=null;
   const why=reason==='abandon'?'You pulled out.':reason==='hull'?'Gravity failed.':'Oxygen failed.';
   let sub='';
   if(isS){const f=surveyFactor(),thr=(CHOICE&&CHOICE.threat)||0,bonus=win?Math.round((8+5*thr)*f*(prHas('uplink')?1.25:1)):0,tot=Math.round(G.data+bonus);
-    if(!(CHOICE&&CHOICE.test)){S.data=(S.data||0)+tot;if(st){st.surveys=(st.surveys||0)+1;st.surv=true;if(win){st.rt=st.rt||{};st.rt[2]=1;S.rtG=S.rtG||{};S.rtG[2]=1;}}persist();}
+    if(!(CHOICE&&CHOICE.test)){S.data=(S.data||0)+tot;if(st){st.surveys=(st.surveys||0)+1;st.surv=true;if(win){st.clears=(st.clears||0)+1;st.rt=st.rt||{};st.rt[2]=1;S.rtG=S.rtG||{};S.rtG[2]=1;}}persist();}
     ex.push(['Data gathered',`<em style="color:#a6ef5a"><i class="dbi"></i>+${tot - bonus}</em>`]);
     if(bonus)ex.push(['Completion bonus',`<em style="color:#a6ef5a"><i class="dbi"></i>+${bonus}</em>`]);
     ex.push(['Data banked',`<em style="color:#a6ef5a"><i class="dbi"></i>+${tot}</em>`]);
@@ -3780,9 +3780,9 @@ const CONTACT_NAME={rock:'Asteroids',enemy:'Enemy ships',planet:'Planets',well:'
 const CONTACT_SPR=k=>({rock:MINI.rock,enemy:MINI.enemy,gunship:MINI.gunship,planet:MINI.planet,well:MINI.well})[k];
 let BRIEF=null,BRIEF_T=false;
 // first Terraform of a game needs a win of each run type (Trade, Attack, Survey) anywhere; after that, one cleared run at the system is enough
-const rtDone=i=>!!(S.rtG&&S.rtG[i])||!!(S.gal&&S.gal.stars.some(x=>x.rt&&x.rt[i])),rtNext=()=>S.tfU||(S.gal&&terraDone(S.gal)>0)?-1:[0,1,2].find(i=>!rtDone(i))??-1;
+const stCleared=st=>!!st&&(st.clears>0||!!(st.rt&&(st.rt[0]||st.rt[1]||st.rt[2]))),rtDone=i=>!!(S.rtG&&S.rtG[i])||!!(S.gal&&S.gal.stars.some(x=>x.rt&&x.rt[i])),rtNext=()=>S.tfU||(S.gal&&terraDone(S.gal)>0)?-1:[0,1,2].find(i=>!rtDone(i))??-1;
 function terraOpt(ch){const g=S.gal,st=g&&ch&&g.stars[ch.starId];if(!st||!g.cons||st.id===g.gate||st.terra||st.terraLost||ch.hold||TR)return null;
-  const nx=rtNext();if(nx>=0)return{lk:`🔒 next: ${DEPTH_NAME[nx]}`};if(!(st.clears>0))return{lk:'🔒 fly a run here first'};if(!popOk(st))return{lk:`🔒 need ${terraPop(st)+1} people aboard`};return{lk:''};}
+  const nx=rtNext();if(nx>=0)return{lk:`🔒 next: ${DEPTH_NAME[nx]}`};if(!(stCleared(st)))return{lk:'🔒 fly a run here first'};if(!popOk(st))return{lk:`🔒 need ${terraPop(st)+1} people aboard`};return{lk:''};}
 function showBrief(ch){{const o=terraOpt(ch);BRIEF_T=!!o&&!o.lk&&MAP.tSel===ch.starId;}return new Promise(res=>{
   const sys0=()=>sysView(ch.key);
   const paint=()=>{const sys=sys0(),vl=surveyVeil(ch),thr=ch.threat,dp=depthNow(),ld=loadNow(),av=availSpecials(),ownR=S.relics||[],
@@ -4255,7 +4255,7 @@ const terraNeed=g=>g&&g.cons?Math.min(4,1+Math.ceil(g.num/3)):0;
 const terraDone=g=>(g&&g.terra)||0;
 const bagNow=()=>{const b=S.bag=S.bag||[0,0,0,0];return b;};
 const bagTotal=()=>bagNow().reduce((a,b)=>a+b,0);
-const canTerra=st=>!!(S.gal&&S.gal.cons&&st&&st.id!==S.gal.gate&&rtNext()<0&&st.clears>0&&!st.terra&&!st.terraLost);
+const canTerra=st=>!!(S.gal&&S.gal.cons&&st&&st.id!==S.gal.gate&&rtNext()<0&&stCleared(st)&&!st.terra&&!st.terraLost);
 const terraDoomed=g=>!!(g&&g.cons&&!g.gateWon&&terraDone(g)+g.stars.filter(x=>x.id!==g.gate&&!x.terra&&!x.terraLost).length<terraNeed(g));
 const terraPop=st=>Math.max(2,Math.round(1.5+tfPlan(st).th*.9)),popOk=st=>(S.station?S.station.pop:0)-terraPop(st)>=1;
 // a geo-form is one variable of the planet. c = ideal centre, ih = ideal half-width, vol = how wild it is
@@ -6133,7 +6133,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v149-terra';
+const BUILD='v150-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},

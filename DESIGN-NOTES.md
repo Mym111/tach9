@@ -78,3 +78,6 @@ Terraform is greyed out until the system has at least one cleared run and enough
 ## v149 — Sequence fix, Pilot Tips
 - Survey Run now unlocks after 2 cleared runs (DEPTH_UNL [0,1,2], was 3), so new game order is Trade > Attack > Survey > Terraform; free choice afterwards. Map "Depth" tip explains it.
 - "Tutorial" at new campaign / Options renamed Pilot Tips (Training remains the scripted, can't-lose mode).
+
+## v150 — Survey win counts as a clear
+- Bug: a won Survey Run never incremented st.clears, so Terraform stayed "fly a run here first". Survey wins now add a clear, and stCleared(st) also accepts any recorded run type (st.rt) so existing saves heal.
