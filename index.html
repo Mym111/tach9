@@ -255,6 +255,7 @@ button:disabled{cursor:default}
 .rc-eff s{color:var(--dim)}
 .rc-open{background:transparent;color:var(--rc);box-shadow:inset 0 0 0 2px var(--rc),0 0 18px color-mix(in srgb,var(--rc) 25%,transparent);font-size:13px;padding:13px 12px;display:flex;justify-content:center;gap:10px}
 .rc-open span{font-size:18px;line-height:.8}
+#rcOpenBox:not(:empty){margin-bottom:10px}#rcOpenBox .rc-open{width:100%}
 .rc-open{align-items:center;justify-content:flex-start}.rc-open b{flex:1;text-align:left;font-weight:400}.nav-i svg{width:22px;height:22px;display:block}
 .rc-up{border:1px solid color-mix(in srgb,var(--rc) 45%,#1e2c4a);border-radius:12px;background:#0b1324;padding:10px;display:flex;flex-direction:column;gap:10px}
 .up-row{display:grid;grid-template-columns:30px 1fr 18px 1fr;align-items:center;gap:8px}
@@ -891,6 +892,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
     <div class="bay stbay"><canvas id="stCv" aria-label="Ship cutaway. Tap a room."></canvas><div class="bay-label" id="stLabel"></div></div>
     <div class="rtabs" id="rtabs" role="tablist" aria-label="Ship rooms"></div>
     <div class="hg-body scroll">
+      <div id="rcOpenBox"></div>
       <div class="room-card" id="roomCard"></div>
     </div>
   </section>
@@ -4885,9 +4887,9 @@ function renderInstall(){
 }
 /* ================= STATION (phase 2): rooms, Alloy, cutaway ================= */
 const ROOMS=[
-  {k:'comms',name:'Sensors',col:'#4da6ff',max:3,cost:[null,[3,60],[6,130]],panel:'comms',open:'Terra-reel calibration',
-   desc:'The ship\'s sensor array. You calibrate it to each Terra-reel in a Terraform, and until you do the ideal and danger zones are barely visible. It also trades Alloy at the star you are parked at.',
-   eff:L=>`Calibrate Terra-reels up to rank ${Math.max(0,L-1)}${L>1?` · trade Alloy ${L-1} jump${L>2?'s':''} away`:''}`},
+  {k:'comms',name:'Sensors',col:'#4da6ff',max:3,cost:[null,[3,60],[6,130]],panel:'comms',open:'Planet upgrades',
+   desc:'The ship\'s sensor array. Spend Data on planet upgrades and subsystems that power your Survey and Terraform Runs. It also trades Alloy at the star you are parked at.',
+   eff:L=>`Planet upgrades up to rank ${L}${L>1?` · trade Alloy ${L-1} jump${L>2?'s':''} away`:''}`},
   {k:'shipyard',name:'Shipyard',col:'#7ff3ff',max:4,cost:[null,[2,40],[4,90],[7,160]],panel:'ship',open:'Systems, subsystems & paint',
    desc:'The mechanics bay. Your crew rebuilds the ship’s weapons, shields, sensors and engines here, repaints the hull and keeps the ledger of your installed subsystems. Its level caps how far each system can be upgraded.',
    eff:L=>`Ship systems up to level ${L}`},
@@ -5026,7 +5028,7 @@ const RM={sel:'comms',badges:{},pc:null,t:0,flash:{},rects:[],people:Array.from(
   stars:Array.from({length:60},()=>({x:Math.random(),y:Math.random(),z:Math.random()})),ore:Array.from({length:5},(_,i)=>i/5)};
 function goStation(){if(document.body.classList.contains('terra')){G.terra=false;G.survey=false;skinTerra(false);}ensureStation();ensureGalaxy();scene='station';renderStation();only('#station');}
 const ROOM_ICO={cargo:'station',comms:'signal',shipyard:'wrench',war:'cross',habitat:'person',refinery:'hexa',drone:'drone',tach:'tach'};
-const ROOM_NAV={comms:['radar','Terra-reel calibration'],shipyard:['launch','Systems, subsystems & paint'],war:['bolt','Combo loadout'],habitat:['person','Crew deck · staffing'],drone:['drone','Drone payloads'],tach:['tach','Core tuning'],refinery:['hexa','Tach & alloy']};
+const ROOM_NAV={comms:['radar','Planet upgrades & subsystems'],shipyard:['launch','Systems, subsystems & paint'],war:['bolt','Combo loadout'],habitat:['person','Crew deck · staffing'],drone:['drone','Drone payloads'],tach:['tach','Core tuning'],refinery:['hexa','Tach & alloy']};
 function habArrivals(L){
   const g=S.gal,stn=S.station,room=Math.max(0,HAB_CAP[L]-stn.pop),here=g.stars[g.at];
   const rows=here.links.map(i=>g.stars[i]).map(st=>{const fresh=!g.visited.includes(st.id);
@@ -5065,8 +5067,8 @@ function renderStation(){
         <div class="up-lv"><span>${L?'NOW · L'+L:'NOW'}</span><b>${nowTxt}</b></div>
         ${max?'':`<span class="up-arr">${ICO.up}</span><div class="up-lv nx"><span>NEXT · L${L+1}</span><b>${d.eff(L+1)}</b></div>`}</div>
       <div class="rc-act">${act}</div>
-    </div>
-    ${nav?`<button class="btn rc-open" id="rcOpen"><i class="nav-i">${ICO[nav[0]]}</i><b>${nav[1]}</b><span>›</span></button>`:''}`;
+    </div>`;
+  {const ob0=$('#rcOpenBox');ob0.style.setProperty('--rc',d.col);ob0.innerHTML=nav?`<button class="btn rc-open" id="rcOpen"><i class="nav-i">${ICO[nav[0]]}</i><b>${nav[1]}</b><span>›</span></button>`:'';}
   const bb=$('#rcBuild');if(bb)bb.onclick=()=>{const[a,cr]=d.cost[rl(d.k)],cw=crewCost(d,rl(d.k));if(stn.alloy<a||S.bucks<cr||stn.pop-cw<1)return;
     stn.alloy-=a;S.bucks-=cr;stn.pop-=cw;crewSync();stn.rooms[d.k]++;crewSync();if(CREWED.includes(d.k)){stn.crew[d.k]=Math.min(crewCap(d.k),(stn.crew[d.k]||0)+crewIdle());crewSync();}RM.flash[d.k]=1;if(d.k==='comms')revealAround(S.gal);persist();sfx.buy();renderStation();};
   {const tc=$('#rcTile');if(tc)drawDroneTile(tc);}
@@ -6108,7 +6110,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v145-terra';
+const BUILD='v146-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},

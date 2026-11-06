@@ -63,3 +63,6 @@ Terraform is greyed out until the system has at least one cleared run and enough
 
 ## v145
 - Terraform gate revised: a new game needs a win of each run type once (S.rtG, global, order shown as 'next: <run>'). After that (S.tfU set on the first Terraform win) one cleared run at a system is enough. Tester feedback may relax this to always-open.
+
+## v146
+- Room submenu button (#rcOpenBox) now sits above the room card, below the room tabs. Sensors room text updated for Data planet upgrades.
