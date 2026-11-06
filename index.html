@@ -2963,7 +2963,7 @@ function genGalaxy(seed,num=1){
   const g={seed,num,stars,regions,at:start.id,gate:gate.id,turn:0,visited:[start.id],cons:{name:C.name}};
   revealAround(g);return g;
 }
-async function gateJump(){const g=S.gal;if(!g||!g.gateWon)return;nextGalaxy();}
+async function gateJump(){const g=S.gal;if(!g||!g.gateWon)return;sfx.launch();await launchCine('gate',null,'Jumping on');nextGalaxy();}
 function revealAround(g){const depth=1+Math.max(1,rle('comms'));let front=[g.at],seen=new Set(front);g.stars[g.at].seen=true;
   for(let d=0;d<depth;d++){const nx=[];for(const id of front)for(const j of g.stars[id].links)if(!seen.has(j)){seen.add(j);g.stars[j].seen=true;nx.push(j);}front=nx;}}
 const salvageOf=st=>Math.max(.25,1-.3*st.clears);
@@ -3569,9 +3569,10 @@ function scheduleHold(i,t){
   const pat=[0,2,4,2,1,3,5,3];mNote(mtof(ch.arp[pat[b]%ch.arp.length]+12),t,.5,'sine',.022,.01,true);
   if(b===7&&bar%2===1)mNote(mtof(ch.arp[ch.arp.length-1]+12),t,2.4,'triangle',.012,.3,true);
 }
-function nextGalaxy(){
+async function nextGalaxy(){
   const g=S.gal;S.legacy=(S.legacy||[]);S.legacy.push({num:g.num,rating:rating(),runs:glog().exp.length});
-  S.gal=genGalaxy((Math.random()*2**31)|0,g.num+1);ensureGalaxy();S.choices=genChoices();persist();goMap();
+  S.gal=genGalaxy((Math.random()*2**31)|0,g.num+1);ensureGalaxy();S.choices=genChoices();persist();
+  if(S.gal.cons){try{await launchCine('arrive',null,S.gal.cons.name);}catch(e){}}goMap();
   toast(S.gal.cons?`<b>Constellation ${S.gal.num} · ${S.gal.cons.name}</b><span>${g.num>TACH_GOAL?'Nobody has gone this far. The chart keeps going. ':''}A new constellation. Threat is higher out here, and the Exodus Gate waits at the far end.</span>`:`<b>Tach ${tachNow()} · a new galaxy</b><span>Threat is higher out here. Recover new gate parts to calibrate the next jump.</span>`,'#5ef0d0');
 }
 /* ================= PHASE 3: population, legend, signals, crates ================= */
@@ -6140,7 +6141,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v151-terra';
+const BUILD='v152-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6305,7 +6306,8 @@ function launchCine(mode,key,name){
       let cv=LC.cv;if(!cv){cv=LC.cv=document.createElement('canvas');cv.id='lcine';cv.style.cssText='position:fixed;left:0;top:0;width:100%;height:100%;z-index:60;background:#02040c;opacity:0;transition:opacity .18s;touch-action:none';document.body.append(cv);}
       const W=innerWidth,H=innerHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
       const c=cv.getContext('2d');cv.style.display='block';void cv.offsetWidth;cv.style.opacity='1';
-      const D={trade:1.3,attack:1.7,survey:1.6,terra:1.6}[mode]||1.3,LAB={trade:'TRADE RUN',attack:'ATTACK RUN',survey:'SURVEY RUN',terra:'TERRAFORM RUN'}[mode]||'';
+      const D={trade:1.3,attack:1.7,survey:1.6,terra:1.6,gate:2.6,arrive:3.4}[mode]||1.3,LAB={trade:'TRADE RUN',attack:'ATTACK RUN',survey:'SURVEY RUN',terra:'TERRAFORM RUN',gate:'EXODUS RUN',arrive:'NEW CONSTELLATION'}[mode]||'';
+      const gst=mode==='arrive'?Array.from({length:150},()=>({a:Math.random()*6.283,r:Math.random(),z:.2+Math.random()*.8})):null;let thoom2=false;
       const stars=Array.from({length:70},()=>({x:Math.random(),y:Math.random(),z:.2+Math.random()*.8}));
       const pcx=W*.6,pcy=H*.42,R0=Math.min(W,H)*.17,bolts=[];
       if(!LC.red){const rc=blankCanvas(SHIP.width,SHIP.height),rx=rc.getContext('2d');rx.drawImage(SHIP,0,0);rx.globalCompositeOperation='source-atop';rx.fillStyle='rgba(255,77,94,.55)';rx.fillRect(0,0,SHIP.width,SHIP.height);LC.red=rc;}
@@ -6318,7 +6320,7 @@ function launchCine(mode,key,name){
         if(mode==='terra'||mode==='survey'){const I=mode==='terra'?{rad:.2,pres:.2,h2o:.25,temp:.3,oxy:.2}:{rad:.4,pres:.45,h2o:.4,temp:.4,oxy:.45},N=64;c.drawImage(lcPlanet(N,t,I),cx-r,cy-r,r*2,r*2);}
         else{drawPortraitSys(key,t+.5);c.drawImage(PB,cx-r*1.15,cy-r*1.15,r*2.3,r*2.3);}c.globalAlpha=1;};
       const glow=(x,y,r,col,a)=>{const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,col.replace('A',a));g.addColorStop(1,col.replace('A',0));c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,6.283);c.fill();};
-      try{tone(260,.12,'sawtooth',.03);setTimeout(()=>tone(520,.1,'square',.02),90);}catch(e){}
+      try{if(mode==='gate'){tone(46,2.2,'sine',.2);tone(69,1.8,'sawtooth',.04,0,.05);setTimeout(()=>tone(34,1.4,'sine',.18),1500);}else if(mode==='arrive'){tone(38,1.6,'sine',.16);setTimeout(()=>{tone(392,.9,'triangle',.035);tone(587,1.2,'sine',.03,0,.12);tone(784,1.4,'sine',.025,0,.28);},900);}else{tone(260,.12,'sawtooth',.03);setTimeout(()=>tone(520,.1,'square',.02),90);}}catch(e){}
       const frame=now=>{
         if(done)return;const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt*(skip?4:1);const u=cl(t/D,0,1);
         c.setTransform(dpr,0,0,dpr,0,0);c.imageSmoothingEnabled=false;c.fillStyle='#02040c';c.fillRect(0,0,W,H);
@@ -6326,7 +6328,27 @@ function launchCine(mode,key,name){
         for(const st of stars){const sx=((st.x-t*.05*st.z)%1+1)%1*W;c.fillStyle=`rgba(200,215,255,${.25+st.z*.6})`;c.fillRect(Math.round(sx),Math.round(st.y*H),st.z>.8?2:1,1);}
         c.fillStyle='rgba(225,233,247,.85)';c.font='11px Silkscreen, monospace';c.textAlign='center';c.textBaseline='top';c.fillText(LAB,W/2,Math.round(H*.07));
         c.fillStyle='rgba(127,143,178,.9)';c.fillText((name||'').toUpperCase(),W/2,Math.round(H*.07)+16);
-        if(mode==='trade'){
+        if(mode==='gate'){
+          const gx=W/2,gy=H*.46,GR=Math.min(W,H)*.2,open=ease(cl(u/.5,0,1)),sh=u>.55?(u-.55)*5:0;
+          c.save();if(sh>0)c.translate((Math.random()-.5)*sh*3,(Math.random()-.5)*sh*3);
+          glow(gx,gy,GR*(2.4+.4*Math.sin(t*3)),'rgba(94,240,208,A)',.35*open);
+          for(let k=0;k<4;k++){c.strokeStyle=`rgba(${k%2?'255,216,74':'94,240,208'},${(.25+.5*open)*(1-k*.18)})`;c.lineWidth=k===0?3:2;c.beginPath();c.ellipse(gx,gy,GR*(1-k*.14)*(.4+.6*open),GR*1.5*(1-k*.14)*(.4+.6*open),0,t*(k%2?1:-1)*.6,t*(k%2?1:-1)*.6+Math.PI*1.5);c.stroke();}
+          c.fillStyle=`rgba(2,4,12,${.9*open})`;c.beginPath();c.ellipse(gx,gy,GR*.62*open,GR*.95*open,0,0,6.283);c.fill();
+          for(let i=0;i<24;i++){const p=((t*.5+i/24)%1),a=i*2.4+t*2.5*(1-p);c.fillStyle=`rgba(150,255,235,${(1-p)*.7*open})`;c.fillRect(Math.round(gx+Math.cos(a)*GR*(1.6-p*1.5)),Math.round(gy+Math.sin(a)*GR*(2.2-p*2.1)),2,2);}
+          const e=ease(cl((u-.12)/.7,0,1)),sx=-W*.1,sy=H*.82,x=sx+(gx-sx)*e,y=sy+(gy-sy)*e,sc=Math.max(.05,3.2*Math.pow(1-e,1.4)),rot=Math.atan2(gy-sy,gx-sx);
+          if(u>.12&&e<.97){for(let i=1;i<8;i++){const k=Math.max(0,e-i*.03);c.fillStyle=`rgba(127,243,255,${.45*(1-i/8)})`;c.fillRect(Math.round(sx+(gx-sx)*k),Math.round(sy+(gy-sy)*k),3,2);}ship(x,y,sc,rot,null,1);}
+          c.restore();
+          if(u>.78){const p=(u-.78)/.22;c.fillStyle=`rgba(210,255,245,${Math.min(1,p*1.6)*.9})`;c.fillRect(0,0,W,H);}
+        }else if(mode==='arrive'){
+          const cx=W/2,cy=H*.4;
+          if(u<.55){const sp=1-u/.55;for(const s of gst){const d=s.r*Math.max(W,H)*.6*(1+(1-sp)*.6),a=s.a,len=sp*60*s.z+1;c.strokeStyle=`rgba(200,225,255,${.3+s.z*.5})`;c.lineWidth=1;c.beginPath();c.moveTo(cx+Math.cos(a)*d,cy+Math.sin(a)*d);c.lineTo(cx+Math.cos(a)*(d+len),cy+Math.sin(a)*(d+len));c.stroke();}}
+          const fa=cl((u-.3)/.4,0,1);for(const s of gst){const d=s.r*Math.max(W,H)*.7,tw=.5+.5*Math.sin(t*3+s.a*9);c.fillStyle=`rgba(210,225,255,${fa*(.25+s.z*.6)*(.6+.4*tw)})`;c.fillRect(Math.round(cx+Math.cos(s.a)*d+t*2*s.z),Math.round(cy+Math.sin(s.a)*d*.8),s.z>.8?2:1,s.z>.8?2:1);}
+          if(u>.3){const nb=c.createRadialGradient(W*.7,H*.3,0,W*.7,H*.3,W*.6);nb.addColorStop(0,`rgba(120,80,200,${.22*fa})`);nb.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=nb;c.fillRect(0,0,W,H);}
+          const gOut=ease(cl(u/.45,0,1)),GR=Math.min(W,H)*.14*(1+gOut*1.6),ga=1-cl((u-.35)/.3,0,1);
+          if(ga>0){glow(cx,cy,GR*2.2,'rgba(94,240,208,A)',.4*ga);c.strokeStyle=`rgba(255,216,74,${.7*ga})`;c.lineWidth=2.5;c.beginPath();c.ellipse(cx,cy,GR*.6,GR*.9,0,0,6.283);c.stroke();c.strokeStyle=`rgba(94,240,208,${.7*ga})`;c.lineWidth=2;c.beginPath();c.ellipse(cx,cy,GR*.8,GR*1.2,0,t,t+4.5);c.stroke();}
+          const e=ease(cl((u-.08)/.5,0,1)),bob=Math.sin(t*2)*3,x=cx+(W*.5-cx)*e,y=cy+(H*.62-cy)*e+bob*e,sc=.15+2.4*e;ship(x,y,sc,.5*(1-e),null,cl(u/.12,0,1));
+          if(u<.4){c.fillStyle=`rgba(210,255,245,${(1-u/.4)*.9})`;c.fillRect(0,0,W,H);}
+        }else if(mode==='trade'){
           const e=ease(Math.pow(u,1.1)),sx=-W*.1,sy=H*.78,tx=pcx,ty=pcy,x=sx+(tx-sx)*e,y=sy+(ty-sy)*e,sc=Math.max(.15,3.4*Math.pow(1-e,1.5)),rot=Math.atan2(ty-sy,tx-sx);
           planet(pcx,pcy,R0*(1+.1*eo(u)));
           if(u<.86){for(let i=1;i<7;i++){const k=Math.max(0,e-i*.025),px2=sx+(tx-sx)*k,py2=sy+(ty-sy)*k;c.fillStyle=`rgba(127,243,255,${.5*(1-i/7)})`;c.fillRect(Math.round(px2),Math.round(py2),3,2);}ship(x,y,sc,rot,null,1);}
@@ -6374,7 +6396,7 @@ async function launch(choice){
   sfx.launch();
   SP.shipX=0;SP.launching=true;SP.warpTarget=1;only();
   await sleep(850);
-  {const exo=choice&&choice.gate&&S.gal&&S.gal.cons,lm=TERRA_PENDING==='terra'?'terra':TERRA_PENDING==='survey'?'survey':exo?'attack':(depthNow()===1?'attack':'trade');await launchCine(lm,choice&&choice.key,choice&&choice.name);}
+  {const exo=choice&&choice.gate&&S.gal&&S.gal.cons,lm=TERRA_PENDING==='terra'?'terra':TERRA_PENDING==='survey'?'survey':exo?'gate':(depthNow()===1?'attack':'trade');await launchCine(lm,choice&&choice.key,choice&&choice.name);}
   startRun();SP.warpTarget=0;SP.launching=false;
 }
 /* --- debrief: Doom-style tally of what the ship did, cleared or lost --- */

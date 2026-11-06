@@ -86,3 +86,8 @@ Terraform is greyed out until the system has at least one cleared run and enough
 - scopeLine(): viewport/banner text per run type (Survey/Terraform/pursuit/storm/all clear) instead of always "<pursuer> ON SCOPE".
 - Terraform launch asks for a do-or-die confirmation; Credits counter hidden in Terraform runs (shown as Data in Survey).
 - Failed Terraform = Destroyed system: debris mark on map and card, Launch/Terraform disabled, toast on attempt. Terraformed worlds radiate green on the map.
+
+## v152 — Exodus Gate cinematics
+- launchCine modes 'gate' (ship approaches the opening Exodus Gate, deep thoom, shake, flash) and 'arrive' (gate flash, hyperspace streaks settle into a star field, ship emerges).
+- Exodus Run launch uses 'gate'. Jump On plays 'gate' then, after the new constellation is generated, 'arrive' before the map reveals. Reduced-motion skips both.
+- Noted for later: no Gate keys in the game.
