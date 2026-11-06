@@ -60,3 +60,6 @@ Terraform is greyed out until the system has at least one cleared run and enough
 ## v143
 - Launch cinematics (launchCine): Trade zoom-in, Attack orbit with chaser and bolts, Survey hover and scan, Terraform planet focus with reels and frame. Tap to skip; skipped under reduced motion; failsafe resolves it.
 - Map: extra pan room equal to the star details panel height (chartOcc) and auto-pan so the selected star clears the panel.
+
+## v145
+- Terraform gate revised: a new game needs a win of each run type once (S.rtG, global, order shown as 'next: <run>'). After that (S.tfU set on the first Terraform win) one cleared run at a system is enough. Tester feedback may relax this to always-open.
