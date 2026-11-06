@@ -116,3 +116,7 @@ Terraform is greyed out until the system has at least one cleared run and enough
 - Launch preview: "Tile boost" bar above Tile systems (not on Terraform/Exodus briefs). Needs a Refinery; cap by Refinery level [0,2,4,6]; each pip melts boostCost() = 45 Credits (+12%/constellation). +/- buy and refund until launch. Stored in S.boost; consumed at launch into G.boost (not in training or Terraform).
 - randType: special tile weights (Credits, crates/Data, burner/flare = w[5..7]) multiplied by SPECIAL_CUT .95 * (1 + .15 * boost) outside Terraform/training. The 5% base cut applies always.
 - Refinery room shows a Tile Boost info card. Lasts one launch (user did not choose a duration; default).
+
+## v158 — Themed run music, Boost stock with cog icons
+- New generative tracks (original, no borrowed melodies): 'exodus' (84 bpm G-minor brass march, timpani, snare, Atari-style square pulse that quickens with threat, tritone stab) used for Exodus Gate runs; 'terra' (108 bpm D-major, rising fourths/fifths melody, harp arp, strings, fanfare swell) used for Terraform runs (not Survey, not training). trackStep(k) replaces the STEP_RUN checks.
+- Tile Boost reworked: Credits are melted into Boosts at the Refinery (S.boosts stock, cap by Refinery level, 45 CR each). The Launch preview's Tile systems panel has a -/+ to assign Boosts (S.boostUse) with cog icons; they are consumed at launch. Old S.boost values migrate into the stock.
