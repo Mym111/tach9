@@ -886,7 +886,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
     <div class="topbar">
       <button class="iconbtn" id="stBack" aria-label="Back to galaxy map">‹</button>
       <button class="iconbtn" id="stWho" aria-label="Captain profile and ship name" style="padding:3px"><canvas class="pix" id="stPilot" width="10" height="10" style="width:26px;height:26px"></canvas></button>
-      <div class="tb-title">Ship</div>
+      <div class="tb-title" id="stTitle">Ship</div>
       <button class="bucks w4" id="stBucks" aria-label="Credits, Alloy, Legend and Ship rating"></button>
     <button class="iconbtn gear" aria-label="Options"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M7 0h2l.4 2.1 1.3.5 1.8-1.2 1.4 1.4-1.2 1.8.5 1.3L16 7v2l-2.1.4-.5 1.3 1.2 1.8-1.4 1.4-1.8-1.2-1.3.5L9 16H7l-.4-2.1-1.3-.5-1.8 1.2-1.4-1.4 1.2-1.8-.5-1.3L0 9V7l2.1-.4.5-1.3-1.2-1.8 1.4-1.4 1.8 1.2 1.3-.5zM8 5a3 3 0 100 6 3 3 0 000-6z"/></svg></button></div>
     <div class="bay stbay"><canvas id="stCv" aria-label="Ship cutaway. Tap a room."></canvas><div class="bay-label" id="stLabel"></div></div>
@@ -1551,6 +1551,8 @@ const UP_TEXT={
 /* ================= SAVE ================= */
 const SAVE_KEY='bridgeduty.save.v3';
 const shipName=()=>(S.shipName||'').trim()||'Ship';
+const escH=t=>t.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const shipTag=(n=9)=>{const t=shipName();return t.length>n?t.slice(0,n-1).trimEnd()+'…':t;};   // short form of the ship's name for nav buttons
 const captainName=()=>(S.callsign||'').trim()||PILOTS[S.pilot].n;
 const defaultSave=()=>({bucks:0,cleared:0,up:{wpn:0,shd:0,sns:0,eng:0,fuel:0},paint:0,pilot:0,callsign:'',perks:{},slots:['surge','burn','burn'],career:null,choices:null,gal:null,station:null,legend:0,ver:2,sq:null,deck:null,face:null});
 let hasSave=false,S=defaultSave(),TR=null;   // TR: training session (see TRAINING below)
@@ -3156,7 +3158,7 @@ function updateMapActions(){
   const ch=S.choices&&S.choices[carIdx],mb=$('#moveBtn');if(!ch)return;
   const busy=!!(MAP.anim||WARP||TC),jb=$('#jumpBtn'),out=MAP.selOut;
   const ib=(b,ico,lab)=>{b.classList.add('mib');b.innerHTML=`<span class="ib-i">${ICO[ico]}</span><span class="ib-t">${lab}</span>`;};
-  ib($('#hangarBtn'),'station','Ship');ib($('#commsBtn'),'signal','Sensors');
+  ib($('#hangarBtn'),'station',escH(shipTag(9)));ib($('#commsBtn'),'signal','Sensors');
   {const rb=$('#resBtn'),here=S.gal.stars[S.gal.at];if(S.gal.cons){rb.hidden=out||!ch.here||here.id===S.gal.gate;rb.disabled=busy||!!here.terra;ib(rb,'flask',here.terra?'Terraformed':'Terraform');rb.classList.toggle('tfready',!rb.hidden&&canTerra(here));rb.classList.toggle('dim',!rb.hidden&&!canTerra(here));}else{rb.classList.remove('tfready');rb.hidden=out||!ch.here||!canResearch(here);rb.disabled=busy;ib(rb,'flask','Research');}}
   jb.hidden=out||!ch.here;jb.disabled=busy;if(ch.gate)ib(jb,'tach',S.gal.cons?(S.gal.gateWon?'Jump on':terraDone(S.gal)<terraNeed(S.gal)?'Sealed':'Exodus Gate'):`Tach ${S.gal.num}`);else ib(jb,'rocket','Launch');jb.classList.toggle('tachb',!!ch.gate);
   mb.hidden=out||ch.here;
@@ -3822,7 +3824,7 @@ function renderCampaignReport(){
   <div class="rp-grid">
     ${box('Galaxy',[['stars visited',`${g.visited.length} / ${g.stars.length}`],['systems cleared · researched',`${g.stars.filter(s=>s.clears).length} · ${g.stars.filter(s=>s.res).length}`],['gate parts',`${shardsMine(g)} / ${SHARD_NEED}`],['Tach attempts',(L.tach||[]).filter(a=>a.T===g.num).map(a=>`${a.p}% ${a.ok?'✓':'✕'}`).join(' ')||'—']])}
     ${box('Expeditions',[['flown / won',`${ex.length} / ${won.length}`],['win rate',pct(won.length,ex.length)],['avg threat',ex.length?(ex.reduce((a,e)=>a+e.T,0)/ex.length).toFixed(1):'—'],['avg time',ex.length?`${f(ex.reduce((a,e)=>a+e.time,0)/ex.length)}s`:'—'],['ranks',Object.entries(rank).map(([k,v])=>`${k}×${v}`).join(' ')||'—']])}
-    ${box('Ship',[['credits',S.bucks],['alloy',S.station.alloy],['people',`${S.station.pop}/${HAB_CAP[rl('habitat')]}`],['legend',legendOf()],['rating',rating()]])}
+    ${box(escH(shipName()),[['credits',S.bucks],['alloy',S.station.alloy],['people',`${S.station.pop}/${HAB_CAP[rl('habitat')]}`],['legend',legendOf()],['rating',rating()]])}
     ${box('Pace',[['expeditions per 10 min',(ex.length/mins*10).toFixed(1)],['jumps per 10 min',(L.jumps/mins*10).toFixed(1)],['avg payout',ex.length?f(ex.reduce((a,e)=>a+(e.cr||0),0)/ex.length)+' CR':'—']])}
   </div>
   <div class="rp-b"><h4>Recent missions</h4><pre>${L.exp.slice(-10).map(e=>`${e.hold?'EXODUS GATE':e.name} (threat ${e.T}) ${e.win?'won '+e.rank:'lost'} · ${e.time}s · hull ${e.hull}%`).join('\n')||'—'}</pre></div>`;
@@ -5035,7 +5037,7 @@ function habArrivals(L){
     return`<div class="ha-r"><b>${st.seen?st.name:'Unknown star'}</b><span>${fresh?`+${2+st.r}–${5+st.r} migrants`:'no migrants (visited)'}</span></div>`;}).join('');
   return`<div class="hab-arr"><div class="ha-h">${ICO.person}<b>Arrivals one jump away</b><em>room for ${room}</em></div>${rows}
     <div class="ha-n">New stars send migrants the first time you park there (more out east).${room?'':' <b style="color:#ffb547">The Habitat is full: upgrade it or new people are turned away.</b>'}</div></div>`;}
-function renderStation(){
+function renderStation(){{const t=$('#stTitle');if(t)t.textContent=shipName();}
   const stn=ensureStation();crewSync();const g=ensureGalaxy(),here=g.stars[g.at];g.stars.forEach(alloyInit);
   $('#stBucks').innerHTML=wallet();
   $('#stLabel').textContent=`PARKED AT ${here.name.toUpperCase()}`;
@@ -5418,7 +5420,7 @@ function drawStation(dt){
   c.fillText(`ABOARD ${S.station.pop}/${HAB_CAP[rl('habitat')]}`,10,8);c.fillStyle='rgba(255,216,74,.85)';c.fillText(`LEGEND ${legendOf()}`,10,20);
 }
 
-function renderHangar(){
+function renderHangar(){{const t=document.querySelector('.htab[data-t="ship"] span');if(t)t.textContent=shipTag(7);}
   SHIP=makeShip(S.paint,S.up);
   ensureStation();$('#hgBucks').innerHTML=wallet();
   {const rd=ROOMS.find(r=>r.panel===H.tab);$('#hgTitle').textContent=H.intro?'Create your pilot':rd?rd.name:shipName();$('#record').style.display=$('#recLab').style.display=H.intro?'none':'';$('#pilotDone').style.display=H.intro?'':'none';$('#hangar .htabs').hidden=true;}
@@ -6110,7 +6112,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v146-terra';
+const BUILD='v147-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6469,10 +6471,10 @@ async function runDebrief(d,ctrEls,rows){
   const bx=$('#dbBtns');bx.innerHTML='';
   const row=document.createElement('div');row.className='ib-row';bx.append(row);
   if(d.terra){const pr=(S.pendPRel||[]).length;if(d.win&&pr){const b=iconBtn(row,'hexa','SubSystem','hot',()=>openRelicOffer('p'));b.id='dbRelicBtn';setTimeout(()=>{if(scene==='debrief'&&(S.pendPRel||[]).length)openRelicOffer('p');},800);}
-    iconBtn(row,'map','Galaxy map',(d.win&&pr)?'':'hot',goMap);iconBtn(row,'station','Ship','',goStation);}
+    iconBtn(row,'map','Galaxy map',(d.win&&pr)?'':'hot',goMap);iconBtn(row,'station',escH(shipTag(8)),'',goStation);}
   else if(d.win){const rs=S.gal&&S.gal.stars[CHOICE.starId];if(canResearch(rs)){const b=iconBtn(row,'flask','Research','hot',()=>openResearch(rs.id));b.id='dbResBtn';}
-    iconBtn(row,'map','Galaxy map',canResearch(rs)?'':'hot',goMap);iconBtn(row,'station','Ship','',goStation);}
-  else{iconBtn(row,'map','Galaxy map','hot',goMap);iconBtn(row,'station','Ship','',goStation);}
+    iconBtn(row,'map','Galaxy map',canResearch(rs)?'':'hot',goMap);iconBtn(row,'station',escH(shipTag(8)),'',goStation);}
+  else{iconBtn(row,'map','Galaxy map','hot',goMap);iconBtn(row,'station',escH(shipTag(8)),'',goStation);}
   if(!d.terra&&d.win&&(S.pendRelics||[]).length){const b=iconBtn(row,'hexa','SubSystem','hot',openRelicOffer);b.id='dbRelicBtn';setTimeout(()=>{if(scene==='debrief'&&(S.pendRelics||[]).length)openRelicOffer();},800);}
   if(!d.terra&&d.win&&CHOICE.gate&&S.gal&&S.gal.cons){iconBtn(row,'tach','Jump on','hot',gateJump);const mp=row.querySelector('.ibtn.hot');}
   const small=document.createElement('div');small.className='db-small';bx.append(small);

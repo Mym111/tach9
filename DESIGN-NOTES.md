@@ -66,3 +66,6 @@ Terraform is greyed out until the system has at least one cleared run and enough
 
 ## v146
 - Room submenu button (#rcOpenBox) now sits above the room card, below the room tabs. Sensors room text updated for Data planet upgrades.
+
+## v147
+- Nav labels use the player's ship name (shipTag(n) truncates with an ellipsis: map button 9, debrief 8, hangar tab 7; ship screen title and flight report use the full name). Falls back to 'Ship'.
