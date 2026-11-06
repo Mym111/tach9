@@ -45,3 +45,10 @@ Terraform is greyed out until the system has at least one cleared run and enough
 3. Chain combos/Overdrive tagged Terraform / Runs / Both.
 4. Longer win/fail cinematic in the planet viewport.
 5. Exodus run keeps storm + gap; remove them from Survey code paths entirely.
+
+## v141
+- Restored green (#38e09b) everywhere the Oxygen grey swap had spilled (Sensors colour etc.); grey stays only for planet-run Oxygen.
+- Terraform runs no longer load Afterburner or Credits/Crates tiles (load = line, nova). Survey loads line, nova, loot (Data).
+- Removed the old Terraform token bag (G.bag accumulation and debrief row). `bagNow/bagTotal` and `.tf-bag` CSS remain as dead code for the reels cleanup.
+- Terraform/Survey now end in the standard debrief screen (`d.terra`, `d.noPay`) with a planet instead of the ship; skin is restored in goMap/goStation.
+- Terraform finale: win 4.8 s (planet morphs barren to lush, shock rings, sparks, flash, caption pops), loss 3.4 s (fracture flash, debris, collapse).
