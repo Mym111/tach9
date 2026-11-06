@@ -111,3 +111,8 @@ Terraform is greyed out until the system has at least one cleared run and enough
 
 ## v156 — Overdrive cinematics
 - closeBurst maps fin.n -> cine: AFTERBURN afterburn, HULL RESTORED mend, PURSUER DRIVEN BACK counterfire (3 volleys of the Exodus return-fire bolts, red tint, pilot call), TANKS TOPPED fuel (mend drones recoloured gold + fuelFill/pour sfx), POWER SLOTS slots (pips streak from the board to the systems that earned them via streak()/gaugeTarget). Rail loader unchanged.
+
+## v157 — Refinery Tile Boost (first pass, balance guesses)
+- Launch preview: "Tile boost" bar above Tile systems (not on Terraform/Exodus briefs). Needs a Refinery; cap by Refinery level [0,2,4,6]; each pip melts boostCost() = 45 Credits (+12%/constellation). +/- buy and refund until launch. Stored in S.boost; consumed at launch into G.boost (not in training or Terraform).
+- randType: special tile weights (Credits, crates/Data, burner/flare = w[5..7]) multiplied by SPECIAL_CUT .95 * (1 + .15 * boost) outside Terraform/training. The 5% base cut applies always.
+- Refinery room shows a Tile Boost info card. Lasts one launch (user did not choose a duration; default).

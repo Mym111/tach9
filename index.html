@@ -2206,7 +2206,9 @@ function tileWeights(){
 }
 function typeCount(ty){let n=0;if(B.grid)for(const row of B.grid)for(const t of row)if(t&&t.t===ty)n++;return n;}
 const crateCount=()=>typeCount(CRATE);
-function randType(){const w=tileWeights().concat([CHOICE&&CHOICE.sig==='derelict'?.3:.07,feat('burner')?.16:0]);if(!feat('loot')){w[5]=0;w[6]=0;}if(G.survey){w[6]=0;w[5]*=1.7;}const tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;for(let i=0;i<8;i++){r-=w[i];if(r<=0){if(TILE_POOL[i]===CRATE&&crateCount()>=3)return randType();if(TILE_POOL[i]===BURN&&typeCount(BURN)>=2)return randType();return TILE_POOL[i];}}return 0;}
+const boostCap=()=>[0,2,4,6][Math.min(3,((S.station&&S.station.rooms&&S.station.rooms.refinery)||0))],boostCost=()=>Math.round(45*(1+.12*Math.max(0,((S.gal&&S.gal.num)||1)-1))),BOOST_STEP=.15,SPECIAL_CUT=.95;
+function randType(){const w=tileWeights().concat([CHOICE&&CHOICE.sig==='derelict'?.3:.07,feat('burner')?.16:0]);if(!feat('loot')){w[5]=0;w[6]=0;}if(G.survey){w[6]=0;w[5]*=1.7;}
+  if(!G.terra&&!TR){const m=SPECIAL_CUT*(1+BOOST_STEP*(G.boost||0));w[5]*=m;w[6]*=m;w[7]*=m;}const tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;for(let i=0;i<8;i++){r-=w[i];if(r<=0){if(TILE_POOL[i]===CRATE&&crateCount()>=3)return randType();if(TILE_POOL[i]===BURN&&typeCount(BURN)>=2)return randType();return TILE_POOL[i];}}return 0;}
 const swappable=t=>!!t&&t.t!==DEBRIS&&!t.lock;
 const matchable=t=>t!=null&&(t<5||t===BUCKS||t===CRATE||t===BURN);
 const isWild=t=>t===BUCKS||t===CRATE||t===BURN;
@@ -3129,6 +3131,8 @@ const LOAD_ICO={
 const loadBtn=(k,on,tag='button')=>`<${tag} ${tag==='button'?'type="button" ':''}data-k="${k}" data-tip="<b>${SPECIAL_NAME[k]}</b><br>${SPECIAL_DESC[k]}" class="ldi${on?' on':''}" aria-label="${SPECIAL_NAME[k]}"><img class="tile-i" src="${loadTileURL(k)}" alt=""></${tag}>`;
 function loadPanel(id){const d=depthNow(),ld=loadFor(d).filter(k=>unl(k)||k===FORCED[d]);if(!ld.length)return '';
   return `<div class="pull sys"><div class="pull-h"><span>Tile systems</span><em>${DEPTH_NAME[d]} loadout</em></div><div class="pull-b" id="${id}">${ld.map(k=>loadBtn(k,true,'span')).join('')}</div><p class="ldn">${ld.map(k=>SPECIAL_NAME[k]).join(' · ')}</p></div>`;}
+function boostRow(){const cap=boostCap();if(!cap||BRIEF_T||!loadPanel('x'))return '';const n=Math.min(cap,S.boost||0),c=boostCost();
+  return `<div class="pull boost" style="margin:14px 0 8px;box-sizing:border-box;width:100%"><div class="pull-h"><span>Tile boost</span><em>${n} / ${cap} · ${c} CR each</em></div><div class="pull-b" style="display:flex;align-items:center;gap:8px;box-sizing:border-box"><div class="xch-pips" style="flex:1;min-width:0">${Array.from({length:cap},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('')}</div><button class="btn" data-bst="-" ${n?'':'disabled'} style="flex:none;width:40px;height:34px;padding:0;font-size:18px">−</button><button class="btn" data-bst="+" ${n<cap&&S.bucks>=c?'':'disabled'} style="flex:none;width:40px;height:34px;padding:0;font-size:18px">+</button></div><p class="ldn">Melt Credits for more Credits tiles, crates and flares on this launch. +${Math.round(BOOST_STEP*100)}% per pip, used up when you launch.</p></div>`;}
 function pullRow(id){const a=loadPanel(id),b=shipPanel();return a||b?`<div class="pulls">${a}${b}</div>`:'';}
 function shipPanel(){if(!unl('relics'))return '';const own=S.relics||[];
   const sk=own.map(id=>{const r=relicOf(id);return `<span class="rlx" data-tip="<b>${r.name}</b><br>${r.d}" style="--rc:${r.c}"><i>${r.g}</i></span>`;}).join('')+Array.from({length:Math.max(0,RELIC_SLOTS-own.length)},()=>'<span class="rlx empty"></span>').join('');
@@ -3839,7 +3843,7 @@ function showBrief(ch){{const o=terraOpt(ch);BRIEF_T=!!o&&!o.lk&&MAP.tSel===ch.s
     <div class="br-mix">${vl?'<div style="grid-column:1/-1;width:100%;box-sizing:border-box;text-align:center;border:1px dashed rgba(255,181,71,.55);border-radius:10px;padding:16px 12px;color:#9fb6d9;font-size:13px;line-height:1.4"><b style="display:block;font:10px Silkscreen,monospace;letter-spacing:.14em;color:#ffb547;margin-bottom:6px">UNSURVEYED</b>Fly a Survey Run here to chart its contacts and twists.</div>':mix.map(m=>`<canvas class="pix" data-spr="${m.k}"></canvas><b>${CONTACT_NAME[m.k]}</b><i>→</i><canvas class="pix" data-ic="${m.m}"></canvas><em style="color:${TYPES[m.m].color}">${TYPES[m.m].name}</em>`).join('')}</div>
     ${sys.twist&&!vl?`<ul class="br-ul"><li><i class="b-ok">＋</i>${sys.bonus}</li><li><i class="b-bad">！</i>${sys.twist}</li></ul>`:''}
     ${(ch.gate&&S.gal&&S.gal.cons)?`<div class="br-lab">Exodus Run</div><p class="br-dn">The end goal, all three run types in one. The first third is a quiet Trade Run. A pursuer joins us at one third. At two thirds the Tach goes fast, solar flares join, and the storm closes in, with the pursuer still on us. It gets harder as we go.</p>`:unl('depth')?`<div class="br-lab">Run type</div><div class="br-seg" id="brDepth">${DEPTH_NAME.map((n,i)=>{const lk=i>depthMax();return `<button type="button" data-d="${i}" class="${i===dp&&!BRIEF_T?'on':''}${lk?' lk':''}">${n}<small>${lk?'🔒 clear '+DEPTH_UNL[i]:DEPTH_SUB[i]}</small></button>`;}).join('')}${(()=>{const o=terraOpt(ch);return o?`<button type="button" data-d="T" class="${BRIEF_T?'on':''}${o.lk?' lk':''}">Terraform<small>${o.lk||'the goal · settle this world'}</small></button>`:'';})()}</div><p class="br-dn">${BRIEF_T?'Terraform Run: this world is the ship. Match Radiation, Pressure, Water and Temperature to build it up, keep Oxygen from running out, and keep hazards from tearing its Gravity apart. Win and settlers stay behind; lose and the world is gone for good.':DEPTH_NOTE[dp]}</p>`:''}
-    ${(ch.gate&&S.gal&&S.gal.cons)?'':pullRow('brLoad')}`;
+    ${(ch.gate&&S.gal&&S.gal.cons)?'':boostRow()+pullRow('brLoad')}`;
   if(BRIEF_T||(dp===2&&!(ch.gate&&S.gal&&S.gal.cons))){const kk=$('#brBody').querySelectorAll('.br-k div');
     if(!BRIEF_T&&kk[2]){const f=(()=>{const st=S.gal&&S.gal.stars[ch.starId];return Math.max(.25,1-.3*((st&&st.surveys)||0));})();kk[2].innerHTML=`<span>Data</span><b style="color:#a6ef5a"><i class="dbi"></i>~${Math.round((8+5*thr)*f)}+</b>`;}
     else if(kk[2])kk[2].innerHTML=`<span>Settlers</span><b>${(()=>{const st=S.gal&&S.gal.stars[ch.starId];return st?terraPop(st):'?';})()} stay</b>`;
@@ -3851,7 +3855,8 @@ function showBrief(ch){{const o=terraOpt(ch);BRIEF_T=!!o&&!o.lk&&MAP.tSel===ch.s
   $('#brTitle').textContent='';
   BRIEF={key:ch.key,t:0,title:((ch.gate&&S.gal&&S.gal.cons)?`EXODUS RUN · ${ch.name}`:`${ch.name} · ${sys0().type}`).toUpperCase(),typed:-1};
   paint();
-  $('#brBody').onclick=e=>{const d=e.target.closest('#brDepth button'),l=e.target.closest('#brLoad button');if(!d&&!l)return;
+  $('#brBody').onclick=e=>{const bb=e.target.closest('[data-bst]');if(bb&&!bb.disabled){const cap=boostCap(),c=boostCost();S.boost=Math.min(cap,S.boost||0);if(bb.dataset.bst==='+'&&S.boost<cap&&S.bucks>=c){S.boost++;S.bucks-=c;sfx.coin();}else if(bb.dataset.bst==='-'&&S.boost>0){S.boost--;S.bucks+=c;sfx.tick();}else return;persist();paint();return;}
+    const d=e.target.closest('#brDepth button'),l=e.target.closest('#brLoad button');if(!d&&!l)return;
     if(d&&d.dataset.d==='T'){if(d.classList.contains('lk')){sfx.bad();return;}BRIEF_T=true;sfx.tick();$('#brief').classList.remove('play');paint();return;}
     if(d){if(+d.dataset.d>depthMax())return;BRIEF_T=false;S.depth=+d.dataset.d;}
     if(l){const k=l.dataset.k,cur=loadNow();if(k!==FORCED[depthNow()]&&!cur.includes(k))S.load=[...cur.slice(1),k];}
@@ -5181,7 +5186,7 @@ function renderSubs(){const own=S.relics||[],el=$('#shipSubs');if(!el)return;
    (own.length?`<div class="rl-list">${own.map(id=>{const r=relicOf(id);return`<div class="rl-row" style="--rc:${r.c}"><i>${r.g}</i><div><b>${r.name}</b><span>${r.d}</span></div></div>`;}).join('')}</div>`:'<p class="hg-note">None yet. Terraform worlds well and the crew finds subsystems to install.</p>')+
    `<p class="hg-note">Subsystems stay installed for the whole campaign.</p>`;}
 function renderRefinery(){const stn=ensureStation();
-  $('#refBody').innerHTML=exchangeBlock()+forgeBlock();
+  $('#refBody').innerHTML=exchangeBlock()+forgeBlock()+boostInfo();
   [1,5].forEach(n=>{const fb=$('#forge'+n);if(fb)fb.onclick=()=>{const c=forgeRate()*n;if(S.bucks<c){sfx.bad();return;}S.bucks-=c;ensureStation().alloy+=n;H.alloyT0=H.t;H.alloyN=n;tone(130,1.6,'sawtooth',.04,5);noise(.8,.04);setTimeout(()=>tone(1000,.3,'triangle',.04,.5),1500);persist();sfx.buy();renderHangar();H.flash=1;};});
   {const xb=$('#xchBuy');if(xb)xb.onclick=()=>{if(buyAlloyHere()){renderHangar();H.flash=1;}};}
   {const mc=$('#modCraft');if(mc)mc.onclick=()=>{const stn=ensureStation();if(modHave()>=modCap()||stn.alloy<MOD_COST){sfx.bad();return;}stn.alloy-=MOD_COST;stn.mod=modHave()+1;H.forgeT0=H.t;tone(110,1.4,'sawtooth',.06,6);noise(.9,.05);setTimeout(()=>{sfx.win();},1500);persist();sfx.buy();renderHangar();H.flash=1;};}
@@ -5191,6 +5196,7 @@ function reelBlock(){const stn=ensureStation(),cap=Math.max(0,rle('comms')-1);
     <p class="mod-t">Calibrate the array to one Terra-reel at a time. Each rank makes that reel's ideal and danger zones clearer and its audio cue (the ♪ button in Terraform) louder, and rank 2 shows its coupling tags.${cap?'':' Upgrade the Sensors room to unlock calibration.'}</p>
     ${GEO.map(g=>{const r=calOf(g.k),can=r<cap&&r<2,ok=can&&stn.alloy>=CAL_COST[r][0]&&S.bucks>=CAL_COST[r][1]&&stn.pop-CAL_COST[r][2]>=1;return`<div class="rl-row" style="--rc:${g.col};margin-bottom:6px"><i><svg viewBox="0 0 24 24" width="18" height="18">${g.ic}</svg></i><div style="flex:1"><b>${g.n}</b><span>${['Zones barely visible','Zones half visible','Fully clear'][r]} · rank ${r}/2</span></div>${can?`<button class="up-buy" data-cal="${g.k}" ${ok?'':'disabled'}>${alloyTag(CAL_COST[r][0])} ${coin(CAL_COST[r][1])} <span class="cal-p">${ICO.person}${CAL_COST[r][2]}</span></button>`:`<span class="up-max" style="min-width:48px">${r>=2?'MAX':'LOCKED'}</span>`}</div>`;}).join('')}</div>`;}
 const forgeRate=()=>Math.round([0,80,65,50][Math.min(3,rl('refinery'))]*(1+.12*Math.max(0,((S.gal&&S.gal.num)||1)-1)));
+function boostInfo(){const cap=boostCap();if(!cap)return '';return `<div class="xch" style="margin-top:12px"><div class="xch-h"><span>TILE BOOST</span><b>up to ${cap} pips</b></div><p class="mod-t">Melt ${boostCost()} Credits per pip in the Launch preview to raise the drop rate of Credits tiles, crates and flares on that launch (+${Math.round(BOOST_STEP*100)}% each). Without a boost those tiles drop about 5% less often. A bigger Refinery holds more pips.</p></div>`;}
 function forgeBlock(){if(!rl('refinery'))return '';const r=forgeRate();
   return `<div class="xch" style="margin-top:12px"><div class="xch-h"><span>ALLOY FORGE</span><b>${coin(r)} per Alloy</b></div>
     <p class="mod-t">Smelt spare credits into Alloy. Always open, but dearer than the exchange. A bigger Refinery gives a better rate.</p>
@@ -6190,7 +6196,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v156-terra';
+const BUILD='v157-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6331,7 +6337,7 @@ function startRun(){
   const TP=TERRA_PENDING;TERRA_PENDING=false;TERRA_STATS=!!TP;if(!TP&&document.body.classList.contains('terra')){G.terra=false;G.survey=false;skinTerra(false);}
   CINE=null;RUNX=TR?null:{depth:depthNow(),load:loadFor(depthNow()),forced:FORCED[depthNow()]};const gx=!TR&&CHOICE&&CHOICE.gate&&S.gal&&S.gal.cons;if(gx){RUNX.depth=0;RUNX.f=[];RUNX.gate=true;RUNX.stage=0;RUNX.forced='loot';RUNX.load=loadFor(0);}
   if(TP)RUNX={depth:1,load:TP==='survey'?['line','nova','loot']:['line','nova'],forced:null,f:[],terra:true};
-  SYS=sysView(CHOICE.key);resetGame();{const e=$('#tileCtr b');if(e)e.textContent='0';}G.hold=false;G.depth=gx?1:(RUNX?RUNX.depth:1);G.aegis=0;if(TP)terraInit(TP);if(gx){G.sayT=3;setTimeout(()=>{if(scene==='game'&&G.running)pilotSay('Steady!');},1400);}G.od=0;IL=null;setTimeout(odSync,60);if(peak('shipyard'))for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2);sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
+  SYS=sysView(CHOICE.key);resetGame();G.boost=(TR||TP)?0:Math.min(boostCap(),S.boost||0);if(G.boost&&!TR&&!TP){S.boost=0;persist();setTimeout(()=>{if(G.running)vpPop('TILE BOOST ×'+G.boost,'#ffd84a');},1200);}{const e=$('#tileCtr b');if(e)e.textContent='0';}G.hold=false;G.depth=gx?1:(RUNX?RUNX.depth:1);G.aegis=0;if(TP)terraInit(TP);if(gx){G.sayT=3;setTimeout(()=>{if(scene==='game'&&G.running)pilotSay('Steady!');},1400);}G.od=0;IL=null;setTimeout(odSync,60);if(peak('shipyard'))for(let m=0;m<4;m++)G.meters[m]=Math.min(ST.cap[m],G.meters[m]+2);sizeViewport();sizeBoard();G.shipY=V.H/2;makeTraces();
   for(let m=0;m<4;m++)gEls[m].bar.style.setProperty('--n',ST.cap[m]);
   B.waiters.length=0;B.dying=[];B.beams=[];B.bomb=null;B.barr=null;B.pops=[];B.hazards=[];B.sel=null;B.hint=null;B.idle=0;B.glow=null;
   fillBoard();B.busy=true;settle().then(()=>{B.busy=false;});
