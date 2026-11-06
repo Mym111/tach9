@@ -3,7 +3,7 @@ Mym Match 3
 
 ## Renaming the game
 
-"Tach 9" is a working title. To rename:
+"Exodus Run" (formerly Tach 9) is still a working title. To rename:
 
 1. `index.html`: change `const GAME_NAME` (drives the splash title, header, install prompts, `document.title` and the iOS app title at boot), and the two static copies in the head: `<title>` and `<meta name="apple-mobile-web-app-title">`. The `data-gn` spans keep the page text in sync.
 2. `manifest.webmanifest`: `name` and `short_name`.

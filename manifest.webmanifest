@@ -1,7 +1,7 @@
 {
- "name": "Tach 9",
- "short_name": "Tach 9",
- "description": "Push your station past the speed of light, one jump at a time.",
+ "name": "Exodus Run",
+ "short_name": "Exodus Run",
+ "description": "Match tiles, run your ship through the constellations and terraform new worlds.",
  "id": "./",
  "start_url": "./",
  "scope": "./",

@@ -69,3 +69,8 @@ Terraform is greyed out until the system has at least one cleared run and enough
 
 ## v147
 - Nav labels use the player's ship name (shipTag(n) truncates with an ellipsis: map button 9, debrief 8, hangar tab 7; ship screen title and flight report use the full name). Falls back to 'Ship'.
+
+## v148 — Splash planet, rename to Exodus Run
+- Splash: terraform planet at mid-left runs a 30s loop (terraform → lush → destruction → gone/debris → reform), reusing terraPlanetPaint (saves/restores _tpImg).
+- Removed splash eyebrow ("Ship log") and tagline. Title now "Exodus Run" (GAME_NAME; head title, apple title, manifest, install text).
+- SW cache prefix stays tach9-vNNN; save keys unchanged. Logo/icons still old.

@@ -17,7 +17,7 @@ PUT IT ONLINE (pick one, all free, all give you https)
 TELL TESTERS
   Android (Chrome): open the link, tap "Install app" (or menu > Install app).
   iPhone (Safari):  open the link, tap Share > Add to Home Screen. It must be Safari.
-  Then play from the new Tach 9 icon. Saves stay on that phone.
+  Then play from the new Exodus Run icon. Saves stay on that phone.
   To send feedback: Settings > Tester report, screenshot it, send the screenshot.
 
 UPDATING
