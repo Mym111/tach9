@@ -6107,7 +6107,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v144-terra';
+const BUILD='v144b-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6337,10 +6337,10 @@ function launchCine(mode,key,name){
 async function launch(choice){
   audio();if(AUD.brief!==false&&choice&&!choice.hold&&choice.key){if(!(await showBrief(choice)))return;}else if(choice){const o=terraOpt(choice);BRIEF_T=!!o&&!o.lk&&MAP.tSel===choice.starId;}
   CHOICE=choice;{const exo=choice&&choice.gate&&S.gal&&S.gal.cons;if(BRIEF_T)TERRA_PENDING='terra';else if(!TR&&choice&&choice.key&&!choice.hold&&!exo&&depthNow()===2)TERRA_PENDING='survey';BRIEF_T=false;}
-  {const exo=choice&&choice.gate&&S.gal&&S.gal.cons,lm=TERRA_PENDING==='terra'?'terra':TERRA_PENDING==='survey'?'survey':exo?'attack':(depthNow()===1?'attack':'trade');await launchCine(lm,choice&&choice.key,choice&&choice.name);}
   sfx.launch();
   SP.shipX=0;SP.launching=true;SP.warpTarget=1;only();
-  await sleep(600);
+  await sleep(850);
+  {const exo=choice&&choice.gate&&S.gal&&S.gal.cons,lm=TERRA_PENDING==='terra'?'terra':TERRA_PENDING==='survey'?'survey':exo?'attack':(depthNow()===1?'attack':'trade');await launchCine(lm,choice&&choice.key,choice&&choice.name);}
   startRun();SP.warpTarget=0;SP.launching=false;
 }
 /* --- debrief: Doom-style tally of what the ship did, cleared or lost --- */
