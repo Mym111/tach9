@@ -81,3 +81,8 @@ Terraform is greyed out until the system has at least one cleared run and enough
 
 ## v150 — Survey win counts as a clear
 - Bug: a won Survey Run never incremented st.clears, so Terraform stayed "fly a run here first". Survey wins now add a clear, and stCleared(st) also accepts any recorded run type (st.rt) so existing saves heal.
+
+## v151 — Terraform polish
+- scopeLine(): viewport/banner text per run type (Survey/Terraform/pursuit/storm/all clear) instead of always "<pursuer> ON SCOPE".
+- Terraform launch asks for a do-or-die confirmation; Credits counter hidden in Terraform runs (shown as Data in Survey).
+- Failed Terraform = Destroyed system: debris mark on map and card, Launch/Terraform disabled, toast on attempt. Terraformed worlds radiate green on the map.

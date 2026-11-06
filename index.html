@@ -520,6 +520,7 @@ button:disabled{cursor:default}
 .vbar .track::after{display:none}
 #fuelBar .track{border-radius:8px;background:rgba(160,190,255,.05);border-color:rgba(180,200,255,.35)}
 .terra-note{display:none}
+body.terra:not(.survey) .runbucks{display:none}
 body.terra{--bezel:var(--tfb,#8a5236)}
 body.terra #game{background:radial-gradient(ellipse at 50% 0%,var(--tfa,#241008) 0%,var(--tfc,#0c0608) 80%)}
 body.terra .viewport{box-shadow:inset 0 0 0 2px var(--tfb,#8a5236),0 0 0 4px var(--tfc,#0c0608),0 0 22px var(--tfg,transparent);transition:box-shadow .3s}
@@ -3033,8 +3034,9 @@ function drawChart(t){
     if(rvT!=null){const k=rvT-rvAt(s.id);if(k<.45){c.strokeStyle=`rgba(127,243,255,${1-k/.45})`;c.lineWidth=1.5;c.beginPath();c.arc(x,y,4+k*40,0,6.28);c.stroke();}}
     if(!s.seen){c.fillStyle='rgba(127,143,178,.35)';c.beginPath();c.arc(x,y,2,0,6.28);c.fill();continue;}
     const col=SYSTEMS[s.key].star,rad=near?5.5:4.2;
-    c.fillStyle=col+'2e';c.beginPath();c.arc(x,y,rad+4,0,6.28);c.fill();
-    {const img=SYS_MARK(s.key),ih=near?12:9,sc=ih/Math.max(img.width,img.height);c.save();c.imageSmoothingEnabled=false;
+    if(g.cons&&s.terra){for(let k=0;k<2;k++){const u=((t*.5+k*.5)%1);c.strokeStyle=`rgba(94,240,140,${(1-u)*.55})`;c.lineWidth=1.5;c.beginPath();c.arc(x,y,rad+3+u*14,0,6.28);c.stroke();}c.fillStyle='rgba(94,240,140,'+(.2+.08*Math.sin(t*2+s.id))+')';c.beginPath();c.arc(x,y,rad+7,0,6.28);c.fill();}
+    c.fillStyle=(g.cons&&s.terraLost)?'rgba(120,100,100,.14)':col+'2e';c.beginPath();c.arc(x,y,rad+4,0,6.28);c.fill();
+    if(g.cons&&s.terraLost){debrisMark(c,x,y,near?16:13,s.id);}else{const img=SYS_MARK(s.key),ih=near?12:9,sc=ih/Math.max(img.width,img.height);c.save();c.imageSmoothingEnabled=false;
       c.drawImage(img,Math.round(x-img.width*sc/2),Math.round(y-img.height*sc/2),Math.round(img.width*sc),Math.round(img.height*sc));c.restore();}
     if(canResearch(s)){const fx=x-rad-5,fy=y-rad-5,p=(Math.sin(t*4+s.id)+1)/2;c.fillStyle=`rgba(255,216,74,${.55+.45*p})`;c.beginPath();c.moveTo(fx-3,fy+3);c.lineTo(fx+3,fy+3);c.lineTo(fx+1,fy-1);c.lineTo(fx+1,fy-4);c.lineTo(fx-1,fy-4);c.lineTo(fx-1,fy-1);c.closePath();c.fill();}
     else if(s.res&&s.id!==g.at){const fx=x-rad-6,fy=y-rad-6;c.strokeStyle='#38e09b';c.lineWidth=1.2;c.beginPath();c.moveTo(fx,fy+5);c.lineTo(fx,fy-3);c.stroke();c.fillStyle='#38e09b';c.beginPath();c.moveTo(fx,fy-3);c.lineTo(fx+5,fy-1.5);c.lineTo(fx,fy);c.closePath();c.fill();}
@@ -3107,7 +3109,8 @@ function depthOutline(d){const L=[];
   L.push(`pay ×${DEPTH_PAY[d]}`);
   if(unl('relics'))L.push(d===0?'no subsystem':d===1?'subsystem: 1 of 2':'subsystem: 1 of 3');
   return L.join(' · ');}
-function depthPanel(s){if(s&&S.gal&&S.gal.cons&&s.id===S.gal.gate)return `<div class="sw-exo"><b>EXODUS RUN</b><span>The end goal. A quiet haul, then a pursuer, then the storm. Everything we have built, in one run.</span></div>`;
+function depthPanel(s){if(s&&S.gal&&S.gal.cons&&s.terraLost)return `<div class="sw-exo" style="border-color:#ff8a95"><b style="color:#ff8a95">DESTROYED</b><span>The terraforming failed and this world is a debris field. You can still pass through, but no runs can be flown here.</span></div>`;
+  if(s&&S.gal&&S.gal.cons&&s.id===S.gal.gate)return `<div class="sw-exo"><b>EXODUS RUN</b><span>The end goal. A quiet haul, then a pursuer, then the storm. Everything we have built, in one run.</span></div>`;
   const dp=depthNow(),av=availSpecials(),ld=loadNow();let h='';
   const to=terraOpt({starId:s.id,hold:false}),tOn=!!to&&!to.lk&&MAP.tSel===s.id;
   h+=`<div class="sw-d${to?' t4':''}" id="swDepth">${DEPTH_NAME.map((n,i)=>{const lk=i>depthMax();return `<button type="button" data-d="${i}" class="${i===dp&&!tOn?'on':''}${lk?' lk':''}">${n}<small>${lk?'🔒 clear '+DEPTH_UNL[i]+(DEPTH_UNL[i]>1?' runs':' run'):DEPTH_SUB[i]}</small></button>`;}).join('')}${to?`<button type="button" data-d="T" class="tf${tOn?' on':''}${to.lk?' lk':''}">Terraform<small>${to.lk||'the goal · settle this world'}</small></button>`:''}</div><p class="sw-dn">${tOn?'Terraform Run: this world is the ship. Win and settlers stay behind. Lose and it is gone for good. Your first Terraform opens once you have won a Trade, Attack and Survey Run. After that, one cleared run at a system is enough.':depthOutline(dp)}</p>`;
@@ -3119,6 +3122,7 @@ function showStarWidget(s){
   if(!s.seen){MAP.wFull=false;w.classList.remove('full');w.innerHTML=`<div class="sw-h"><span></span><div><b>Unexplored star</b><span>Beyond your scanners</span></div><button class="sw-x" aria-label="Close">✕</button></div>`;}
   else{alloyInit(s);const thr=s.threat+(s.shard&&!s.shardClaimed?1:0),pay=Math.round(gateBonusBase(thr,sys)*salvageOf(s)*(s.sig==='storm'?1.6:1));
     const chips=[s.id===g.gate?(g.cons?['»',g.gateWon?'Exodus Gate · open. Jump on':terraDone(g)<terraNeed(g)?`Exodus Gate · sealed, terraform ${terraNeed(g)-terraDone(g)} more`:`Exodus Gate · clear it to jump on to the next constellation`,'#5ef0d0']:['»',`Tach ${g.num} attempt · ${pctTxt(tachPlan().total)} chance`,'#5ef0d0']):null,s.shard?[glyphTag('crystal',SHARD_COL),s.shardClaimed?'Gate part · recovered':'Gate part · guarded',SHARD_COL]:null,s.lm?[glyphTag(LM_GLYPH[s.lm]||'ring',LANDMARKS[s.lm].col),LANDMARKS[s.lm].name,LANDMARKS[s.lm].col]:null,s.sig?[glyphTag(SIG_GLYPH[s.sig]||'signal',SIGS[s.sig].col),SIGS[s.sig].name,SIGS[s.sig].col]:null,
+      g.cons&&s.terraLost?['✕','Destroyed · a debris field, no runs possible','#ff8a95']:null,
       g.cons&&s.terra?['◍','Terraformed · counts toward the Exodus Gate','#5ef0d0']:null,
       g.cons?null:s.res?['⚗',`Researched · ${s.res.name} · ${reelDef(s.res.k).name} +${s.res.amt}`,reelDef(s.res.k).col]:g.cons?null:canResearch(s)?['⚗','Research ready · park here','#ffd84a']:s.id!==g.gate&&!s.clears?['⚗','Clear it to unlock research','#7f8fb2']:null,
       s.clears?['✓',`Cleared ${s.clears}× · salvage ${Math.round(salvageOf(s)*100)}%`,'#38e09b']:null].filter(Boolean);
@@ -3131,7 +3135,7 @@ function showStarWidget(s){
       ${chips.length?`<div class="sw-c">${chips.map(([ic,l,c])=>`<i style="--tc:${c}"><b>${ic}</b>${l}</i>`).join('')}</div>`:''}
       ${dial}${tfRow}
       ${i>=0?`<canvas id="swScan"></canvas><button class="sw-more" id="swMore">${MAP.wFull?'▾ Less':'▴ Details'}</button>`:''}`;
-    const ic=$('#swIc'),img=SYS_MARK(s.key);ic.width=img.width;ic.height=img.height;ic.getContext('2d').drawImage(img,0,0);
+    const ic=$('#swIc'),img=SYS_MARK(s.key);ic.width=img.width;ic.height=img.height;if(g.cons&&s.terraLost){ic.getContext('2d').clearRect(0,0,ic.width,ic.height);debrisMark(ic.getContext('2d'),ic.width/2,ic.height/2,ic.width,s.id);}else ic.getContext('2d').drawImage(img,0,0);
     w.classList.toggle('full',!!(MAP.wFull&&i>=0));
     const bu=$('#swBuy');if(bu)bu.onclick=e=>{e.stopPropagation();if(buyAlloyAt(s.id))showStarWidget(s);};
     const tfb=$('#swTerra');if(tfb)tfb.onclick=e=>{e.stopPropagation();openTerra(s);};
@@ -3180,8 +3184,8 @@ function updateMapActions(){
   const busy=!!(MAP.anim||WARP||TC),jb=$('#jumpBtn'),out=MAP.selOut;
   const ib=(b,ico,lab)=>{b.classList.add('mib');b.innerHTML=`<span class="ib-i">${ICO[ico]}</span><span class="ib-t">${lab}</span>`;};
   ib($('#hangarBtn'),'station',escH(shipTag(9)));ib($('#commsBtn'),'signal','Sensors');
-  {const rb=$('#resBtn'),here=S.gal.stars[S.gal.at];if(S.gal.cons){rb.hidden=out||!ch.here||here.id===S.gal.gate;rb.disabled=busy||!!here.terra;ib(rb,'flask',here.terra?'Terraformed':'Terraform');rb.classList.toggle('tfready',!rb.hidden&&canTerra(here));rb.classList.toggle('dim',!rb.hidden&&!canTerra(here));}else{rb.classList.remove('tfready');rb.hidden=out||!ch.here||!canResearch(here);rb.disabled=busy;ib(rb,'flask','Research');}}
-  jb.hidden=out||!ch.here;jb.disabled=busy;if(ch.gate)ib(jb,'tach',S.gal.cons?(S.gal.gateWon?'Jump on':terraDone(S.gal)<terraNeed(S.gal)?'Sealed':'Exodus Gate'):`Tach ${S.gal.num}`);else ib(jb,'rocket','Launch');jb.classList.toggle('tachb',!!ch.gate);
+  {const rb=$('#resBtn'),here=S.gal.stars[S.gal.at];if(S.gal.cons){rb.hidden=out||!ch.here||here.id===S.gal.gate;rb.disabled=busy||!!here.terra||!!here.terraLost;ib(rb,'flask',here.terra?'Terraformed':here.terraLost?'Destroyed':'Terraform');rb.classList.toggle('tfready',!rb.hidden&&canTerra(here));rb.classList.toggle('dim',!rb.hidden&&!canTerra(here));}else{rb.classList.remove('tfready');rb.hidden=out||!ch.here||!canResearch(here);rb.disabled=busy;ib(rb,'flask','Research');}}
+  jb.hidden=out||!ch.here;jb.disabled=busy||!!(S.gal.cons&&S.gal.stars[ch.starId]&&S.gal.stars[ch.starId].terraLost);if(ch.gate)ib(jb,'tach',S.gal.cons?(S.gal.gateWon?'Jump on':terraDone(S.gal)<terraNeed(S.gal)?'Sealed':'Exodus Gate'):`Tach ${S.gal.num}`);else ib(jb,'rocket','Launch');jb.classList.toggle('tachb',!!ch.gate);
   mb.hidden=out||ch.here;
   if(!ch.here&&!out){const cost=moveCost(S.gal.stars[ch.starId]);const short=S.bucks<cost;mb.disabled=busy||short;mb.classList.toggle('short',short);ib(mb,'jumpb',`Move · <span class="coin"></span>${cost}${short?` <small>need ${cost-S.bucks} more</small>`:''}`);}
 }
@@ -3427,6 +3431,9 @@ function initPhase4(g){
 const lmActive=st=>!!(st&&st.lm);
 const SUN_MARK=(()=>{const c=blankCanvas(11,11),x=c.getContext('2d');x.fillStyle='#ff9640';for(let i=0;i<8;i++){const a=i*Math.PI/4;x.fillRect(Math.round(5+Math.cos(a)*4.5),Math.round(5+Math.sin(a)*4.5),1,1);}
   x.fillStyle='#ffb547';x.beginPath();x.arc(5.5,5.5,3.2,0,6.28);x.fill();x.fillStyle='#fff3bf';x.fillRect(4,4,2,2);return c;})();
+function debrisMark(c,x,y,sz,seed){c.save();c.imageSmoothingEnabled=false;const r=sz/2;let q=(seed*9301+49297)%233280;const rnd=()=>{q=(q*9301+49297)%233280;return q/233280;};
+  for(let i=0;i<9;i++){const a=rnd()*6.28,d=rnd()*r,w=1+Math.round(rnd()*2);c.fillStyle=i%3===0?'#8a7068':i%3===1?'#5c4c52':'#a89088';c.fillRect(Math.round(x+Math.cos(a)*d-w/2),Math.round(y+Math.sin(a)*d-w/2),w,w);}
+  c.fillStyle='rgba(255,138,149,.55)';c.fillRect(Math.round(x)-1,Math.round(y)-1,2,2);c.restore();}
 const SYS_MARK=k=>({asteroid:MINI.rock,imperial:ENEMY,horizon:MINI.well,nebula:MINI.planet,flare:SUN_MARK})[k];
 const SHARD_NEED=4,SHARD_COL='#5ef0d0';
 function initShards(g){
@@ -6133,7 +6140,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v150-terra';
+const BUILD='v151-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6219,7 +6226,7 @@ function updateCountdown(dt){
   if(!G.cdArrived&&u>=.75){G.cdArrived=true;sfx.arrive();G.shake=.3;}
   if(now!==before&&now>0&&G.cdArrived)sfx.cdTick(now);
   if(G.countdown<=0){G.countdown=0;applyWarBoost();if(G.tut)setTimeout(()=>coach('run_start'),500);G.warpX=0;G.cdBoost=0;sfx.engage();G.fx.push({k:'burst',t:0,d:1.2});G.shake=.25;
-    showBanner('Engage',`${SYS.pName.toUpperCase()} ON SCOPE`);}
+    showBanner('Engage',scopeLine());}
 }
 function drawCountdownBuf(b,W,H,t){
   if(!(G.countdown>0))return;
@@ -6231,12 +6238,13 @@ function drawCountdownBuf(b,W,H,t){
     b.strokeStyle=`rgba(255,255,255,${.8*(1-v)})`;b.beginPath();b.ellipse(m.x,m.y,2+v*18,2+v*11,0,0,6.28);b.stroke();
     if(v<.3){b.fillStyle=`rgba(220,245,255,${.5*(1-v/.3)})`;b.fillRect(0,0,W,H);}}
 }
+const scopeLine=()=>G.survey?'SURVEY ARRAY ONLINE':G.terra?'HOLD GRAVITY AND OXYGEN':feat('pursuer')?`${SYS.pName.toUpperCase()} ON SCOPE`:feat('gap')?'STORM CLOSING IN':'ALL CLEAR · NO PURSUIT';
 function drawCountdownHUD(c,CW,CH,t){
   if(!(G.countdown>0))return;
   const tot=G.cdTotal||3,u=clamp(1-G.countdown/tot,0,1),n=Math.ceil(G.countdown),arrived=u>=.75;
   c.textAlign='center';c.textBaseline='middle';
   c.font='11px Silkscreen, monospace';c.fillStyle='#e1e9f7';c.fillText(`${CHOICE.name} · ${SYS.type}`.toUpperCase(),CW/2,28);
-  c.font='9px Silkscreen, monospace';c.fillStyle=arrived?'#ff8a95':'rgba(255,138,149,.35)';c.fillText(`${SYS.pName.toUpperCase()} ON SCOPE`,CW/2,42);
+  c.font='9px Silkscreen, monospace';c.fillStyle=arrived?'#ff8a95':'rgba(255,138,149,.35)';c.fillText(scopeLine(),CW/2,42);
   const y=CH*.78;
   c.font='10px Silkscreen, monospace';c.fillStyle='#7ff3ff';c.fillText(arrived?'ALL STATIONS · STAND BY':'DROPPING OUT OF WARP',CW/2,y);
   {const w=Math.min(160,CW*.5),bx=CW/2-w/2,by=y+14;c.fillStyle='rgba(127,243,255,.15)';c.fillRect(bx,by,w,3);
@@ -6284,7 +6292,7 @@ function startRun(){
   G.cdTotal=G.countdown=AUD.cd??3;G.cdArrived=false;G.cdBoost=0;if(!G.countdown)applyWarBoost();
   if(G.tut&&!G.countdown)setTimeout(()=>coach('run_start'),700);
   if(G.terra)setTimeout(()=>{if(scene==='game'&&G.running&&G.terra)coach(G.survey?'survey_start':'terra_start');},1800);
-  if(!G.countdown)showBanner(TP==='survey'?'Survey':TP?'Terraform':`${CHOICE.name} · ${SYS.type}`,TP==='survey'?`${CHOICE.name.toUpperCase()} · SCAN FOR DATA`:TP?`${CHOICE.name.toUpperCase()} · HOLD THE WORLD TOGETHER`:`${SYS.pName.toUpperCase()} ON SCOPE`);
+  if(!G.countdown)showBanner(TP==='survey'?'Survey':TP?'Terraform':`${CHOICE.name} · ${SYS.type}`,TP==='survey'?`${CHOICE.name.toUpperCase()} · SCAN FOR DATA`:TP?`${CHOICE.name.toUpperCase()} · HOLD THE WORLD TOGETHER`:scopeLine());
 }
 /* --- launch cinematics: a quick ship-to-planet flight per run type, played over the map before the warp --- */
 const LC={cv:null,pc:null,pi:null,pT:-9,red:null};
@@ -6641,6 +6649,8 @@ async function launchChoice(ch){if(TR){toast('<b>Launching is turned off in trai
   if(ch&&ch.gate&&terraDoomed(S.gal)){if(await askConfirm('CONSTELLATION LOST',`<p>Too many worlds are lost. The Exodus Gate can never open here.</p><p class="cf-dim">Re-chart this constellation from the start. The crew and Alloy are halved, but credits and upgrades come with us.</p>`,'Re-chart')){const g=S.gal,stn=ensureStation();stn.pop=Math.max(2,Math.floor(stn.pop/2));stn.alloy=Math.floor(stn.alloy/2);S.gal=genGalaxy((Math.random()*2**31)|0,g.num);ensureGalaxy();crewSync();S.choices=genChoices();persist();goMap();toast(`<b>Re-charted · Constellation ${S.gal.num}</b><span>Half the crew did not make it. Choose your worlds with care.</span>`,'#ff8a95');}return;}
   if(ch&&ch.gate&&S.gal.cons&&!S.gal.gateWon&&terraDone(S.gal)<terraNeed(S.gal)){const n=terraNeed(S.gal)-terraDone(S.gal);toast(`<b>The Exodus Gate is sealed</b><span>Terraform ${n} more world${n>1?'s':''} first. Clear a star, then terraform it from its launch window.</span>`,'#5ef0d0');return;}
   const st=ch&&S.gal&&S.gal.stars[ch.starId];
+  if(st&&st.terraLost){toast('<b>Destroyed</b><span>'+st.name+' is a debris field. You can fly here, but no runs are possible.</span>','#ff8a95');return;}
+  {const o=terraOpt(ch);if(o&&!o.lk&&MAP.tSel===ch.starId&&!(await askConfirm('TERRAFORM '+st.name.toUpperCase(),`<p>This is do or die. <b>Win</b> and the world lives and settlers stay. <b>Lose</b> and ${st.name} is destroyed for good, a debris field where no run can ever be flown again.</p><p class="cf-dim">No Credits, Alloy or crates here. Only Gravity, Oxygen and time.</p>`,'Terraform')))return;}
   if(st&&st.res&&!(await askConfirm('ALREADY RESEARCHED',`<p><b>${st.name}</b> has already given its research (${st.res.name}). Another run here still pays credits and salvage at <b>${Math.round(salvageOf(st)*100)}%</b>, but no new research.</p><p class="cf-dim">Uncleared planets nearby can still raise your Tach odds.</p>`,'Launch anyway')))return;
   launch(ch);}
 $('#jumpBtn').onclick=()=>{if(MAP.anim||WARP||TC)return;audio();launchChoice(S.choices[carIdx]);};
