@@ -96,3 +96,9 @@ Terraform is greyed out until the system has at least one cleared run and enough
 - Pulsar: body.exo brightness pulse on board+viewport, period 4.2s→1.25s as the gate nears; each beat plays a thoom whose pitch, length and volume rise with progress (plus screen shake late).
 - Viewport: much larger Exodus Gate (grows and slides toward the ship, rotating rings, inflow sparks) and animated drifting debris (34 chunks, faster/larger near the gate). Normal jump-gate drawing skipped for gate runs.
 - Pilot speech at 3/14/50/78/92% progress, on top of the existing stage barks.
+
+## v154 — Constellation picker, earlier pulsar, smaller speech
+- Pulsar/thoom progress curve eased (pow .55) so the pulse is clearly felt from roughly a third of the run; min intensity raised.
+- Speech bubbles (huge) ~25% smaller.
+- Jump On: gate approach > "Choose your next constellation" frame (3 unvisited constellations with mini star maps; Crux stays the first) > arrival cinematic > map. S.consDone tracks visited constellations; genGalaxy takes an optional constellation index.
+- Fix: launchCine's delayed hide timer from the gate cine hid the arrival cine, flashing the debrief behind. Timer is now cleared on the next cine.
