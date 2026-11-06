@@ -108,3 +108,6 @@ Terraform is greyed out until the system has at least one cleared run and enough
 - sfx.droneBuzz/droneFix: mechanical buzz for drone repairs, hull patch and payload clears (fireDrone).
 - Wallet: 3 rows x 2 with separators: Credits Alloy | Data Staff | Legend Rating. Data always shown, Staff (S.station.pop) added. Tooltip is bulleted.
 - Overdrive cinematic audit: dedicated after-cine only for Afterburn (afterburn) and Repair (mend); Counterfire, Power slots, Tanks share the generic boardclear; Rail loader has none.
+
+## v156 — Overdrive cinematics
+- closeBurst maps fin.n -> cine: AFTERBURN afterburn, HULL RESTORED mend, PURSUER DRIVEN BACK counterfire (3 volleys of the Exodus return-fire bolts, red tint, pilot call), TANKS TOPPED fuel (mend drones recoloured gold + fuelFill/pour sfx), POWER SLOTS slots (pips streak from the board to the systems that earned them via streak()/gaugeTarget). Rail loader unchanged.
