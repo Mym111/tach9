@@ -181,7 +181,7 @@ button:disabled{cursor:default}
 #secSkip{margin:0 14px;width:auto}
 .bucks.w4{display:grid;grid-template-columns:auto auto;gap:2px 10px;padding:5px 9px;font-size:12px;line-height:1.25;text-align:left;cursor:pointer}
 .wv{display:flex;align-items:center;gap:4px;color:var(--bucks)}.wv .coin,.wv .alloy{margin:0}.wv:nth-child(2){color:#cfe0f5}.wv.dt{color:#a6ef5a}.wv.dt i{font-style:normal}.dbi{display:inline-block;width:.9em;height:1em;vertical-align:-.14em;margin-right:.25em;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M1 9.6v2c0 .9 2.2 1.5 5 1.5s5-.6 5-1.5v-2z' fill='%23a6ef5a' stroke='%231f3a10' stroke-width='.5'/%3E%3Cellipse cx='6' cy='9.6' rx='5' ry='1.5' fill='%23e3ffbf' stroke='%231f3a10' stroke-width='.5'/%3E%3Cpath d='M1 5.8v2c0 .9 2.2 1.5 5 1.5s5-.6 5-1.5v-2z' fill='%23a6ef5a' stroke='%231f3a10' stroke-width='.5'/%3E%3Cellipse cx='6' cy='5.8' rx='5' ry='1.5' fill='%23e3ffbf' stroke='%231f3a10' stroke-width='.5'/%3E%3Cpath d='M1 2v2c0 .9 2.2 1.5 5 1.5s5-.6 5-1.5v-2z' fill='%23a6ef5a' stroke='%231f3a10' stroke-width='.5'/%3E%3Cellipse cx='6' cy='2' rx='5' ry='1.5' fill='%23e3ffbf' stroke='%231f3a10' stroke-width='.5'/%3E%3C/svg%3E") center/contain no-repeat}.dbi.dk{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M1 9.6v2c0 .9 2.2 1.5 5 1.5s5-.6 5-1.5v-2z' fill='%233a2a08' stroke='%231b1206' stroke-width='.5'/%3E%3Cellipse cx='6' cy='9.6' rx='5' ry='1.5' fill='%238a6a1c' stroke='%231b1206' stroke-width='.5'/%3E%3Cpath d='M1 5.8v2c0 .9 2.2 1.5 5 1.5s5-.6 5-1.5v-2z' fill='%233a2a08' stroke='%231b1206' stroke-width='.5'/%3E%3Cellipse cx='6' cy='5.8' rx='5' ry='1.5' fill='%238a6a1c' stroke='%231b1206' stroke-width='.5'/%3E%3Cpath d='M1 2v2c0 .9 2.2 1.5 5 1.5s5-.6 5-1.5v-2z' fill='%233a2a08' stroke='%231b1206' stroke-width='.5'/%3E%3Cellipse cx='6' cy='2' rx='5' ry='1.5' fill='%238a6a1c' stroke='%231b1206' stroke-width='.5'/%3E%3C/svg%3E")}.wv.dt .dbi{margin:0}
-.wv.lg{color:#ffd84a}.wv.rt{color:#7ff3ff}.wv i{font-style:normal}
+.bucks.w4 .wv:nth-child(n+3){border-top:1px solid #5a2550;padding-top:3px;margin-top:1px}.wv.st{color:#ffb4d9}.wv.lg{color:#ffd84a}.wv.rt{color:#7ff3ff}.wv i{font-style:normal}
 .xch{position:relative;border:1px solid #2b4f86;border-radius:14px;padding:12px 14px 14px;background:linear-gradient(180deg,rgba(13,32,64,.95),rgba(6,12,26,.95));box-shadow:inset 0 0 30px rgba(77,166,255,.12),0 0 0 3px #0c1426;overflow:hidden}
 .xch::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
 .xch-h{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--f-display);font-size:9px;letter-spacing:.18em;color:#4da6ff}.xch-h b{font-weight:400;font-size:12px;color:var(--ink);letter-spacing:.1em}
@@ -1699,6 +1699,8 @@ const sfx={
   ion(){tone(900,.3,'sine',.04,.4);tone(1350,.3,'sine',.02,.4,.05)},
   fire(){noise(.3,.06);tone(160,.25,'sawtooth',.03,.6)},
   perk(t){[523,659,784,1047].slice(0,t+1).forEach((f,i)=>tone(f,.16,'triangle',.05,1,i*.07));tone(220,.5,'sawtooth',.025,3);},
+  droneBuzz(n=6){for(let i=0;i<n;i++)tone(150+(i%2)*16,.05,'sawtooth',.032,.85,i*.055);tone(620,n*.055,'triangle',.018,1.9);},
+  droneFix(n=1){sfx.droneBuzz(5);tone(1480,.05,'triangle',.03,0,.3);tone(1980,.06,'triangle',.025,0,.36);if(n>1)for(let i=1;i<Math.min(n,4);i++){sfx.droneBuzz(3);}},
   drone(){tone(180,.9,'sawtooth',.018,1.3);tone(240,.9,'square',.012,1.2,.1);},
   flares(){for(let i=0;i<6;i++)tone(900-i*60,.08,'square',.025,.6,.08+i*.1);noise(.6,.04);},
   pour(){tone(300,1.2,'sine',.03,2.2);noise(1.1,.025);},
@@ -2978,7 +2980,7 @@ function genGalaxy(seed,num=1,ci){
   const start=stars.reduce((a,b)=>b.x<a.x?b:a),gate=stars.reduce((a,b)=>b.x>a.x?b:a);
   start.key='asteroid';start.threat=(num-1)*2;gate.key='imperial';
   stars.forEach(st=>st.seen=true);   // a constellation is a known shape: the whole chart is visible from the start
-  const g={seed,num,stars,regions,at:start.id,gate:gate.id,turn:0,visited:[start.id],cons:{name:C.name}};
+  const g={seed,num,stars,regions,at:start.id,gate:gate.id,turn:0,visited:[start.id],cons:{name:C.name},ci:CONSTELLATIONS.indexOf(C)};
   revealAround(g);return g;
 }
 function consOptions(){const done=new Set([...(S.consDone||[]),S.gal&&S.gal.cons?S.gal.cons.name:'']);let pool=CONSTELLATIONS.map((c,i)=>i).filter(i=>!done.has(CONSTELLATIONS[i].name));if(pool.length<1)pool=CONSTELLATIONS.map((c,i)=>i).filter(i=>CONSTELLATIONS[i].name!==(S.gal.cons&&S.gal.cons.name));
@@ -2998,7 +3000,7 @@ function revealAround(g){const depth=1+Math.max(1,rle('comms'));let front=[g.at]
   for(let d=0;d<depth;d++){const nx=[];for(const id of front)for(const j of g.stars[id].links)if(!seen.has(j)){seen.add(j);g.stars[j].seen=true;nx.push(j);}front=nx;}}
 const salvageOf=st=>Math.max(.25,1-.3*st.clears);
 const moveCost=st=>25+15*st.r;
-function ensureGalaxy(){if(!S.gal||!S.gal.td){S.gal=genGalaxy((Math.random()*2**31)|0,S.gal&&S.gal.num||1);persist();}if(S.gal.cons)S.gal.stars.forEach(st=>st.seen=true);S.gal.stars.forEach(alloyInit);S.gal.stars.forEach(st=>sigInit(st,S.gal));initPhase4(S.gal);return S.gal;}
+function ensureGalaxy(){if(!S.gal||!S.gal.td){S.gal=genGalaxy((Math.random()*2**31)|0,S.gal&&S.gal.num||1,S.gal&&S.gal.ci);persist();}if(S.gal.cons)S.gal.stars.forEach(st=>st.seen=true);S.gal.stars.forEach(alloyInit);S.gal.stars.forEach(st=>sigInit(st,S.gal));initPhase4(S.gal);return S.gal;}
 function genChoices(){
   const g=ensureGalaxy(),here=g.stars[g.at];
   return [here,...here.links.map(i=>g.stars[i])].map(st=>({key:st.key,name:st.name,threat:st.threat+(st.shard&&!st.shardClaimed?1:0),hq:false,gate:st.id===g.gate,shard:!!st.shard,shardClaimed:!!st.shardClaimed,guarded:!!(st.shard&&!st.shardClaimed),starId:st.id,here:st.id===g.at,salvage:salvageOf(st),region:st.r,sig:st.sig||null,lm:st.lm||null}));
@@ -3505,7 +3507,7 @@ async function fireDrone(cells,label,col){
     const rows=new Set(cells.map(x=>x[0])),cols=new Set(cells.map(x=>x[1]));
     if(rows.size===1)B.beams.push({h:true,i:[...rows][0],t:0,color:col});else if(cols.size===1)B.beams.push({h:false,i:[...cols][0],t:0,color:col});else B.beams.push({nova:true,t:0});
     let sr=0,sc=0;for(const[r,c]of cells){sr+=r;sc+=c;}boardPop(label,sc/cells.length+.5,sr/cells.length+.5,col);
-    if(typeof tone==='function'){tone(300,.18,'sawtooth',.04);setTimeout(()=>tone(900,.1,'square',.03),60);}
+    sfx.droneBuzz(4);tone(300,.18,'sawtooth',.03,0,.2);tone(900,.1,'square',.025,0,.26);
     G.log.drones=(G.log.drones||0)+set.size;rEvent(`DRONE ${label} x${set.size}`);
     await clearCells(set,1);await collapse();await cascade([]);if(!findMove())await reshuffle();
   }catch(err){console.error(err);}finally{B.busy=false;}
@@ -5012,7 +5014,7 @@ function buyAlloyAt(id){
 }
 function hexPath(c,x,y,r){c.beginPath();for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/2;i?c.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r):c.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r);}c.closePath();}
 function wallet(full=true){const base=`${coin(S.bucks)}<span class="wsep"></span>${alloyTag(S.station?S.station.alloy:0)}`;if(!full)return base;
-  return`<span class="wv"><i class="coin"></i>${S.bucks}</span><span class="wv"><i class="alloy"></i>${S.station?S.station.alloy:0}</span>${(S.data||0)>0?`<span class="wv dt"><i class="dbi"></i>${S.data}</span>`:''}<span class="wv lg"><i>★</i>${legendOf()}</span><span class="wv rt"><i>◆</i>${rating()}</span>`;}
+  return`<span class="wv"><i class="coin"></i>${S.bucks}</span><span class="wv"><i class="alloy"></i>${S.station?S.station.alloy:0}</span><span class="wv dt"><i class="dbi"></i>${S.data||0}</span><span class="wv st"><i>☻</i>${S.station?(S.station.pop||0):0}</span><span class="wv lg"><i>★</i>${legendOf()}</span><span class="wv rt"><i>◆</i>${rating()}</span>`;}
 
 /* ---- in-run effects ---- */
 function droneTarget(){
@@ -5042,7 +5044,7 @@ function deployDrone(){const D=G.drone;if(!D||D.fly)return;const L=Math.max(1,rl
   if(!list.length){boardPop('ALL CLEAR',D.c+.5,D.r+.5,'#c792ff');G.drone=null;G.droneT=ST.droneT;return;}
   list.sort((a,b)=>b.pri-a.pri);let n=0;for(const x of list.slice(0,cap))if(fixTile(x.r,x.c))n++;
   boardPop(n>1?`DRONE ×${n}`:'DRONE FIX',D.c+.5,D.r+.5,'#c792ff');B.beams.push({h:true,i:D.r,t:0,color:'#c792ff'});
-  if(typeof tone==='function'){tone(1480,.05,'triangle',.03);setTimeout(()=>tone(1980,.06,'triangle',.025),70);}
+  sfx.droneFix(n);
   G.log.drones=(G.log.drones||0)+n;rEvent(`DRONE repair x${n}`);G.drone=null;G.droneT=ST.droneT;}
 function droneTrack(D){if(!D||D.fly)return;let f=null;if(D.tile)for(let r=0;r<ROWS&&!f;r++)for(let c=0;c<COLS;c++)if(B.grid[r][c]===D.tile){f=[r,c];break;}
   if(f){D.r=f[0];D.c=f[1];}else D.tile=B.grid[D.r]&&B.grid[D.r][D.c]||null;}
@@ -5050,7 +5052,7 @@ function updateDrone(dt){
   if(!ST.droneT)return;const D=G.drone;droneTrack(D);
   if(D){if(D.fly){D.fly.u=Math.min(1,D.fly.u+dt/.4);if(D.fly.u>=1&&!B.busy){let n=0;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(fixTile(r,c))n++;const sk=rle('drone')>=2?droneArea(D.fly.tr,D.fly.tc):null;
         boardPop(n>1?`DRONE ×${n}`:'DRONE FIX',D.fly.tc+.5,D.fly.tr+.5,'#c792ff');B.beams.push({h:true,i:D.fly.tr,t:0,color:'#c792ff'});
-        if(typeof tone==='function'){tone(1480,.05,'triangle',.03);setTimeout(()=>tone(1980,.06,'triangle',.025),70);}
+        sfx.droneFix(n);
         G.log.drones=(G.log.drones||0)+n;rEvent(`DRONE repair x${n}`);G.drone=null;G.droneT=ST.droneT;if(sk)setTimeout(()=>fireDrone(sk,'SEEKER BLAST','#c792ff'),250);}return;}
     if(!B.droneDrag)D.life-=dt;if(D.life<=0){G.drone=null;G.droneT=ST.droneT*.5;B.droneAim=null;}return;}
   if(B.busy||CINE||G.countdown>0||G.ending)return;
@@ -5080,7 +5082,7 @@ function drawDrone(c,T){
 function updateStationFX(dt){
   updateDrone(dt);
   if(ST.patch&&!G.patched&&G.hull>0&&G.hull<ST.hullMax*.35){
-    G.patched=true;G.hull=Math.min(ST.hullMax,G.hull+ST.patch);vpPop(`DRONES SEAL BREACH +${ST.patch}`,'#c792ff');rEvent('DRONE hull patch');
+    G.patched=true;G.hull=Math.min(ST.hullMax,G.hull+ST.patch);vpPop(`DRONES SEAL BREACH +${ST.patch}`,'#c792ff');sfx.droneBuzz(10);rEvent('DRONE hull patch');
     if(typeof tone==='function'){tone(520,.12,'sine',.05);setTimeout(()=>tone(780,.16,'sine',.05),110);}
   }
 }
@@ -6172,7 +6174,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v154-terra';
+const BUILD='v155-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6710,7 +6712,7 @@ $('#jumpBtn').onclick=()=>{if(MAP.anim||WARP||TC)return;audio();launchChoice(S.c
 $('#moveBtn').onclick=()=>{audio();moveStation();};
 $('#resBtn').onclick=()=>{audio();if(S.gal&&S.gal.cons){const h=S.gal.stars[S.gal.at];if(canTerra(h)){if(!popOk(h)){toast(`<b>Not enough colonists</b><span>${h.name} needs ${terraPop(h)+1} people aboard to settle it.</span>`,'#ff8a95');return;}MAP.tSel=h.id;const ch=S.choices.find(c=>c.starId===h.id)||{key:h.key,name:h.name,threat:h.threat,hold:false,starId:h.id};launchChoice(ch);}else if(h.terra)toast('<b>Already terraformed</b>','#5ef0d0');else toast('<b>Terraform unavailable</b><span>Clear a run at this star first. Then its world can be terraformed.</span>','#5ef0d0');}else openResearch();};
 $('#commsBtn').onclick=()=>{audio();ensureStation();openRoom('comms');};
-document.querySelectorAll('.bucks.w4').forEach(b=>b.onclick=()=>{sfx.tick();toast(`<b>Credits ${S.bucks} · Alloy ${S.station?S.station.alloy:0}</b><span>★ Legend ${legendOf()} comes from how well you fly. ◆ Ship rating ${rating()} is people aboard plus Legend.</span>`,'#ffd84a');});
+document.querySelectorAll('.bucks.w4').forEach(b=>b.onclick=()=>{sfx.tick();toast(`<b>Your ship at a glance</b><span>• Credits ${S.bucks}: your main currency<br>• Alloy ${S.station?S.station.alloy:0}: refined from your clears<br>• Data ${S.data||0}: gathered on Survey and Terraform runs<br>• Staff ${S.station?(S.station.pop||0):0}: people aboard<br>• ★ Legend ${legendOf()}: how well you fly<br>• ◆ Ship rating ${rating()}: people aboard plus Legend</span>`,'#ffd84a');});
 $('#chartCv').addEventListener('click',e=>{if(MAP.dragged){MAP.dragged=false;return;}chartTap(e);});
 $('#zIn').onclick=()=>{setZoom((MAP.z||1)*1.35);sfx.tick();};$('#zOut').onclick=()=>{setZoom((MAP.z||1)/1.35);if((MAP.z||1)<=1.01){MAP.panX=MAP.panY=0;}sfx.tick();};$('#zBig').onclick=()=>toggleBigChart();
 $('#carPrev').onclick=()=>carGo(-1);$('#carNext').onclick=()=>carGo(1);

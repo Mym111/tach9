@@ -102,3 +102,9 @@ Terraform is greyed out until the system has at least one cleared run and enough
 - Speech bubbles (huge) ~25% smaller.
 - Jump On: gate approach > "Choose your next constellation" frame (3 unvisited constellations with mini star maps; Crux stays the first) > arrival cinematic > map. S.consDone tracks visited constellations; genGalaxy takes an optional constellation index.
 - Fix: launchCine's delayed hide timer from the gate cine hid the arrival cine, flashing the debrief behind. Timer is now cleared on the next cine.
+
+## v155 — Constellation fix, drone sounds, wallet layout
+- Bug: ensureGalaxy() regenerated a fresh galaxy (no `td` yet) with the default constellation, ignoring the picker. g.ci now stores the constellation index and ensureGalaxy passes it.
+- sfx.droneBuzz/droneFix: mechanical buzz for drone repairs, hull patch and payload clears (fireDrone).
+- Wallet: 3 rows x 2 with separators: Credits Alloy | Data Staff | Legend Rating. Data always shown, Staff (S.station.pop) added. Tooltip is bulleted.
+- Overdrive cinematic audit: dedicated after-cine only for Afterburn (afterburn) and Repair (mend); Counterfire, Power slots, Tanks share the generic boardclear; Rail loader has none.
