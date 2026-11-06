@@ -1044,7 +1044,7 @@ i.od-g{font-style:normal;width:30px;text-align:center;flex:none;font-size:20px;l
       <div class="srow dbg"><span>Test Overdrive</span><div class="seg" id="dbgOd"><button type="button" data-m="counter">Counter</button><button type="button" data-m="pipe">Fuel</button><button type="button" data-m="repair">Repair</button><button type="button" data-m="storm">Slots</button><button type="button" data-m="burn">Burn</button><button type="button" data-m="rail">Rail</button></div></div>
       <div class="srow dbg"><span>Terraform Run (prototype)</span><div class="seg" id="dbgTRun"><button type="button" data-t="1">Easy</button><button type="button" data-t="3">Mid</button><button type="button" data-t="6">Hard</button></div></div>
       <div class="srow dbg"><span>Test Terraform</span><div class="seg" id="dbgTf"><button type="button" data-t="0">Easy</button><button type="button" data-t="9">Mid</button><button type="button" data-t="16">Hard</button></div></div>
-      <button class="btn ghost" id="optTips">Replay tutorial &amp; tips</button>
+      <button class="btn ghost" id="optTips">Replay Pilot Tips</button>
       <button class="btn ghost" id="optQA">Tester report</button>
       <button class="btn ghost" id="optReport">Campaign report</button>
       <button class="btn ghost" id="optHome">Main menu</button>
@@ -3855,7 +3855,7 @@ function renderCampaignReport(){
 const TACH_GOAL=9;
 /* ================= STAGES: the ten-minute lesson plan. Each Tach attempt introduces one new idea ================= */
 /* v75: nothing unlocks by Tach number any more. Complexity is the player's choice (survey depth), and tools unlock by clearing runs. */
-const UNL={line:0,nova:2,loot:3,flare:4,load:3,relics:1,burst:2,rooms:2,perks:4},DEPTH_UNL=[0,1,3];
+const UNL={line:0,nova:2,loot:3,flare:4,load:3,relics:1,burst:2,rooms:2,perks:4},DEPTH_UNL=[0,1,2];
 const prog=()=>career().cleared||0,unl=k=>prog()>=(UNL[k]||0);
 const depthMax=()=>prog()>=DEPTH_UNL[2]?2:prog()>=DEPTH_UNL[1]?1:0;
 const stageNow=()=>9;
@@ -4757,7 +4757,7 @@ const COACH_TIPS={
   gate:{el:'#chartCv',t:()=>'The Exodus Gate is in reach. It is the last system in this constellation. Clear it and we jump on to the next. Tap it to see what is waiting.'},
   tach:{el:'.tc-tot',t:()=>'Five reels, one per system, and all five must hold. The chances multiply, so one weak reel drags the whole jump down. Shore up the weakest first.'},
   tach_fail:{el:'.tc-res',t:()=>'We lost a level on every system that failed. Hard lesson. Rebuild at the planets, research what broke, and we go again.'},
-  depth:{el:'#brDepth',t:()=>'Your call on the kind of run. Trade Run: crates full of goods to sell. Attack Run: a pursuer, and Legend. Survey Run: scan a world on the planet board and bring home Data. Win all three once and Terraform opens, the goal of the constellation. After that, one cleared run at a system is enough. Choose before you give the order.'},
+  depth:{el:'#brDepth',t:()=>'Your call on the kind of run. Trade Run: crates full of goods to sell. Attack Run: a pursuer, and Legend. Survey Run: scan a world on the planet board and bring home Data. A new game goes in order: Trade, then Attack, then Survey (it opens after two cleared runs), then Terraform, the goal of the constellation. Once you have won one of each, fly whichever you like, and one cleared run at a system opens its Terraform. Choose before you give the order.'},
   terra_start:{el:'#board',t:()=>'Terraform board. The five colours are planet readings now: Radiation, Pressure, Water, Temperature, Oxygen. Match them to fill the progress bar and bring the world to life. Hazards hit the planet from the right. If Gravity or Oxygen runs out, the world is lost for good.'},
   survey_start:{el:'#board',t:()=>'Survey Run. The same planet board, but we are scanning, not changing the world. Data tiles (the green cylinder) bank Data even if we fail, and nothing here is lost. Spend Data in the Sensors room on planet upgrades.'},
   load:{el:'#brLoad',t:()=>'We only have room for so many Tile systems. Each run type brings its own.'},
@@ -6133,7 +6133,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v148-terra';
+const BUILD='v149-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},
@@ -6597,7 +6597,7 @@ function setPaused(p){if(scene!=='game'||!G.running)return;if(!p&&perkOpen){paus
 $('#continueBtn').onclick=()=>{audio();goMap();};
 { // new game: wipes an existing campaign only after a second tap
   let armed=false,timer=0;const b=$('#newGameBtn');
-  const begin=async(fresh)=>{const pick=await askChoice('NEW CAMPAIGN','<p>Want your captain to talk you through it? The first run is a gentler guided flight, and tips pop up the first time each thing happens.</p><p class="cf-dim">You can turn tips off or replay them any time in Settings. For hands-on lessons you cannot lose, try Training on the title screen.</p>','With tutorial','Skip tutorial');
+  const begin=async(fresh)=>{const pick=await askChoice('NEW CAMPAIGN','<p>Want your captain to talk you through it? The first run is a gentler guided flight, and tips pop up the first time each thing happens.</p><p class="cf-dim">You can turn tips off or replay them any time in Settings. For hands-on lessons you cannot lose, try Training on the title screen.</p>','With Pilot Tips','Skip Pilot Tips');
     if(pick==null){if(!fresh){armed=false;b.classList.remove('armed');b.textContent='New game';}return;}
     if(fresh){S.choices=genChoices();}else restartCampaign();
     AUD.tips=pick==='a';saveAudio();S.tips={};S.tutRunDone=pick!=='a';persist();openPilotIntro();};

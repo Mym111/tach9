@@ -74,3 +74,7 @@ Terraform is greyed out until the system has at least one cleared run and enough
 - Splash: terraform planet at mid-left runs a 30s loop (terraform → lush → destruction → gone/debris → reform), reusing terraPlanetPaint (saves/restores _tpImg).
 - Removed splash eyebrow ("Ship log") and tagline. Title now "Exodus Run" (GAME_NAME; head title, apple title, manifest, install text).
 - SW cache prefix stays tach9-vNNN; save keys unchanged. Logo/icons still old.
+
+## v149 — Sequence fix, Pilot Tips
+- Survey Run now unlocks after 2 cleared runs (DEPTH_UNL [0,1,2], was 3), so new game order is Trade > Attack > Survey > Terraform; free choice afterwards. Map "Depth" tip explains it.
+- "Tutorial" at new campaign / Options renamed Pilot Tips (Training remains the scripted, can't-lose mode).
