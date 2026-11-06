@@ -521,6 +521,7 @@ button:disabled{cursor:default}
 #fuelBar .track{border-radius:8px;background:rgba(160,190,255,.05);border-color:rgba(180,200,255,.35)}
 .terra-note{display:none}
 body.terra:not(.survey) .runbucks{display:none}
+body.exo #boardwrap,body.exo #viewport{filter:brightness(var(--exo,1)) saturate(calc(.8 + var(--exo,1)*.25))}
 body.terra{--bezel:var(--tfb,#8a5236)}
 body.terra #game{background:radial-gradient(ellipse at 50% 0%,var(--tfa,#241008) 0%,var(--tfc,#0c0608) 80%)}
 body.terra .viewport{box-shadow:inset 0 0 0 2px var(--tfb,#8a5236),0 0 0 4px var(--tfc,#0c0608),0 0 22px var(--tfg,transparent);transition:box-shadow .3s}
@@ -1799,7 +1800,7 @@ const ty0=t=>Math.min(3,Math.max(0,t));
 /* ================= RUN STATE ================= */
 let scene='splash', paused=false, CHOICE=null, SYS=SYSTEMS.asteroid, ST=stats();
 const G={};
-function resetGame(){
+function resetGame(){G.exoPh=0;G.exoSaid=null;G.exoDeb=null;
   ST=stats();
   const T=CHOICE?CHOICE.threat:0;
   Object.assign(G,{running:true,terra:false,survey:false,data:0,flare:null,T,time:0,dist:0,len:gateLen(T),prog:0,vel:1,fuel:ST.tank,hull:ST.hullMax,meters:[0,0,0,0],
@@ -1981,6 +1982,13 @@ function updateGame(dt){
     G.sayT=(G.sayT??8)-dt;
     if(G.sayT<=0){G.sayT=9+Math.random()*5;pilotSay([['Steady!','Quiet out here.','Easy does it.'],['Pursuant closing!','Keep them off us!','Stay sharp!'],['Hold together!','Burn it all!','Almost there!']][RUNX.stage][Math.floor(Math.random()*3)]);}
   }
+  if(RUNX&&RUNX.gate&&!TR){
+    const on=G.running&&!G.ending&&!G.hold&&!CINE&&!G.countdown;document.body.classList.toggle('exo',!!on);
+    if(on){const pr=clamp(G.prog,0,1),per=4.2-2.95*pr;G.exoPh=(G.exoPh||0)+dt/per;
+      if(G.exoPh>=1){G.exoPh-=1;try{tone(44+pr*28,.5+pr*.55,'sine',.06+.2*pr);tone(30+pr*18,.3+pr*.4,'sawtooth',.008+.03*pr,0,.02);}catch(e){}if(pr>.5)G.shake=Math.max(G.shake||0,.08+.2*(pr-.5));}
+      const lit=Math.pow(1-G.exoPh,3),k=.35+.65*pr;document.body.style.setProperty('--exo',(1+(-.3+.62*lit)*k).toFixed(3));
+      G.exoSaid=G.exoSaid||{};for(const [p,txt] of [[.03,'The Exodus Gate. Everyone hold on.'],[.14,'It is waking up. I can feel it in my teeth.'],[.5,'Do not let go. Do not look away.'],[.78,'Almost there. Please, almost there.'],[.92,'For everyone aboard. GO!']])if(pr>=p&&!G.exoSaid[p]){G.exoSaid[p]=1;pilotSay(txt,true);G.sayT=Math.max(G.sayT||0,6);}}
+  }
   if(!G.ending){
     if(!G.milestones.half&&G.prog>=.5){G.milestones.half=true;showBanner(G.hold?'Gate 50%':'Halfway',G.hold?'THE GATE PUSHES BACK':'KEEP THE SHIP TOGETHER');sfx.milestone();}
     if(!G.milestones.sight&&G.prog>=.88){G.milestones.sight=true;showBanner('Gate in sight','HOLD ON');sfx.milestone();}
@@ -2055,8 +2063,18 @@ function drawViewport(){
   for(const s of V.stars){b.fillStyle=['#3a4766','#7f8fb2','#e1e9f7'][s.L];b.fillRect(Math.round(s.x),Math.round(s.y),s.L===2?Math.max(1,Math.round((v-1)*3)):1,1);}
   const sxr=Math.round(evX(G.sensor));
   b.fillStyle='rgba(56,224,155,.28)';for(let y=2;y<H;y+=4)b.fillRect(sxr,y,1,2);
+  if(RUNX&&RUNX.gate&&!TR&&!G.terra){
+    const pr=clamp(G.prog,0,1),gs=.35+.65*pr,gcx=Math.round((W+90)+((shipBaseX()+34)-(W+90))*Math.pow(pr,1.6)),gcy=H/2,ry=H*(.3+.7*gs*.75),rx=ry*.42;
+    const gl=b.createRadialGradient(gcx,gcy,0,gcx,gcy,ry*1.6);gl.addColorStop(0,`rgba(94,240,208,${.16+.2*pr})`);gl.addColorStop(1,'rgba(94,240,208,0)');b.fillStyle=gl;b.fillRect(0,0,W,H);
+    b.fillStyle='rgba(2,4,12,.85)';b.beginPath();b.ellipse(gcx,gcy,rx*.7,ry*.96,0,0,6.28);b.fill();
+    for(let k=0;k<3;k++){for(let a=0;a<6.28;a+=.05){const lit=((a*(k%2?-1:1)+t*(2+k)+k)%1.4)<.6;b.fillStyle=lit?(k===1?'#ffd84a':'#7ff3ff'):'#2f5d8a';b.fillRect(Math.round(gcx+Math.cos(a)*rx*(1-k*.14)),Math.round(gcy+Math.sin(a)*ry*(1-k*.1)),1,1);}}
+    for(let i=0;i<18;i++){const p=((t*.4+i/18)%1),a=i*2.4+t*2*(1-p);b.fillStyle=`rgba(150,255,235,${(1-p)*.8})`;b.fillRect(Math.round(gcx+Math.cos(a)*rx*(1.8-p*1.6)),Math.round(gcy+Math.sin(a)*ry*(1.4-p*1.35)),1,1);}
+    if(!G.exoDeb){G.exoDeb=Array.from({length:34},()=>({x:Math.random()*W,y:Math.random()*H,s:.5+Math.random()*1.5,r:Math.random()*6.28,w:(Math.random()-.5)*4,z:.4+Math.random()}));}
+    for(const d of G.exoDeb){d.x-=(d.z*(14+40*pr)*(v))*(1/60);d.r+=d.w*(1/60);d.y+=Math.sin(t+d.r)*.04;if(d.x<-4){d.x=W+4+Math.random()*30;d.y=Math.random()*H;}
+      const sz=Math.max(1,Math.round(d.s*(1+pr)));b.fillStyle=d.z>.9?'#8a7068':d.z>.65?'#5c4c52':'#3a3640';b.fillRect(Math.round(d.x),Math.round(d.y),sz,Math.max(1,Math.round(sz*(.5+.5*Math.abs(Math.sin(d.r))))));}
+  }
   // jump gate
-  if(G.prog>.82&&!G.terra){
+  if(G.prog>.82&&!G.terra&&!(RUNX&&RUNX.gate&&!TR)){
     const gp=clamp((G.prog-.82)/.18,0,1),gx=Math.round((W+20)+((shipBaseX()+20)-(W+20))*gp),gy=H/2,ry=H*.34;
     for(let a=0;a<6.28;a+=.06){const lit=((a+t*3)%1.2)<.5;b.fillStyle=lit?'#7ff3ff':'#2f5d8a';b.fillRect(Math.round(gx+Math.cos(a)*5),Math.round(gy+Math.sin(a)*ry),1,1);}
     b.fillStyle='rgba(127,243,255,.12)';b.beginPath();b.ellipse(gx,gy,4,ry,0,0,6.28);b.fill();
@@ -2708,7 +2726,7 @@ legend.insertAdjacentHTML('beforeend',`<div class="lg-note"><b>Swap any two tile
 
 const show=(id,on)=>$(id).classList.toggle('off',!on);
 const ALL=['#trainMenu','#qa','#confirm','#resv','#tach','#anom','#brief','#tutorial','#credits','#splash','#map','#station','#hangar','#game','#pause','#debrief','#sysinfo','#tip','#guide','#sound','#report','#relic','#burst'];
-function only(...ids){for(const id of ALL)show(id,ids.includes(id));}
+function only(...ids){document.body.classList.remove('exo');for(const id of ALL)show(id,ids.includes(id));}
 const coin=n=>`<i class="coin"></i>${n}`;
 
 function renderSplash(){
@@ -6141,7 +6159,7 @@ function drawDangerHUD(c,CW,CH,t){
 }
 
 /* ================= FLIGHT REPORT (dev) ================= */
-const BUILD='v152-terra';
+const BUILD='v153-terra';
 // brand: every visible name comes from GAME_NAME (title tags in the head are the only other copy)
 document.title=GAME_NAME;document.querySelectorAll('[data-gn]').forEach(e=>e.textContent=GAME_NAME);{const m=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(m)m.content=GAME_NAME;}
 function newReport(){return{spawn:{asteroid:0,enemy:0,planet:0,well:0,gunship:0,attack:0,pod:0},

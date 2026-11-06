@@ -91,3 +91,8 @@ Terraform is greyed out until the system has at least one cleared run and enough
 - launchCine modes 'gate' (ship approaches the opening Exodus Gate, deep thoom, shake, flash) and 'arrive' (gate flash, hyperspace streaks settle into a star field, ship emerges).
 - Exodus Run launch uses 'gate'. Jump On plays 'gate' then, after the new constellation is generated, 'arrive' before the map reveals. Reduced-motion skips both.
 - Noted for later: no Gate keys in the game.
+
+## v153 — Exodus Run staging
+- Pulsar: body.exo brightness pulse on board+viewport, period 4.2s→1.25s as the gate nears; each beat plays a thoom whose pitch, length and volume rise with progress (plus screen shake late).
+- Viewport: much larger Exodus Gate (grows and slides toward the ship, rotating rings, inflow sparks) and animated drifting debris (34 chunks, faster/larger near the gate). Normal jump-gate drawing skipped for gate runs.
+- Pilot speech at 3/14/50/78/92% progress, on top of the existing stage barks.
