@@ -56,3 +56,7 @@ Terraform is greyed out until the system has at least one cleared run and enough
 ## v142
 - Terraform now needs a win of each run type (Trade, Attack, Survey) at that system: st.rt[0..2], shown as 'next: <run>' on the card.
 - New training lesson 'Run types and planet boards' compares Trade/Attack/Survey/Terraform tile systems; stale tips (research, Survey flares) updated; first-time tips for planet runs.
+
+## v143
+- Launch cinematics (launchCine): Trade zoom-in, Attack orbit with chaser and bolts, Survey hover and scan, Terraform planet focus with reels and frame. Tap to skip; skipped under reduced motion; failsafe resolves it.
+- Map: extra pan room equal to the star details panel height (chartOcc) and auto-pan so the selected star clears the panel.
